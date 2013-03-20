@@ -5,6 +5,16 @@
 #include "config.h"
 #endif
 
+ 
+/** 
+ * @defgroup RAPI2 RAPI2 public API
+ * @ingroup RAPI 
+ * @brief The public RAPI2 API
+ *
+ * @{ 
+ */ 
+ 
+
 #include "rapi_ops.h"
 #include "rapi_context.h"
 #include "rapi2.h"
@@ -1409,6 +1419,15 @@ IRAPISession_CeRapiInvoke(IRAPISession *session,
  * IRAPIDevice
  */
 
+/**
+ * @defgroup IRAPIDevice IRAPIDevice public API
+ * @ingroup RAPI2 
+ * 
+ * An object representing a connected device.
+ *
+ *@{ 
+ */
+
 struct _IRAPIDevice {
         IRAPIDesktop *desktop;
         char *obj_path;
@@ -1418,6 +1437,13 @@ struct _IRAPIDevice {
 };
 
 
+/** @brief Add a reference to the IRAPIDevice object
+ * 
+ * This function increases the reference count of the IRAPIDevice
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to increase the ref count
+ */ 
 void
 IRAPIDevice_AddRef(IRAPIDevice *self)
 {
@@ -1425,6 +1451,13 @@ IRAPIDevice_AddRef(IRAPIDevice *self)
         return;
 }
 
+/** @brief Remove a reference to the IRAPIDevice object
+ * 
+ * This function decreases the reference count of the IRAPIDevice
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to decrease the ref count
+ */ 
 void
 IRAPIDevice_Release(IRAPIDevice *self)
 {
@@ -1441,6 +1474,15 @@ IRAPIDevice_Release(IRAPIDevice *self)
 }
 
 
+/** @brief Create a communication session with the device
+ * 
+ * This function creates an IRAPISession object with the device for remote calls,
+ * with a reference count of one.
+ * 
+ * @param[in] self address of the device object
+ * @param[out] ppISession address of the pointer to receive the reference to the session
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDevice_CreateSession(IRAPIDevice *self, IRAPISession** ppISession)
 {
@@ -1553,9 +1595,19 @@ IRAPIDevice_get_local_ip(IRAPIDevice *self)
   return synce_info_get_local_ip(self->info);
 }
 
+/** @} */
 
 /*
  * IRAPIEnumDevices
+ */
+
+/**
+ * @defgroup IRAPIEnumDevices IRAPIEnumDevices public API
+ * @ingroup RAPI2 
+ * 
+ * An object representing an enumeration of connected devices.
+ *
+ *@{ 
  */
 
 struct _IRAPIEnumDevices {
@@ -1566,6 +1618,13 @@ struct _IRAPIEnumDevices {
 };
 
 
+/** @brief Add a reference to the IRAPIEnumDevices object
+ * 
+ * This function increases the reference count of the IRAPIEnumDevices
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to increase the ref count
+ */ 
 void
 IRAPIEnumDevices_AddRef(IRAPIEnumDevices *self)
 {
@@ -1573,6 +1632,13 @@ IRAPIEnumDevices_AddRef(IRAPIEnumDevices *self)
         return;
 }
 
+/** @brief Remove a reference to the IRAPIEnumDevices object
+ * 
+ * This function decreases the reference count of the IRAPIEnumDevices
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to decrease the ref count
+ */ 
 void
 IRAPIEnumDevices_Release(IRAPIEnumDevices *self)
 {
@@ -1591,6 +1657,15 @@ IRAPIEnumDevices_Release(IRAPIEnumDevices *self)
         return;
 }
 
+/** @brief Create a copy of the IRAPIEnumDevices object
+ * 
+ * This function creates a copy of the IRAPIEnumDevices object in the same 
+ * enumeration state, with a reference count of one.
+ * 
+ * @param[in] self address of the object to copy
+ * @param[out] ppIEnum address of the pointer to receive the reference to the new object
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIEnumDevices_Clone(IRAPIEnumDevices *self, IRAPIEnumDevices** ppIEnum)
 {
@@ -1617,6 +1692,14 @@ IRAPIEnumDevices_Clone(IRAPIEnumDevices *self, IRAPIEnumDevices** ppIEnum)
         return S_OK;
 }
 
+/** @brief Get the number of connected devices in the enumerator
+ * 
+ * This function returns the number of connected devices in the enumerator.
+ * 
+ * @param[in] self address of the enumerator
+ * @param[out] pcElt address of the variable to receive device count
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIEnumDevices_GetCount(IRAPIEnumDevices *self, ULONG* pcElt)
 {
@@ -1624,6 +1707,14 @@ IRAPIEnumDevices_GetCount(IRAPIEnumDevices *self, ULONG* pcElt)
         return S_OK;
 }
 
+/** @brief Retrieve the next device from the enumerator
+ * 
+ * This function retrieve the next device in the sequence of connected devices in the enumerator.
+ * 
+ * @param[in] self address of the enumerator
+ * @param[out] ppIDevice address of the pointer to receive the reference to the device.
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIEnumDevices_Next(IRAPIEnumDevices *self, IRAPIDevice** ppIDevice)
 {
@@ -1637,6 +1728,13 @@ IRAPIEnumDevices_Next(IRAPIEnumDevices *self, IRAPIDevice** ppIDevice)
         return S_OK;
 }
 
+/** @brief Resets the enumerator sequence
+ * 
+ * This function resets the enumerator sequence back to the first device.
+ * 
+ * @param[in] self address of the enumerator
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIEnumDevices_Reset(IRAPIEnumDevices *self)
 {
@@ -1644,6 +1742,15 @@ IRAPIEnumDevices_Reset(IRAPIEnumDevices *self)
         return S_OK;
 }
 
+/** @brief Skip devices in the enumerator
+ * 
+ * This function skips over the specified number of connected devices in the enumerator.
+ * If there are insufficient devices to skip, an error is returned.
+ * 
+ * @param[in] self address of the enumerator
+ * @param[out] cElt number of devices to skip
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIEnumDevices_Skip(IRAPIEnumDevices *self, ULONG cElt)
 {
@@ -1657,11 +1764,22 @@ IRAPIEnumDevices_Skip(IRAPIEnumDevices *self, ULONG cElt)
         return S_OK;
 }
 
+/** @} */
 
 
 /*
  * IRAPIDesktop
 */
+
+/**
+ * @defgroup IRAPIDesktop IRAPIDesktop public API
+ * @ingroup RAPI2 
+ *  
+ * The global object used by applications to find connected devices.
+ *
+ *@{ 
+ */
+
 
 struct _IRAPIDesktop {
         int refcount;
@@ -2015,6 +2133,16 @@ IRAPIDesktop_Uninit()
         return S_OK;
 }
 
+
+
+/** @brief Obtain a reference to the global IRAPIDesktop object
+ * 
+ * This function obtains a reference to the global object 
+ * used to find connected devices.
+ * 
+ * @param[out] ppIRAPIDesktop address of the pointer to receive the reference
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDesktop_Get(IRAPIDesktop **ppIRAPIDesktop)
 {
@@ -2033,6 +2161,13 @@ IRAPIDesktop_Get(IRAPIDesktop **ppIRAPIDesktop)
         return hr;
 }
 
+/** @brief Add a reference to the IRAPIDesktop object
+ * 
+ * This function increases the reference count of the IRAPIDesktop
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to increase the ref count
+ */ 
 void
 IRAPIDesktop_AddRef(IRAPIDesktop *self)
 {
@@ -2040,6 +2175,13 @@ IRAPIDesktop_AddRef(IRAPIDesktop *self)
         return;
 }
 
+/** @brief Remove a reference to the IRAPIDesktop object
+ * 
+ * This function decreases the reference count of the IRAPIDesktop
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to decrease the ref count
+ */ 
 void
 IRAPIDesktop_Release(IRAPIDesktop *self)
 {
@@ -2051,6 +2193,16 @@ IRAPIDesktop_Release(IRAPIDesktop *self)
         return;
 }
 
+/** @brief Registers an IRAPISink object to receive connection events
+ * 
+ * This function registers an IRAPISink object so that it receives
+ * connection and disconnection events.
+ * 
+ * @param[in] self address of an IRAPIDesktop instance
+ * @param[in] pISink address of the IRAPISink object
+ * @param[out] pdwContext address of a DWORD to return the context id, this is required to cease delivery of events to this sink.
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDesktop_Advise(IRAPIDesktop *self, IRAPISink* pISink, DWORD* pdwContext)
 {
@@ -2076,6 +2228,15 @@ IRAPIDesktop_Advise(IRAPIDesktop *self, IRAPISink* pISink, DWORD* pdwContext)
   return S_OK;
 }
 
+/** @brief Unregisters an IRAPISink object
+ * 
+ * This function unregisters an IRAPISink object to cease notification of
+ * connection and disconnection events.
+ * 
+ * @param[in] self address of an IRAPIDesktop instance
+ * @param[in] dwContext the context id from IRAPIDesktop_Advise
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDesktop_UnAdvise(IRAPIDesktop *self, DWORD dwContext)
 {
@@ -2086,6 +2247,15 @@ IRAPIDesktop_UnAdvise(IRAPIDesktop *self, DWORD dwContext)
   return S_OK;
 }
 
+/** @brief Obtain an enumeration object of connected devices
+ * 
+ * This function returns an IRAPIEnumDevices object to enumerate all
+ * connected devices.
+ * 
+ * @param[in] self address of an IRAPIDesktop instance
+ * @param[out] ppIEnum address of the pointer to receive the reference
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDesktop_EnumDevices(IRAPIDesktop *self, IRAPIEnumDevices** ppIEnum)
 {
@@ -2115,6 +2285,19 @@ IRAPIDesktop_EnumDevices(IRAPIDesktop *self, IRAPIEnumDevices** ppIEnum)
 /*
  * we haven't got GUID (RAPIDEVICEID) for pre WM5 in dccm
  */
+/** @brief Obtain a connected device specified by GUID
+ * 
+ * This function returns an IRAPIDevice object corresponding to the device
+ * identified by the GUID.
+ * Note, pre Windows Mobile 5 devices cannot be identified by GUID.
+ * 
+ * @param[in] self address of an IRAPIDesktop instance
+ * @param[in] pDeviceID address of a RAPIDEVICEID struct containing the GUID
+ * @param[in] opFlags A member of the RAPI_GETDEVICEOPCODE enumeration, indicates
+ *       whether the call should block. This value is unused in this implementation.
+ * @param[out] ppIDevice address of the pointer to receive the device reference
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDesktop_FindDevice(IRAPIDesktop *self, RAPIDEVICEID *pDeviceID, RAPI_GETDEVICEOPCODE opFlags, IRAPIDevice** ppIDevice)
 {
@@ -2140,3 +2323,6 @@ IRAPIDesktop_FindDevice(IRAPIDesktop *self, RAPIDEVICEID *pDeviceID, RAPI_GETDEV
   return S_OK;
 }
 
+/** @} */
+
+/** @} */
