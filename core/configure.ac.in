@@ -79,6 +79,29 @@ PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60, dbus-glib-1 >= 0.74], dbus_found=yes, d
 
 
 dnl
+dnl whether to build documentation
+dnl
+AC_CHECK_PROGS([DOXYGEN], [doxygen])
+
+AC_ARG_ENABLE(generate-docs,
+              [  --enable-generate-docs  build documentation (requires doxygen)],
+              enable_generate_docs=$enableval, enable_generate_docs=no)
+
+if ! test "$enable_generate_docs" = "no"; then
+  if test -z "$DOXYGEN"; then
+    AC_MSG_WARN([Doxygen not found - continuing without Doxygen support])
+    enable_generate_docs="no"
+  else
+    AC_MSG_NOTICE([Building doxygen documentation])
+    enable_generate_docs="yes"
+  fi
+else
+  AC_MSG_NOTICE([Documentation not requested])
+fi
+AM_CONDITIONAL([BUILD_DOCS], [test "$enable_generate_docs" = "yes"])
+
+
+dnl
 dnl whether (v)dccm connection file support is required
 dnl
 AC_ARG_ENABLE(dccm-file-support,
@@ -376,7 +399,8 @@ AC_CONFIG_FILES([
         scripts/85-synce.rules \
         bluetooth/synce-udev-bt-ipup \
         etc/org.synce.dccm.service \
-        etc/synce-connector.conf] )
+        etc/synce-connector.conf \
+        docs/Doxyfile] )
 
 AC_OUTPUT([libsynce.pc
            Makefile
@@ -402,5 +426,6 @@ AC_OUTPUT([libsynce.pc
            dccm/Makefile
            etc/Makefile
            bluetooth/Makefile
+           docs/Makefile
 ])
 
