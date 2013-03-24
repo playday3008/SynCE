@@ -1,4 +1,4 @@
-syncedatadir = ${datadir}/@PACKAGE_NAME@
+syncedatadir = ${datadir}/@PACKAGE_TARNAME@
 syncedata_DATA = synceconnector.py
 
 

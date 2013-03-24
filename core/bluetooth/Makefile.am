@@ -8,7 +8,7 @@ ppppeerdir = ${pppdir}/peers
 EXTRA_DIST = README
 ppppeer_DATA = synce-bt-peer
 
-syncedatadir = ${datadir}/@PACKAGE_NAME@
+syncedatadir = ${datadir}/@PACKAGE_TARNAME@
 
 pppup_SCRIPTS = synce-udev-bt-ipup
 
