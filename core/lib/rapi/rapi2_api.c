@@ -2149,12 +2149,14 @@ IRAPIDesktop_Get(IRAPIDesktop **ppIRAPIDesktop)
         HRESULT hr;
 
         if (irapi_desktop != NULL) {
+                IRAPIDesktop_AddRef(irapi_desktop);
                 *ppIRAPIDesktop = irapi_desktop;
                 return S_OK;
         }
 
         hr = IRAPIDesktop_Init();
         if (SUCCEEDED(hr)) {
+                IRAPIDesktop_AddRef(irapi_desktop);
                 *ppIRAPIDesktop = irapi_desktop;
                 return S_OK;
         }
