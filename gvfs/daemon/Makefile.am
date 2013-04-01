@@ -7,18 +7,17 @@ INCLUDES =					\
 	-I$(gvfs_src_dir)			\
 	-I$(gvfs_src_dir)/common		\
 	-I$(gvfs_src_dir)/daemon		\
-	$(GLIB_CFLAGS) $(DBUS_CFLAGS) 		\
-	-DDBUS_API_SUBJECT_TO_CHANGE		\
+	$(GLIB_CFLAGS) 				\
 	-DLIBEXEC_DIR=\"$(libexecdir)/\" 	\
 	-DMOUNTABLE_DIR=\"$(mountdir)/\" 	\
 	-DGVFS_LOCALEDIR=\""$(localedir)"\"     \
 	-DG_DISABLE_DEPRECATED
 
-noinst_LTLIBRARIES = libdaemon.la
+if !USE_GDBUS
+INCLUDES += $(DBUS_CFLAGS) -DDBUS_API_SUBJECT_TO_CHANGE
+endif
 
-libraries = \
-	libdaemon.la				\
-	$(GLIB_LIBS) $(DBUS_LIBS)
+noinst_LTLIBRARIES = libdaemon.la
 
 %.mount: %.mount.in ../config.log
 	sed -e "s|\@libexecdir\@|$(libexecdir)|" $< > $@
@@ -138,5 +137,8 @@ gvfsd_synce_CPPFLAGS = \
 	-DGVFS_LOG_DOMAIN=\"synce-gvfs\" \
 	-DG_LOG_DOMAIN=\"synce-gvfs\"
 
-gvfsd_synce_LDADD = $(libraries) $(LIBSYNCE_LIBS)
+gvfsd_synce_LDADD = libdaemon.la $(LIBSYNCE_LIBS) $(GLIB_LIBS)
 
+if !USE_GDBUS
+gvfsd_synce_LDADD += $(DBUS_LIBS)
+endif

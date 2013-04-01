@@ -28,8 +28,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
+
+#if !USE_GDBUS
 #if GVFS_POST_1_12
 #include <dbus/dbus.h>
+#endif
 #endif
 
 #include "gvfsbackendsynce.h"
@@ -2817,8 +2820,11 @@ g_vfs_synce_daemon_init (void)
 {
   g_set_application_name (_("Pocket PC Filesystem Service"));
 
+
+#if !USE_GDBUS
 #if GVFS_POST_1_12
   dbus_threads_init_default();
+#endif
 #endif
 
   openlog(g_get_prgname(), LOG_PID, LOG_USER);

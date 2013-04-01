@@ -24,11 +24,28 @@ PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.18 gthread-2.0 gobject-2.0 gmodule-no-expo
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-PKG_CHECK_MODULES(DBUS, dbus-1)
+PKG_CHECK_MODULES(DBUS, dbus-1, dbus_found=yes, dbus_found=no)
 AC_SUBST(DBUS_CFLAGS)
 AC_SUBST(DBUS_LIBS)
 
 AC_CHECK_LIB(gvfscommon, g_mount_info_ref, ,AC_MSG_ERROR([Required library libgvfscommon not found]))
+
+dnl Check if GLib version is high enough for GDBus
+PKG_CHECK_EXISTS([gio-2.0 >= 2.26], have_gdbus=yes, have_gdbus=no)
+
+dnl Should we build with GDBus ?                                                
+AC_MSG_CHECKING([whether to use GDBus])
+if test "$have_gdbus" = "yes"; then
+   use_gdbus=1;
+   AC_MSG_RESULT([yes])
+else
+   use_gdbus=0;
+   AC_MSG_RESULT([no])
+fi
+AC_DEFINE_UNQUOTED(USE_GDBUS, $use_gdbus, [Define to 1 if you want to use GDBus\
+ support.])
+AM_CONDITIONAL(USE_GDBUS, test "x$use_gdbus" = "x1")
+
 
 dnl **** gio module path handling ****
 giomodulesdir=`pkg-config --variable=giomoduledir gio-2.0`
