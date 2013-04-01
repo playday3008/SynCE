@@ -76,6 +76,10 @@ if test "$gvfs_major_ver" -eq 1 -a "$gvfs_minor_ver" -lt 4; then
 AC_DEFINE(GVFS_PRE_1_4, 1, [Define if building against gvfs pre version 1.4])
 fi
 
+if test "$gvfs_major_ver" -eq 1 -a "$gvfs_minor_ver" -gt 12; then
+AC_DEFINE(GVFS_POST_1_12, 1, [Define if building against gvfs post version 1.12])
+fi
+
 AM_CONDITIONAL(GVFS_VERSION_1_0, test "$gvfs_major_ver" -ge 1 )
 AM_CONDITIONAL(GVFS_VERSION_1_2, test "$gvfs_major_ver" -ge 1 -a "$gvfs_minor_ver" -ge 2 )
 AM_CONDITIONAL(GVFS_VERSION_1_4, test "$gvfs_major_ver" -ge 1 -a "$gvfs_minor_ver" -ge 4 )

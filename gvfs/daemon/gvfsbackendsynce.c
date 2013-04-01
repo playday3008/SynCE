@@ -28,6 +28,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
+#if GVFS_POST_1_12
+#include <dbus/dbus.h>
+#endif
 
 #include "gvfsbackendsynce.h"
 #include "gvfsjobopenforread.h"
@@ -2813,6 +2816,10 @@ void
 g_vfs_synce_daemon_init (void)
 {
   g_set_application_name (_("Pocket PC Filesystem Service"));
+
+#if GVFS_POST_1_12
+  dbus_threads_init_default();
+#endif
 
   openlog(g_get_prgname(), LOG_PID, LOG_USER);
   g_log_set_handler(GVFS_LOG_DOMAIN, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION, log_to_syslog, NULL);
