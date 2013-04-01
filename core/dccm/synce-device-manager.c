@@ -9,7 +9,12 @@
 #include <gio/gio.h>
 
 #include "synce-device-manager.h"
+#if USE_GDBUS
+#include "synce-device-manager-dbus.h"
+#else
+#include <dbus/dbus-glib.h>
 #include "synce-device-manager-glue.h"
+#endif
 #include "synce-device-manager-control.h"
 #include "synce-device.h"
 #include "synce-device-rndis.h"
@@ -49,6 +54,9 @@ struct _SynceDeviceManagerPrivate
   gulong control_connect_id;
   gulong control_disconnect_id;
   guint iface_check_id;
+#if USE_GDBUS
+  SynceDeviceManagerDeviceManager *interface;
+#endif
 };
 
 #define SYNCE_DEVICE_MANAGER_GET_PRIVATE(o) \
@@ -102,6 +110,9 @@ synce_device_manager_device_sends_disconnected_cb(SynceDevice *device,
   g_object_get(device, "object-path", &obj_path, NULL);
   g_debug("%s: emitting disconnect for object path %s", G_STRFUNC, obj_path);
   g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, obj_path);
+#if USE_GDBUS
+  synce_device_manager_device_manager_emit_device_disconnected(priv->interface, obj_path);
+#endif
   g_free(obj_path);
   synce_device_manager_device_entry_free(deventry);
 
@@ -115,6 +126,7 @@ synce_device_manager_device_obj_path_changed_cb(GObject    *obj,
 						gpointer    user_data)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
   SynceDevice *dev = SYNCE_DEVICE(obj);
 
   gchar *obj_path = NULL;
@@ -126,6 +138,9 @@ synce_device_manager_device_obj_path_changed_cb(GObject    *obj,
 
   g_debug("%s: sending connected signal for %s", G_STRFUNC, obj_path); 
   g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_CONNECTED], 0, obj_path);
+#if USE_GDBUS
+  synce_device_manager_device_manager_emit_device_connected(priv->interface, obj_path);
+#endif
   g_free (obj_path);
 }
 
@@ -416,7 +431,47 @@ synce_device_manager_device_disconnected_cb(SynceDeviceManagerControl *device_ma
   return;
 }
 
+#if USE_GDBUS
+gboolean
+synce_device_manager_get_connected_devices (SynceDeviceManagerDeviceManager *interface,
+                                            GDBusMethodInvocation *invocation,
+                                            gpointer userdata)
+{
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
 
+  gchar **device_list = g_malloc0(g_slist_length(priv->devices) + 1);
+  guint n = 0;
+  GSList *device_entry_iter = priv->devices;
+  while (device_entry_iter != NULL) {
+
+    gchar *obj_path;
+    SynceDevice *device = ((DeviceEntry*)device_entry_iter->data)->device;
+    if (device == NULL)
+      /* interface is not yet ready */
+      continue;
+
+    g_object_get (device, "object-path", &obj_path, NULL);
+    if (obj_path == NULL)
+      /* device is not yet ready */
+      continue;
+
+    g_debug("%s: found device %s with object path %s", G_STRFUNC, ((DeviceEntry*)device_entry_iter->data)->device_path, obj_path);
+
+    device_list[n] = obj_path;
+    n++;
+
+    device_entry_iter = g_slist_next(device_entry_iter);
+  }
+
+  synce_device_manager_device_manager_complete_get_connected_devices(interface, invocation, device_list);
+
+  g_strfreev(device_list);
+
+  return TRUE;
+}
+#else
 gboolean
 synce_device_manager_get_connected_devices (SynceDeviceManager *self,
                                             GPtrArray **ret,
@@ -467,6 +522,7 @@ synce_device_manager_get_connected_devices (SynceDeviceManager *self,
 
   return TRUE;
 }
+#endif
 
 /*
  * class / object functions
@@ -505,6 +561,28 @@ synce_device_manager_initable_init (GInitable *initable, GCancellable *cancellab
     return FALSE;
   }
 
+#if USE_GDBUS
+  priv->interface = synce_device_manager_device_manager_skeleton_new();
+  g_signal_connect(priv->interface,
+		   "handle-get-connected-devices",
+		   G_CALLBACK (synce_device_manager_get_connected_devices),
+		   self);
+
+  GDBusConnection *system_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
+  if (system_bus == NULL) {
+    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, (*error)->message);
+    return FALSE;
+  }
+  if (!g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(priv->interface),
+					system_bus,
+                                        DEVICE_MANAGER_OBJECT_PATH,
+					error)) {
+    g_critical("%s: Failed to export interface on system bus: %s", G_STRFUNC, (*error)->message);
+    g_object_unref(system_bus);
+    return FALSE;
+  }
+  g_object_unref(system_bus);
+#else
   DBusGConnection *system_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, error);
   if (system_bus == NULL) {
     g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, (*error)->message);
@@ -514,6 +592,7 @@ synce_device_manager_initable_init (GInitable *initable, GCancellable *cancellab
                                        DEVICE_MANAGER_OBJECT_PATH,
 				       G_OBJECT(self));
   dbus_g_connection_unref(system_bus);
+#endif
 
   priv->control_iface = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER_CONTROL, NULL, error, NULL);
   if (!(priv->control_iface)) {
@@ -538,6 +617,13 @@ synce_device_manager_dispose (GObject *obj)
     return;
 
   priv->dispose_has_run = TRUE;
+
+#if USE_GDBUS
+  if (priv->interface) {
+    g_dbus_interface_skeleton_unexport(G_DBUS_INTERFACE_SKELETON(priv->interface));
+    g_object_unref(priv->interface);
+  }
+#endif
 
   GSList *list_entry = priv->devices;
   while (list_entry) {
@@ -591,9 +677,10 @@ synce_device_manager_class_init (SynceDeviceManagerClass *klass)
                   g_cclosure_marshal_VOID__STRING,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
+#if !USE_GDBUS
   dbus_g_object_type_install_info (G_TYPE_FROM_CLASS (klass),
                                    &dbus_glib_synce_device_manager_object_info);
+#endif
 }
-
 
 

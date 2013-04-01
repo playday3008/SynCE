@@ -11,14 +11,13 @@
 #include <errno.h>
 #include <glib.h>
 #include <glib-object.h>
+#if !USE_GDBUS
 #include <dbus/dbus-glib.h>
+#endif
 
 #include "synce-device-manager.h"
 
 #include "log.h"
-#include "synce-device.h"
-#include "synce-device-rndis.h"
-#include "synce-device-legacy.h"
 #include "utils.h"
 
 #define BUS_NAME "org.synce.dccm"
@@ -37,6 +36,57 @@ static GOptionEntry options[] =
     { NULL }
   };
 
+#if USE_GDBUS
+
+SynceDeviceManager *device_manager = NULL;
+
+static void
+bus_acquired_handler(GDBusConnection *connection, const gchar *name, gpointer user_data)
+{
+  GMainLoop *mainloop = (GMainLoop*)user_data;
+  GError *error = NULL;
+
+  /* have a bus, set up device_manager */
+
+  g_debug("%s: bus acquired, creating device manager", G_STRFUNC);
+
+  device_manager = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER, NULL, &error, NULL);
+  if (!device_manager) {
+    g_critical("Failed to create device manager: %s", error->message);
+    g_error_free(error);
+    g_main_loop_quit(mainloop);
+    return;
+  }
+}
+
+static void
+name_acquired_handler(GDBusConnection *connection, const gchar *name, gpointer user_data)
+{
+  GMainLoop *mainloop = (GMainLoop*)user_data;
+  g_debug("%s: bus name acquired", G_STRFUNC);
+}
+
+static void
+name_lost_handler(GDBusConnection *connection, const gchar *name, gpointer user_data)
+{
+  GMainLoop *mainloop = (GMainLoop*)user_data;
+
+  /* probably quit, whatever the reason */
+
+  if (!connection)
+    if (!device_manager)
+      g_critical("%s: unable to connect to dbus, exiting ...", G_STRFUNC);
+    else
+      g_critical("%s: lost connection to dbus, exiting ...", G_STRFUNC);
+  else
+    g_critical("%s: lost our name on dbus, exiting ...", G_STRFUNC);
+
+  if (device_manager) g_object_unref(device_manager);
+  g_main_loop_quit(mainloop);
+  return;
+}
+
+#endif
 
 gint
 main(gint argc,
@@ -44,13 +94,13 @@ main(gint argc,
 {
   GMainLoop *mainloop;
   GError *error = NULL;
+#if !USE_GDBUS
   DBusGConnection *main_bus;
-
   DBusGProxy *main_bus_proxy = NULL;
-  guint req_name_result;
   gchar *bus_name = NULL;
-
   SynceDeviceManager *device_manager = NULL;
+#endif
+  guint req_name_result;
 
   g_type_init ();
 
@@ -87,6 +137,18 @@ main(gint argc,
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
+#if USE_GDBUS
+
+  req_name_result = g_bus_own_name(G_BUS_TYPE_SYSTEM,
+				   BUS_NAME,
+				   G_BUS_NAME_OWNER_FLAGS_NONE,
+				   bus_acquired_handler,
+				   name_acquired_handler,
+				   name_lost_handler,
+				   mainloop,
+				   NULL);
+
+#else
   if (!(main_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
     g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
     g_error_free(error);
@@ -121,9 +183,13 @@ main(gint argc,
     g_error_free(error);
     return EXIT_FAILURE;
   }
+#endif
 
   g_main_loop_run (mainloop);
 
+#if USE_GDBUS
+  g_bus_unown_name(req_name_result);
+#else
   if (!dbus_g_proxy_call(main_bus_proxy, "ReleaseName", &error,
 			 G_TYPE_STRING, bus_name,
 			 G_TYPE_INVALID,
@@ -138,7 +204,7 @@ main(gint argc,
   g_object_unref(main_bus_proxy);
 
   dbus_g_connection_unref(main_bus);
-
+#endif
   g_debug("%s: exiting normally", G_STRFUNC);
 
   if (!log_to_foreground)

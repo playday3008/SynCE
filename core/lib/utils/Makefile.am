@@ -25,8 +25,13 @@ if IMPLEMENT_BSWAP_XX
 libutils_la_SOURCES += bswap.c
 endif
 
-libutils_la_CFLAGS = @DBUS_CFLAGS@
-libutils_la_LIBADD  = config/libconfig.la -lm @LTLIBICONV@ @LTLIBOBJS@ @DBUS_LIBS@
+libutils_la_CFLAGS = @GLIB_CFLAGS@
+libutils_la_LIBADD  = config/libconfig.la -lm @LTLIBICONV@ @LTLIBOBJS@ @GLIB_LIBS@
+
+if !USE_GDBUS
+libutils_la_CFLAGS += @DBUS_CFLAGS@
+libutils_la_LIBADD += @DBUS_LIBS@
+endif
 
 include_HEADERS = \
 	synce_hash.h \

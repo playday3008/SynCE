@@ -21,7 +21,12 @@
 
 #include <string.h>
 #include <stdio.h>
+#if USE_GDBUS
+#include <glib-object.h>
+#include <gio/gio.h>
+#else
 #include <dbus/dbus-glib.h>
+#endif
 
 #define DBUS_SERVICE "org.freedesktop.DBus"
 #define DBUS_IFACE   "org.freedesktop.DBus"
@@ -1785,10 +1790,19 @@ struct _IRAPIDesktop {
         int refcount;
 
         /* udev */
+#if USE_GDBUS
+        GDBusProxy *dbus_proxy;
+#else
         DBusGConnection *dbus_connection;
         DBusGProxy *dbus_proxy;
+#endif /* USE_GDBUS */
+
 #if ENABLE_UDEV_SUPPORT
+#if USE_GDBUS
+        GDBusProxy *dev_mgr_proxy;
+#else
         DBusGProxy *dev_mgr_proxy;
+#endif /* USE_GDBUS */
 #endif
 
         /* list of IRAPIDevice objects */
@@ -1802,6 +1816,207 @@ struct _IRAPIDesktop {
 
 
 #if ENABLE_UDEV_SUPPORT
+
+#if USE_GDBUS
+
+static void
+on_devmgr_proxy_signal (GDBusProxy *proxy,
+			gchar *sender_name,
+			gchar *signal_name,
+			GVariant *parameters,
+			gpointer user_data)
+{
+        IRAPIDesktop *self = (IRAPIDesktop*)user_data;
+
+	gchar *obj_path = NULL;
+
+        if (strcmp(signal_name, "DeviceConnected") == 0) {
+	  g_variant_get (parameters, "(s)", &obj_path);
+
+	  synce_debug("found device: %s", obj_path);
+
+	  IRAPIDevice *newdev = calloc(1, sizeof(IRAPIDevice));
+	  if (!newdev) {
+	    synce_error("failed to allocate IRAPIDevice");
+	    g_free(obj_path);
+	    return;
+	  }
+
+          newdev->desktop = self;
+          IRAPIDesktop_AddRef(self);
+	  newdev->obj_path = obj_path;
+	  newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
+	  newdev->status = RAPI_DEVICE_CONNECTED;
+	  newdev->refcount = 1;
+
+	  self->devices = g_list_append(self->devices, newdev);
+
+          GHashTableIter iter;
+          gpointer key, value;
+          HRESULT ret;
+
+          g_hash_table_iter_init (&iter, self->sinks);
+          while (g_hash_table_iter_next (&iter, &key, &value))
+	  {
+
+	    if ( ((IRAPISink*)value)->IRAPISink_OnDeviceConnected )
+            {
+              IRAPIDevice_AddRef(newdev);
+              ret = ((IRAPISink*)value)->IRAPISink_OnDeviceConnected((IRAPISink*)value, newdev);
+              /* what am I supposed to do about this return value ? */
+              if (ret != S_OK)
+                synce_debug("error reported from IRAPISink_OnDeviceConnected: %d: %s", ret, synce_strerror(ret));
+            }
+	  }
+
+	  return;
+	}
+
+        if (strcmp(signal_name, "DeviceDisconnected") == 0) {
+	  g_variant_get (parameters, "(s)", &obj_path);
+
+          IRAPIDevice *device = NULL;
+	  GList *device_el = self->devices;
+	  while (device_el) {
+	    if (strcmp(((IRAPIDevice*)device_el->data)->obj_path, obj_path) == 0)
+	      break;
+
+	    device_el = g_list_next(device_el);
+	  }
+
+	  if (!device_el) {
+            synce_warning("Received disconnect from dccm for unfound device: %s", obj_path);
+	    g_free(obj_path);
+	    return;
+	  }
+
+	  synce_debug("Received device disconnected from dccm: %s", obj_path);
+
+          device = ((IRAPIDevice*)device_el->data);
+	  device->status = RAPI_DEVICE_DISCONNECTED;
+	  self->devices = g_list_delete_link(self->devices, device_el);
+
+          GHashTableIter iter;
+          gpointer key, value;
+          HRESULT ret;
+
+          g_hash_table_iter_init (&iter, self->sinks);
+          while (g_hash_table_iter_next (&iter, &key, &value))
+	  {
+
+	    if ( ((IRAPISink*)value)->IRAPISink_OnDeviceDisconnected )
+            {
+              IRAPIDevice_AddRef(device);
+              ret = ((IRAPISink*)value)->IRAPISink_OnDeviceDisconnected((IRAPISink*)value, device);
+              /* what am I supposed to do about this return value ? */
+              if (ret != S_OK)
+                synce_debug("error reported from IRAPISink_OnDeviceDisonnected: %d: %s", ret, synce_strerror(ret));
+            }
+	  }
+
+	  IRAPIDevice_Release(device);
+
+	  return;
+	}
+
+	return;
+}
+
+static void
+udev_disconnect(IRAPIDesktop *self)
+{
+
+	g_signal_handlers_disconnect_by_func(self->dev_mgr_proxy, on_devmgr_proxy_signal, self);
+
+	g_object_unref(self->dev_mgr_proxy);
+	self->dev_mgr_proxy = NULL;
+
+        GList *device = self->devices;
+        while (device) {
+                if (strncmp(((IRAPIDevice*)device->data)->obj_path, "/org/synce/dccm/", 16) == 0) {
+                        synce_debug("removing device %s", ((IRAPIDevice*)device->data)->obj_path);
+                        ((IRAPIDevice*)device->data)->status = RAPI_DEVICE_DISCONNECTED;
+                        IRAPIDevice_Release((IRAPIDevice*)device->data);
+                        self->devices = g_list_delete_link(self->devices, device);
+                        device = self->devices;
+                        continue;
+                }
+                device = g_list_next(device);
+        }
+}
+
+static void
+udev_connect(IRAPIDesktop *self)
+{
+        GError *error;
+	GVariant *ret = NULL;
+        gchar **dev_list = NULL;
+        guint i;
+        gchar *obj_path = NULL;
+
+	self->dev_mgr_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+							     G_DBUS_PROXY_FLAGS_NONE,
+							     NULL, /* GDBusInterfaceInfo */
+							     DCCM_SERVICE,
+							     DCCM_MGR_PATH,
+							     DCCM_MGR_IFACE,
+							     NULL, /* GCancellable */
+							     &error);
+	if (self->dev_mgr_proxy == NULL) {
+	  synce_error("%s: Failed to create proxy to device manager: %s", G_STRFUNC, error->message);
+	  return;
+	}
+
+	g_signal_connect (self->dev_mgr_proxy,
+			  "g-signal",
+			  G_CALLBACK (on_devmgr_proxy_signal),
+			  self);
+
+        /* currently connected devices */
+
+	ret = g_dbus_proxy_call_sync (self->dev_mgr_proxy,
+				      "GetConnectedDevices",
+				      g_variant_new ("()"),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      NULL,
+				      &error);
+	if (!ret) {
+	  synce_error("Error getting device list from dccm: %s", error->message);
+	  g_error_free(error);
+	  return;
+	}
+
+	g_variant_get (ret, "(^ao)", &dev_list);
+	g_variant_unref (ret);
+
+        for (i = 0; i < g_strv_length(dev_list); i++) {
+                obj_path = dev_list[i];
+                synce_debug("found device: %s", obj_path);
+
+                IRAPIDevice *newdev = calloc(1, sizeof(IRAPIDevice));
+                if (!newdev) {
+                        synce_error("failed to allocate IRAPIDevice");
+                        break;
+                }
+
+                newdev->desktop = self;
+                IRAPIDesktop_AddRef(self);
+                newdev->obj_path = obj_path;
+                newdev->info = synce_info_new_by_field(INFO_OBJECT_PATH, newdev->obj_path);
+                newdev->status = RAPI_DEVICE_CONNECTED;
+                newdev->refcount = 1;
+
+                self->devices = g_list_append(self->devices, newdev);
+
+        }
+	g_strfreev(dev_list);
+
+        return;
+}
+
+#else /* USE_GDBUS */
+
 static void
 udev_device_connected_cb(DBusGProxy *proxy,
 			 gchar *obj_path,
@@ -1898,7 +2113,6 @@ udev_device_disconnected_cb(DBusGProxy *proxy,
         return;
 }
 
-
 static void
 udev_disconnect(IRAPIDesktop *self)
 {
@@ -1991,7 +2205,54 @@ udev_connect(IRAPIDesktop *self)
 
         return;
 }
+#endif /* USE_GDBUS */
+#endif /* ENABLE_UDEV_SUPPORT */
+
+#if USE_GDBUS
+
+static void
+on_dbus_proxy_signal (GDBusProxy *proxy,
+		      gchar *sender_name,
+		      gchar *signal_name,
+		      GVariant *parameters,
+		      gpointer user_data)
+{
+        IRAPIDesktop *self = (IRAPIDesktop*)user_data;
+
+	gchar *name;
+	gchar *old_owner;
+	gchar *new_owner;
+
+        if (strcmp(signal_name, "NameOwnerChanged") != 0)
+	  return;
+
+#if ENABLE_UDEV_SUPPORT
+	g_variant_get (parameters, "(sss)", &name, &old_owner, &new_owner);
+
+        if (strcmp(name, DCCM_SERVICE) == 0) {
+
+	        /* If this parameter is empty, dccm just came online */
+
+                if (strcmp(old_owner, "") == 0) {
+                        synce_debug("%s: dccm came online", G_STRFUNC);
+			udev_connect(self);
+
+			return;
+		}
+
+                /* If this parameter is empty, dccm just went offline */
+
+                if (strcmp(new_owner, "") == 0) {
+		        g_debug("%s: dccm went offline", G_STRFUNC);
+			udev_disconnect(self);
+
+			return;
+		}
+	}
 #endif
+}
+
+#else /* USE_GDBUS */
 
 static void
 dbus_name_owner_changed_cb(DBusGProxy *proxy,
@@ -2026,6 +2287,7 @@ dbus_name_owner_changed_cb(DBusGProxy *proxy,
 #endif
 }
 
+#endif /* USE_GDBUS */
 
 static HRESULT
 IRAPIDesktop_Init()
@@ -2046,8 +2308,9 @@ IRAPIDesktop_Init()
            set up callbacks from dccm and odccm 
            create initial devices
         */
-
+#if !USE_GDBUS
         self->dbus_connection = NULL;
+#endif
         self->dbus_proxy = NULL;
 #if ENABLE_UDEV_SUPPORT
         self->dev_mgr_proxy = NULL;
@@ -2059,6 +2322,27 @@ IRAPIDesktop_Init()
         GError *error = NULL;
         gboolean has_owner = FALSE;
 
+#if USE_GDBUS
+	self->dbus_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
+							  G_DBUS_PROXY_FLAGS_NONE,
+							  NULL, /* GDBusInterfaceInfo */
+							  DBUS_SERVICE,
+							  DBUS_PATH,
+							  DBUS_IFACE,
+							  NULL, /* GCancellable */
+							  &error);
+	if (self->dbus_proxy == NULL) {
+	  g_warning("%s: Failed to get dbus proxy object: %s", G_STRFUNC, error->message);
+	  g_error_free(error);
+	  /* we don't yet have error handling here ? */
+	}
+
+	g_signal_connect (self->dbus_proxy,
+			  "g-signal",
+			  G_CALLBACK (on_dbus_proxy_signal),
+			  self);
+
+#else /* USE_GDBUS */
         self->dbus_connection = dbus_g_bus_get(DBUS_BUS_SYSTEM,
                                                &error);
         if (self->dbus_connection == NULL) {
@@ -2077,8 +2361,26 @@ IRAPIDesktop_Init()
 
         dbus_g_proxy_connect_signal(self->dbus_proxy, "NameOwnerChanged",
                                     G_CALLBACK(dbus_name_owner_changed_cb), self, NULL);
+#endif /* USE_GDBUS */
 
 #if ENABLE_UDEV_SUPPORT
+#if USE_GDBUS
+	GVariant *ret = NULL;
+	ret = g_dbus_proxy_call_sync (self->dbus_proxy,
+				      "NameHasOwner",
+				      g_variant_new ("(s)", DCCM_SERVICE),
+				      G_DBUS_CALL_FLAGS_NONE,
+				      -1,
+				      NULL,
+				      &error);
+	if (!ret) {
+	  synce_error("%s: Error checking owner of %s: %s", G_STRFUNC, DCCM_SERVICE, error->message);
+	  g_error_free(error);
+	  return E_FAIL;
+	}
+	g_variant_get (ret, "(b)", &has_owner);
+	g_variant_unref (ret);
+#else /* USE_GDBUS */
         if (!(dbus_g_proxy_call(self->dbus_proxy, "NameHasOwner",
                                 &error,
                                 G_TYPE_STRING, DCCM_SERVICE,
@@ -2089,6 +2391,7 @@ IRAPIDesktop_Init()
                 g_error_free(error);
                 return E_FAIL;
         }
+#endif /* USE_GDBUS */
 
         if (has_owner)
                 udev_connect(self);
@@ -2118,14 +2421,20 @@ IRAPIDesktop_Uninit()
 	  udev_disconnect(self);
 #endif
 
+#if USE_GDBUS
+        g_signal_handlers_disconnect_by_func(self->dbus_proxy, on_dbus_proxy_signal, self);
+#else
         dbus_g_proxy_disconnect_signal (self->dbus_proxy, "NameOwnerChanged",
                                   G_CALLBACK(dbus_name_owner_changed_cb), NULL);
+#endif
 
         g_object_unref(self->dbus_proxy);
         self->dbus_proxy = NULL;
 
+#if !USE_GDBUS
         dbus_g_connection_unref(self->dbus_connection);
         self->dbus_connection = NULL;
+#endif
 
         free(irapi_desktop);
         irapi_desktop = NULL;

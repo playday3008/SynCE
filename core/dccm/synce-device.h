@@ -3,8 +3,11 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
+#if USE_GDBUS
+#include "synce-device-dbus.h"
+#else
 #include <dbus/dbus-glib.h>
-
+#endif
 
 G_BEGIN_DECLS
 
@@ -33,8 +36,13 @@ struct _SynceDeviceClass {
   guint signals[SYNCE_DEVICE_LAST_SIGNAL];
 
   void (*synce_device_conn_event_cb) (GObject *istream, GAsyncResult *res, gpointer user_data);
+#if USE_GDBUS
+  gboolean (*synce_device_request_connection) (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata);
+  gboolean (*synce_device_provide_password) (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata);
+#else
   void (*synce_device_request_connection) (SynceDevice *self, DBusGMethodInvocation *ctx);
   void (*synce_device_provide_password) (SynceDevice *self, const gchar *password, DBusGMethodInvocation *ctx);
+#endif
 };
 
 GType synce_device_get_type (void);
@@ -46,6 +54,7 @@ GType synce_device_get_type (void);
 #define SYNCE_IS_DEVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), SYNCE_TYPE_DEVICE))
 #define SYNCE_DEVICE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), SYNCE_TYPE_DEVICE, SynceDeviceClass))
 
+#if !USE_GDBUS
 gboolean synce_device_get_name (SynceDevice *self, gchar **name, GError **error);
 gboolean synce_device_get_platform_name (SynceDevice *self, gchar **platform_name, GError **error);
 gboolean synce_device_get_model_name (SynceDevice *self, gchar **model_name, GError **error);
@@ -57,6 +66,7 @@ gboolean synce_device_get_iface_address (SynceDevice *self, gchar **iface_addres
 gboolean synce_device_get_guid (SynceDevice *self, gchar **guid, GError **error);
 gboolean synce_device_get_current_partner_id (SynceDevice *self, guint *cur_partner_id, GError **error);
 gboolean synce_device_get_password_flags (SynceDevice *self, gchar **pw_flag, GError **error);
+#endif
 
 G_END_DECLS
 

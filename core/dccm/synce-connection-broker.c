@@ -2,8 +2,6 @@
 #include "config.h"
 #endif
 
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
@@ -14,6 +12,13 @@
 #include <gio/gunixsocketaddress.h>
 
 #include "synce-connection-broker.h"
+
+#if USE_GDBUS
+#include "synce-device-dbus.h"
+#else
+#include <dbus/dbus-glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
+#endif
 
 #include "utils.h"
 
@@ -46,7 +51,11 @@ struct _SynceConnectionBrokerPrivate
   gboolean dispose_has_run;
 
   guint id;
+#if USE_GDBUS
+  GDBusMethodInvocation *ctx;
+#else
   DBusGMethodInvocation *ctx;
+#endif
   GSocketConnection *conn;
   gchar *filename;
   GSocketService *server;
@@ -269,42 +278,27 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
     g_critical("%s: failed to add address to socket service: %s", G_STRFUNC, error->message);
     goto error_exit;
   }
-  /*
-  socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, &error);
-  if (!socket) {
-    g_critical("%s: failed to create socket: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-  if (!(g_initable_init(G_INITABLE(socket), NULL, &error))) {
-    g_critical("%s: failed to initialise socket: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-  if (!(g_socket_bind(socket, sock_address, TRUE, &error))) {
-    g_critical("%s: failed to bind to address %s: %s", G_STRFUNC, priv->filename, error->message);
-    goto error_exit;
-  }
-  if (!(g_socket_listen(socket, &error))) {
-    g_critical("%s: failed to listen to address %s: %s", G_STRFUNC, priv->filename, error->message);
-    goto error_exit;
-  }
-  if (!(g_socket_listener_add_socket(G_SOCKET_LISTENER(priv->server), socket, NULL, &error))) {
-    g_critical("%s: failed to add socket to socket service: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-  g_object_unref(socket);
-  */
   g_object_unref(sock_address);
 
   g_signal_connect(priv->server, "incoming", G_CALLBACK(server_socket_readable_cb), self);
 
-  synce_get_dbus_sender_uid (dbus_g_method_get_sender (priv->ctx), &uid);
+#if USE_GDBUS
+  synce_get_dbus_sender_uid(g_dbus_method_invocation_get_sender (priv->ctx), &uid);
+#else
+  synce_get_dbus_sender_uid(dbus_g_method_get_sender (priv->ctx), &uid);
+#endif
 
   chmod (priv->filename, S_IRUSR | S_IWUSR);
   chown (priv->filename, uid, -1);
 
   g_socket_service_start(priv->server);
 
+#if USE_GDBUS
+  /* we don't need the object for the first argument, it doesn't go anywhere */
+  synce_device_device_complete_request_connection(NULL, priv->ctx, priv->filename);
+#else
   dbus_g_method_return (priv->ctx, priv->filename);
+#endif
   priv->ctx = NULL;
 
   return;
@@ -315,7 +309,13 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
 
   error = g_error_new (G_FILE_ERROR, G_FILE_ERROR_FAILED,
 		       "Failed to create socket to pass connection");
+#if USE_GDBUS
+  g_dbus_method_invocation_return_gerror(priv->ctx, error);
+  g_error_free(error);
+#else
   dbus_g_method_return_error (priv->ctx, error);
+#endif
+  priv->ctx = NULL;
   g_free(priv->filename);
   priv->filename = NULL;
 

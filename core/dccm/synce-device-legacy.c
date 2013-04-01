@@ -2,12 +2,15 @@
 #include "config.h"
 #endif
 
-#include <dbus/dbus-glib.h>
 #include <synce.h>
 #include <arpa/inet.h>
 #include <string.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+
+#if !USE_GDBUS
+#include <dbus/dbus-glib.h>
+#endif
 
 #include "synce-device.h"
 #include "synce-device-internal.h"
@@ -314,7 +317,11 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	  synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
 	}
 
+#if USE_GDBUS
+      g_dbus_method_invocation_return_value (priv->pw_ctx, g_variant_new ("(b)", result != 0));
+#else
       dbus_g_method_return (priv->pw_ctx, result != 0);
+#endif
 
       priv->pw_ctx = NULL;
     }
@@ -382,7 +389,11 @@ synce_device_legacy_client_event_password_cb(GObject *source_object,
   GSocketConnection *conn = NULL;
   SynceConnectionBroker *broker = NULL;
   guint8 result = 0;
+#if USE_GDBUS
+  GDBusMethodInvocation *ctx;
+#else
   DBusGMethodInvocation *ctx;
+#endif
 
   GError *error = NULL;
   gssize num_read = g_input_stream_read_finish(istream, res, &error);
@@ -428,13 +439,29 @@ synce_device_legacy_client_event_password_cb(GObject *source_object,
   }
  OUT:
   if (error != NULL)
+#if USE_GDBUS
+    {
+      g_dbus_method_invocation_return_gerror(ctx, error);
+      g_error_free(error);
+    }
+  return;
+}
+#else
     dbus_g_method_return_error (ctx, error);
   return;
 }
+#endif
 
+#if USE_GDBUS
+gboolean
+synce_device_legacy_request_connection_impl (SynceDeviceDevice *interface, GDBusMethodInvocation *ctx, gpointer userdata)
+{
+  SynceDeviceLegacy *self = SYNCE_DEVICE_LEGACY (userdata);
+#else
 void
 synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvocation *ctx)
 {
+#endif
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
   GError *error = NULL;
   SynceConnectionBroker *broker;
@@ -516,15 +543,37 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
  OUT:
   if (buf)
     wstr_free_string(buf);
-  if (error != NULL)
+  if (error != NULL) {
+    if (broker)
+      g_hash_table_remove (priv->requests, req_id_local);
+
+#if USE_GDBUS
+    g_dbus_method_invocation_return_gerror(ctx, error);
+    g_error_free(error);
+  }
+  return TRUE;
+#else /* USE_GDBUS */
     dbus_g_method_return_error (ctx, error);
+  }
+  return;
+#endif
 }
 
-static void
-synce_device_legacy_provide_password_impl (SynceDevice *self,
-				    const gchar *password,
-				    DBusGMethodInvocation *ctx)
+#if USE_GDBUS
+static gboolean
+synce_device_legacy_provide_password_impl(SynceDeviceDevice *interface,
+					  GDBusMethodInvocation *ctx,
+					  const gchar *password,
+					  gpointer userdata)
 {
+  SynceDevice *self = SYNCE_DEVICE (userdata);
+#else /* USE_GDBUS */
+static void
+synce_device_legacy_provide_password_impl(SynceDevice *self,
+					  const gchar *password,
+					  DBusGMethodInvocation *ctx)
+{
+#endif
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
   GError *error = NULL;
 
@@ -545,13 +594,25 @@ synce_device_legacy_provide_password_impl (SynceDevice *self,
   SynceDeviceLegacyPrivate *priv_legacy = SYNCE_DEVICE_LEGACY_GET_PRIVATE (SYNCE_DEVICE_LEGACY(self));
   priv_legacy->password = g_strdup(password);
 
+#if USE_GDBUS
+  (SYNCE_DEVICE_CLASS(synce_device_legacy_parent_class)->synce_device_provide_password) (interface, ctx, password, SYNCE_DEVICE(self));
+#else
   (SYNCE_DEVICE_CLASS(synce_device_legacy_parent_class)->synce_device_provide_password) (SYNCE_DEVICE(self), password, ctx);
+#endif
 
  OUT:
   if (error != NULL)
+#if USE_GDBUS
+    {
+      g_dbus_method_invocation_return_gerror(ctx, error);
+      g_error_free(error);
+    }
+  return TRUE;
+#else
     dbus_g_method_return_error (ctx, error);
+  return;
+#endif
 }
-
 
 /* class & instance functions */
 

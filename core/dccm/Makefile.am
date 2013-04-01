@@ -5,11 +5,23 @@ libexec_PROGRAMS = dccm synce-serial-chat
 
 BUILT_SOURCES = synce-device-signals-marshal.h \
 		synce-device-signals-marshal.c \
-		synce-device-glue.h \
 		synce-device-manager-control-signals-marshal.h \
-		synce-device-manager-control-signals-marshal.c \
+		synce-device-manager-control-signals-marshal.c
+
+if USE_GDBUS
+BUILT_SOURCES += \
+		synce-device-dbus.h \
+		synce-device-dbus.c \
+		synce-device-manager-control-dbus.h \
+		synce-device-manager-control-dbus.c \
+		synce-device-manager-dbus.c \
+		synce-device-manager-dbus.h
+else
+BUILT_SOURCES += \
+		synce-device-glue.h \
 		synce-device-manager-control-glue.h \
 		synce-device-manager-glue.h
+endif
 
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -30,14 +42,17 @@ dccm_CPPFLAGS = \
 	-I$(top_srcdir)/lib/utils \
 	-I$(top_builddir)/lib/utils \
 	$(GLIB_CFLAGS) \
-	$(DBUS_CFLAGS) \
 	$(GUDEV_CFLAGS) -DG_UDEV_API_IS_SUBJECT_TO_CHANGE
 
 dccm_LDADD = \
 	$(top_builddir)/lib/libsynce.la \
 	$(GLIB_LIBS) \
-	$(DBUS_LIBS) \
 	$(GUDEV_LIBS)
+
+if !USE_GDBUS
+dccm_CPPFLAGS += $(DBUS_CFLAGS)
+dccm_LDADD += $(DBUS_LIBS)
+endif
 
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
@@ -58,3 +73,13 @@ bin_SCRIPTS = synce-unlock
 
 %-signals-marshal.c: %-signals-marshal.list
 	glib-genmarshal --body --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.c
+
+
+synce-device-manager-dbus.%: synce-device-manager.xml
+	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code synce-device-manager-dbus --c-namespace SynceDeviceManager --c-generate-object-manager synce-device-manager.xml
+
+synce-device-manager-control-dbus.%: synce-device-manager-control.xml
+	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code synce-device-manager-control-dbus --c-namespace SynceDeviceManagerControl --c-generate-object-manager synce-device-manager-control.xml
+
+synce-device-dbus.%: synce-device.xml
+	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code synce-device-dbus --c-namespace SynceDevice --c-generate-object-manager synce-device.xml
