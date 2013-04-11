@@ -66,7 +66,7 @@ enum
 #if USE_GDBUS
 
 gboolean
-synce_device_request_connection (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata)
+synce_device_request_connection (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   return (SYNCE_DEVICE_GET_CLASS(self)->synce_device_request_connection (interface, invocation, userdata));
@@ -74,7 +74,7 @@ synce_device_request_connection (SynceDeviceDevice *interface, GDBusMethodInvoca
 
 
 gboolean
-synce_device_provide_password (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata)
+synce_device_provide_password (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   return (SYNCE_DEVICE_GET_CLASS(self)->synce_device_provide_password (interface, invocation, password, userdata));
@@ -106,7 +106,7 @@ synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_da
 
 #if USE_GDBUS
 static gboolean
-synce_device_provide_password_impl (SynceDeviceDevice *interface,
+synce_device_provide_password_impl (SynceDbusDevice *interface,
 				    GDBusMethodInvocation *ctx,
 				    const gchar *password,
 				    gpointer userdata)
@@ -248,136 +248,136 @@ gudev_uevent_callback(GUdevClient *client,
 #if USE_GDBUS
 
 static gboolean
-synce_device_get_name(SynceDeviceDevice *interface,
+synce_device_get_name(SynceDbusDevice *interface,
 		      GDBusMethodInvocation *invocation,
 		      gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_name(interface, invocation, priv->name);
+  synce_dbus_device_complete_get_name(interface, invocation, priv->name);
 
   return TRUE;
 }
 
 static gboolean
-synce_device_get_platform_name(SynceDeviceDevice *interface,
+synce_device_get_platform_name(SynceDbusDevice *interface,
 			       GDBusMethodInvocation *invocation,
 			       gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_platform_name(interface, invocation, priv->platform_name);
+  synce_dbus_device_complete_get_platform_name(interface, invocation, priv->platform_name);
 
   return TRUE;
 }
 
 static gboolean
-synce_device_get_model_name(SynceDeviceDevice *interface,
+synce_device_get_model_name(SynceDbusDevice *interface,
 			    GDBusMethodInvocation *invocation,
 			    gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_model_name(interface, invocation, priv->model_name);
+  synce_dbus_device_complete_get_model_name(interface, invocation, priv->model_name);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_os_version(SynceDeviceDevice *interface,
+synce_device_get_os_version(SynceDbusDevice *interface,
 			    GDBusMethodInvocation *invocation,
 			    gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_os_version(interface, invocation, priv->os_major, priv->os_minor);
+  synce_dbus_device_complete_get_os_version(interface, invocation, priv->os_major, priv->os_minor);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_version(SynceDeviceDevice *interface,
+synce_device_get_version(SynceDbusDevice *interface,
 			 GDBusMethodInvocation *invocation,
 			 gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_version(interface, invocation, priv->version);
+  synce_dbus_device_complete_get_version(interface, invocation, priv->version);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_cpu_type(SynceDeviceDevice *interface,
+synce_device_get_cpu_type(SynceDbusDevice *interface,
 			  GDBusMethodInvocation *invocation,
 			  gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_cpu_type(interface, invocation, priv->cpu_type);
+  synce_dbus_device_complete_get_cpu_type(interface, invocation, priv->cpu_type);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_ip_address(SynceDeviceDevice *interface,
+synce_device_get_ip_address(SynceDbusDevice *interface,
 			    GDBusMethodInvocation *invocation,
 			    gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_ip_address(interface, invocation, priv->ip_address);
+  synce_dbus_device_complete_get_ip_address(interface, invocation, priv->ip_address);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_iface_address(SynceDeviceDevice *interface,
+synce_device_get_iface_address(SynceDbusDevice *interface,
 			       GDBusMethodInvocation *invocation,
 			       gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_iface_address(interface, invocation, priv->iface_address);
+  synce_dbus_device_complete_get_iface_address(interface, invocation, priv->iface_address);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_guid(SynceDeviceDevice *interface,
+synce_device_get_guid(SynceDbusDevice *interface,
 		      GDBusMethodInvocation *invocation,
 		      gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_guid(interface, invocation, priv->guid);
+  synce_dbus_device_complete_get_guid(interface, invocation, priv->guid);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_current_partner_id(SynceDeviceDevice *interface,
+synce_device_get_current_partner_id(SynceDbusDevice *interface,
 				    GDBusMethodInvocation *invocation,
 				    gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_current_partner_id(interface, invocation, priv->cur_partner_id);
+  synce_dbus_device_complete_get_current_partner_id(interface, invocation, priv->cur_partner_id);
   return TRUE;
 }
 
 static gboolean
-synce_device_get_password_flags(SynceDeviceDevice *interface,
+synce_device_get_password_flags(SynceDbusDevice *interface,
 				GDBusMethodInvocation *invocation,
 				gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
-  synce_device_device_complete_get_password_flags(interface, invocation, get_password_flag_text(priv->pw_flags));
+  synce_dbus_device_complete_get_password_flags(interface, invocation, get_password_flag_text(priv->pw_flags));
   return TRUE;
 }
 
@@ -538,7 +538,7 @@ synce_device_dbus_init(SynceDevice *self)
 
 #if USE_GDBUS
 
-  priv->interface = synce_device_device_skeleton_new();
+  priv->interface = synce_dbus_device_skeleton_new();
   g_signal_connect(priv->interface,
 		   "handle-get-name",
 		   G_CALLBACK (synce_device_get_name),
@@ -660,7 +660,7 @@ synce_device_change_password_flags (SynceDevice *self,
   prop_str = get_password_flag_text(new_flag);
   g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_PASSWORD_FLAGS_CHANGED], 0, prop_str);
 #if USE_GDBUS
-  synce_device_device_emit_password_flags_changed(priv->interface, prop_str);
+  synce_dbus_device_emit_password_flags_changed(priv->interface, prop_str);
 #endif
 
   return;

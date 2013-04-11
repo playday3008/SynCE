@@ -37,8 +37,8 @@ struct _SynceDeviceClass {
 
   void (*synce_device_conn_event_cb) (GObject *istream, GAsyncResult *res, gpointer user_data);
 #if USE_GDBUS
-  gboolean (*synce_device_request_connection) (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata);
-  gboolean (*synce_device_provide_password) (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata);
+  gboolean (*synce_device_request_connection) (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata);
+  gboolean (*synce_device_provide_password) (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata);
 #else
   void (*synce_device_request_connection) (SynceDevice *self, DBusGMethodInvocation *ctx);
   void (*synce_device_provide_password) (SynceDevice *self, const gchar *password, DBusGMethodInvocation *ctx);

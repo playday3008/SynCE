@@ -295,7 +295,7 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
 
 #if USE_GDBUS
   /* we don't need the object for the first argument, it doesn't go anywhere */
-  synce_device_device_complete_request_connection(NULL, priv->ctx, priv->filename);
+  synce_dbus_device_complete_request_connection(NULL, priv->ctx, priv->filename);
 #else
   dbus_g_method_return (priv->ctx, priv->filename);
 #endif

@@ -69,7 +69,7 @@ struct _SynceDevicePrivate
 #endif
 
 #if USE_GDBUS
-  SynceDeviceDevice *interface;
+  SynceDbusDevice *interface;
   GDBusMethodInvocation *pw_ctx;
 #else
   DBusGMethodInvocation *pw_ctx;
@@ -85,8 +85,8 @@ struct _SynceDevicePrivate
 /* header information */
 
 #if USE_GDBUS
-gboolean synce_device_provide_password (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata);
-gboolean synce_device_request_connection (SynceDeviceDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata);
+gboolean synce_device_provide_password (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata);
+gboolean synce_device_request_connection (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata);
 #else
 void synce_device_provide_password (SynceDevice *self, const gchar *password, DBusGMethodInvocation *ctx);
 void synce_device_request_connection (SynceDevice *self, DBusGMethodInvocation *ctx);

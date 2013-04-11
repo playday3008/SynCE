@@ -75,11 +75,6 @@ bin_SCRIPTS = synce-unlock
 	glib-genmarshal --body --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.c
 
 
-synce-device-manager-dbus.%: synce-device-manager.xml
-	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code synce-device-manager-dbus --c-namespace SynceDeviceManager --c-generate-object-manager synce-device-manager.xml
+%-dbus.c %-dbus.h: %.xml
+	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code $*-dbus --c-namespace SynceDbus $<
 
-synce-device-manager-control-dbus.%: synce-device-manager-control.xml
-	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code synce-device-manager-control-dbus --c-namespace SynceDeviceManagerControl --c-generate-object-manager synce-device-manager-control.xml
-
-synce-device-dbus.%: synce-device.xml
-	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code synce-device-dbus --c-namespace SynceDevice --c-generate-object-manager synce-device.xml

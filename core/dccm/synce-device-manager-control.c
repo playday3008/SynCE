@@ -33,7 +33,7 @@ struct _SynceDeviceManagerControlPrivate
   gboolean inited;
   gboolean dispose_has_run;
 #if USE_GDBUS
-  SynceDeviceManagerControlDeviceManagerControl *interface;
+  SynceDbusDeviceManagerControl *interface;
 #endif
 };
 
@@ -43,7 +43,7 @@ struct _SynceDeviceManagerControlPrivate
 #if USE_GDBUS
 
 static gboolean
-synce_device_manager_control_device_connected(SynceDeviceManagerControlDeviceManagerControl *interface,
+synce_device_manager_control_device_connected(SynceDbusDeviceManagerControl *interface,
 					      GDBusMethodInvocation *invocation,
 					      const gchar *device_path, const gchar *device_ip,
 					      const gchar *local_ip, gboolean rndis,
@@ -58,13 +58,13 @@ synce_device_manager_control_device_connected(SynceDeviceManagerControlDeviceMan
 		0,
 		device_path, device_ip, local_ip, rndis);
 
-  synce_device_manager_control_device_manager_control_complete_device_connected(interface, invocation);
+  synce_dbus_device_manager_control_complete_device_connected(interface, invocation);
 
   return TRUE;
 }
 
 static gboolean
-synce_device_manager_control_device_disconnected(SynceDeviceManagerControlDeviceManagerControl *interface,
+synce_device_manager_control_device_disconnected(SynceDbusDeviceManagerControl *interface,
                                                  GDBusMethodInvocation *invocation,
                                                  const gchar *device_path,
                                                  gpointer userdata)
@@ -78,7 +78,7 @@ synce_device_manager_control_device_disconnected(SynceDeviceManagerControlDevice
 		0,
 		device_path);
 
-  synce_device_manager_control_device_manager_control_complete_device_disconnected(interface, invocation);
+  synce_dbus_device_manager_control_complete_device_disconnected(interface, invocation);
 
   return TRUE;
 }
@@ -146,7 +146,7 @@ synce_device_manager_control_initable_init (GInitable *initable, GCancellable *c
 
 
 #if USE_GDBUS
-  priv->interface = synce_device_manager_control_device_manager_control_skeleton_new();
+  priv->interface = synce_dbus_device_manager_control_skeleton_new();
   g_signal_connect(priv->interface,
 		   "handle-device-connected",
 		   G_CALLBACK (synce_device_manager_control_device_connected),

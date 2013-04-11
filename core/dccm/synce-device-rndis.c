@@ -452,7 +452,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 
 #if USE_GDBUS
 gboolean
-synce_device_rndis_request_connection_impl (SynceDeviceDevice *interface, GDBusMethodInvocation *ctx, gpointer userdata)
+synce_device_rndis_request_connection_impl (SynceDbusDevice *interface, GDBusMethodInvocation *ctx, gpointer userdata)
 {
   SynceDeviceRndis *self = SYNCE_DEVICE_RNDIS (userdata);
 #else
