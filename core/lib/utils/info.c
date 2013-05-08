@@ -242,6 +242,7 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
   guint i;
   gboolean dccm_running = FALSE;
   GVariant *ret = NULL;
+  gchar **devices = NULL;
   const gchar *service = NULL;
   const gchar *mgr_path = NULL;
   const gchar *mgr_iface = NULL;
@@ -325,7 +326,6 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
     g_warning("%s: Failed to get devices: %s", G_STRFUNC, error->message);
     goto ERROR;
   }
-  gchar **devices;
   g_variant_get (ret, "(^ao)", &devices);
   g_variant_unref (ret);
 
