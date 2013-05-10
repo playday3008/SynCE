@@ -95,6 +95,14 @@ EXTRA_DIST += \
 	gvfsjobprogress.c gvfsjobprogress.h
 endif
 
+if GVFS_VERSION_1_16
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/gvfsjoberror.c $(gvfs_src_dir)/daemon/gvfsjoberror.h
+else
+EXTRA_DIST += \
+	gvfsjoberror.c gvfsjoberror.h
+endif
+
 
 if LOCAL_LIBDAEMON_SRC
 

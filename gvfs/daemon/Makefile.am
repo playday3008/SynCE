@@ -115,6 +115,14 @@ EXTRA_DIST += \
 	../gvfs/daemon/gvfsjobprogress.c $(gvfs_src_dir)/daemon/gvfsjobprogress.h
 endif
 
+if GVFS_VERSION_1_16
+libdaemon_la_SOURCES += \
+	$(gvfs_src_dir)/daemon/gvfsjoberror.c $(gvfs_src_dir)/daemon/gvfsjoberror.h
+else
+EXTRA_DIST += \
+	../gvfs/daemon/gvfsjoberror.c $(gvfs_src_dir)/daemon/gvfsjoberror.h
+endif
+
 
 mount_in_files = synce.mount.in
 mount_DATA = synce.mount

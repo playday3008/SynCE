@@ -59,7 +59,11 @@ struct _GVfsBackendSynce
 
   gchar *device_name;
   RapiConnection *rapi_conn;
+#if GLIB_CHECK_VERSION (2, 32, 0)
+  GMutex mutex;
+#else
   GMutex * mutex;
+#endif
 };
 
 G_DEFINE_TYPE (GVfsBackendSynce, g_vfs_backend_synce, G_VFS_TYPE_BACKEND)
@@ -68,6 +72,10 @@ G_DEFINE_TYPE (GVfsBackendSynce, g_vfs_backend_synce, G_VFS_TYPE_BACKEND)
 #define SHOW_APPLICATIONS   0
 
 
+#if GLIB_CHECK_VERSION (2, 32, 0)
+#define MUTEX_LOCK(a)   g_mutex_lock (&a)
+#define MUTEX_UNLOCK(a) g_mutex_unlock (&a)
+#else /* GLIB_CHECK_VERSION (2, 32, 0) */
 #ifdef G_THREADS_ENABLED
 #define MUTEX_NEW()     g_mutex_new ()
 #define MUTEX_FREE(a)   g_mutex_free (a)
@@ -79,6 +87,7 @@ G_DEFINE_TYPE (GVfsBackendSynce, g_vfs_backend_synce, G_VFS_TYPE_BACKEND)
 #define MUTEX_LOCK(a)
 #define MUTEX_UNLOCK(a)
 #endif
+#endif /* GLIB_CHECK_VERSION (2, 32, 0) */
 
 #define NAME_MY_DOCUMENTS  "My Documents"
 
@@ -2724,7 +2733,11 @@ g_vfs_backend_synce_finalize (GObject *object)
 {
   GVfsBackendSynce *synce_backend = G_VFS_BACKEND_SYNCE(object);
 
+#if GLIB_CHECK_VERSION (2, 32, 0)
+  g_mutex_clear(&synce_backend->mutex);
+#else
   MUTEX_FREE(synce_backend->mutex);
+#endif
 
   if (G_OBJECT_CLASS (g_vfs_backend_synce_parent_class)->finalize)
     (*G_OBJECT_CLASS (g_vfs_backend_synce_parent_class)->finalize) (object);
@@ -2738,7 +2751,11 @@ g_vfs_backend_synce_init (GVfsBackendSynce *synce_backend)
   /* we could set this to the device name after do_mount() ?? */
   g_vfs_backend_set_display_name (backend, "Mobile Device");
 
+#if GLIB_CHECK_VERSION (2, 32, 0)
+  g_mutex_init(&synce_backend->mutex);
+#else
   synce_backend->mutex = MUTEX_NEW ();
+#endif
 }
 
 
