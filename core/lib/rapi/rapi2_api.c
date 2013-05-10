@@ -1948,7 +1948,7 @@ udev_disconnect(IRAPIDesktop *self)
 static void
 udev_connect(IRAPIDesktop *self)
 {
-        GError *error;
+        GError *error = NULL;
 	GVariant *ret = NULL;
         gchar **dev_list = NULL;
         guint i;
@@ -2143,7 +2143,7 @@ udev_disconnect(IRAPIDesktop *self)
 static void
 udev_connect(IRAPIDesktop *self)
 {
-        GError *error;
+        GError *error = NULL;
         GPtrArray *dev_list = NULL;
         guint i;
         gchar *obj_path = NULL;

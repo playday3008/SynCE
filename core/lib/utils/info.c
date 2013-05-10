@@ -254,7 +254,7 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
     mgr_path = DCCM_MGR_PATH;
     mgr_iface = DCCM_MGR_IFACE;
     dev_iface = DCCM_DEV_IFACE;
-    dccm_name = "dccm";
+    dccm_name = "udev";
 #endif
   } else {
 #if ENABLE_ODCCM_SUPPORT
@@ -557,7 +557,7 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
     mgr_path = DCCM_MGR_PATH;
     mgr_iface = DCCM_MGR_IFACE;
     dev_iface = DCCM_DEV_IFACE;
-    dccm_name = "dccm";
+    dccm_name = "udev";
 #endif
   } else {
 #if ENABLE_ODCCM_SUPPORT
