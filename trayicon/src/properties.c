@@ -116,7 +116,7 @@ prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 
 
 static void
-prefs_window_destroy_cb(GtkObject *object, gpointer user_data)
+prefs_window_destroy_cb(GtkWidget *widget, gpointer user_data)
 {
         g_object_unref(builder);
 
