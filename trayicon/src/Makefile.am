@@ -11,8 +11,13 @@ INCLUDES  = \
 
 BUILT_SOURCES = \
 	dccm-client-signals-marshal.h \
-	dccm-client-signals-marshal.c \
-	sync-engine-glue.h
+	dccm-client-signals-marshal.c
+
+if USE_GDBUS
+BUILT_SOURCES += sync-engine-dbus.h sync-engine-dbus.c
+else
+BUILT_SOURCES += sync-engine-glue.h
+endif
 
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -53,7 +58,6 @@ synce_trayicon_CPPFLAGS = \
 	$(GNOME_KEYRING_CFLAGS) \
 	$(LIBSYNCE_CFLAGS) \
 	$(LIBRRA_CFLAGS) \
-	$(DBUS_CFLAGS) \
 	$(GTOP_CFLAGS) \
 	$(LIBORANGE_CFLAGS) \
 	$(NOTIFY_CFLAGS) \
@@ -66,13 +70,16 @@ synce_trayicon_LDADD = \
 	$(GNOME_KEYRING_LIBS) \
 	$(LIBSYNCE_LIBS) \
 	$(LIBRRA_LIBS) \
-	$(DBUS_LIBS) \
 	$(GTOP_LIBS) \
 	$(LIBORANGE_LIBS) \
 	$(NOTIFY_LIBS) \
 	$(XML_LIBS) \
 	$(APP_INDICATOR_LIBS)
 
+if !USE_GDBUS
+synce_trayicon_CPPFLAGS += $(DBUS_CFLAGS)
+synce_trayicon_LDADD += $(DBUS_LIBS)
+endif
 
 noinst_HEADERS = synce-trayicon-module.h
 
@@ -85,4 +92,7 @@ noinst_HEADERS = synce-trayicon-module.h
 
 %-glue.h: %.xml
 	dbus-binding-tool --mode=glib-client --ignore-unsupported --output=$@ --prefix=$(subst -,_,$*) $<
+
+%-dbus.c %-dbus.h: %.xml
+	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code $*-dbus --c-namespace SynceDbus $<
 
