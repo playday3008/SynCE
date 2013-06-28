@@ -433,18 +433,12 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   GtkBuilder *builder = gtk_builder_new();
   guint builder_res;
   GError *error = NULL;
-#if GTK_CHECK_VERSION(2,14,0)
   gchar *namelist[] = { "create_partnership_dialog", NULL };
 
   builder_res = gtk_builder_add_objects_from_file(builder,
                                                   SYNCE_DATA "synce_trayicon_properties.glade",
                                                   namelist,
                                                   &error);
-#else
-  builder_res = gtk_builder_add_from_file(builder,
-                                          SYNCE_DATA "synce_trayicon_properties.glade",
-                                          &error);
-#endif
 
   if (builder_res == 0) {
           g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
@@ -2648,18 +2642,12 @@ device_info_setup_dialog (WmDeviceInfo *self)
 
   guint builder_res;
   GError *error = NULL;
-#if GTK_CHECK_VERSION(2,14,0)
   gchar *namelist[] = { "device_info_dialog", NULL };
 
   builder_res = gtk_builder_add_objects_from_file(priv->builder,
                                                   SYNCE_DATA "synce_trayicon_properties.glade",
                                                   namelist,
                                                   &error);
-#else
-  builder_res = gtk_builder_add_from_file(priv->builder,
-                                          SYNCE_DATA "synce_trayicon_properties.glade",
-                                          &error);
-#endif
   if (builder_res == 0) {
           g_critical("%s: failed to load interface file: %s", G_STRFUNC, error->message);
           g_error_free(error);
