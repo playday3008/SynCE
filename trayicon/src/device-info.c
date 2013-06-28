@@ -2267,13 +2267,13 @@ busy_window_new(const gchar *title, const gchar *message, GtkWidget **progressba
   gtk_window_set_title(GTK_WINDOW(window), title);
   gtk_container_set_border_width(GTK_CONTAINER(window), 14);
 
-  hbox = gtk_hbox_new(FALSE, 10);
+  hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
   gtk_container_add(GTK_CONTAINER(window), hbox);
 
   image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
   gtk_container_add(GTK_CONTAINER(hbox), image);
 
-  vbox = gtk_vbox_new(FALSE, 10);
+  vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
   gtk_container_add(GTK_CONTAINER(hbox), vbox);
 
   label = gtk_label_new(message);
