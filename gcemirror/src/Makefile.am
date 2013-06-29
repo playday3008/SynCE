@@ -24,11 +24,13 @@ gcemirror_SOURCES = $(BUILT_SOURCES) \
 EXTRA_DIST = gcemirror-signals-marshal.list
 
 gcemirror_CPPFLAGS = \
-	$(GTK2_CFLAGS) \
+	$(GLIB2_CFLAGS) \
+	$(GTK3_CFLAGS) \
 	$(LIBSYNCE_CFLAGS)
 
 gcemirror_LDADD = \
-	$(GTK2_LIBS) \
+	$(GLIB2_LIBS) \
+	$(GTK3_LIBS) \
 	$(LIBSYNCE_LIBS)
 
 
