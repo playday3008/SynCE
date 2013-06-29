@@ -1105,7 +1105,7 @@ ce_screen_init(CeScreen *self)
         */
         gtk_window_set_resizable(GTK_WINDOW(self), FALSE);
 
-        GtkWidget *vbox = gtk_vbox_new(FALSE, 5);
+        GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 
         /*
          * create menus
@@ -1183,7 +1183,7 @@ ce_screen_init(CeScreen *self)
         /*
          * 2 boxes required to ensure the ImageViewer event box doesn't get allocated extra space
          */
-        GtkWidget *hbox = gtk_hbox_new(FALSE, 0);
+        GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
         priv->imageviewer = g_object_new(IMAGE_VIEWER_TYPE, NULL);
         gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(priv->imageviewer), FALSE, FALSE, 0);
 
