@@ -1,0 +1,19 @@
+<schemalist>
+  <schema id="org.synce.SynceTrayicon" path="/org/synce/trayicon/">
+    <key name="start-vdccm" type="b">
+      <default>false</default>
+      <summary>If we should start and stop the vdccm daemon</summary>
+      <description>If we should start and stop the vdccm daemon. Only applies when using vdccm for communications.</description>
+    </key>
+    <key name="enable-vdccm" type="b">
+      <default>false</default>
+      <summary>Enable use of Vdccm</summary>
+      <description>Enable use of the legacy Vdccm communications daemon.</description>
+    </key>
+    <key name="show-disconnected" type="b">
+      <default>false</default>
+      <summary>Show icon when disconnected</summary>
+      <description>Whether the icon will be shown when the device is not connected (true) or only when it is connected (false). The latter is the default.</description>
+    </key>
+  </schema>
+</schemalist>
