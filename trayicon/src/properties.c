@@ -6,8 +6,6 @@
 #include <gtk/gtk.h>
 #include "properties.h"
 
-GtkBuilder *builder = NULL;
-
 static void
 prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 {
@@ -17,8 +15,6 @@ prefs_close_button_clicked_cb (GtkWidget *widget, gpointer data)
 static void
 prefs_window_destroy_cb(GtkWidget *widget, gpointer user_data)
 {
-        g_object_unref(builder);
-        builder = NULL;
 }
 
 GtkWidget *
@@ -34,6 +30,7 @@ run_prefs_dialog(GSettings *settings)
   gchar *prefs_window_name = "prefs_window";
 #endif
   GError *error = NULL;
+  GtkBuilder *builder = NULL;
 
   builder = gtk_builder_new();
   guint builder_res;
@@ -79,6 +76,9 @@ run_prefs_dialog(GSettings *settings)
 
   g_signal_connect (G_OBJECT (prefs_window), "destroy",
 		    G_CALLBACK (prefs_window_destroy_cb), NULL);
+
+  g_object_unref(builder);
+  builder = NULL;
 
   gtk_widget_show_all (prefs_window);
 

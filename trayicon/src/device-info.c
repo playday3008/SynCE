@@ -691,7 +691,6 @@ partnerships_gvariant_to_gvalue(GVariant *partnerships)
   gchar *hostname = NULL;
   gchar *devicename = NULL;
   guint storetype;
-  GVariant *devsyncitemsvar = NULL;
   guint devsyncitem;
   GArray *devsyncitems = NULL;
 
