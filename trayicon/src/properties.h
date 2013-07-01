@@ -1,6 +1,6 @@
+#include <gio/gio.h>
 #include <gtk/gtk.h>
 
-#include "synce-trayicon.h"
 
 GtkWidget *
-run_prefs_dialog (SynceTrayIcon *trayicon);
+run_prefs_dialog(GSettings *settings);

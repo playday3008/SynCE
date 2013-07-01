@@ -30,8 +30,8 @@ IN THE SOFTWARE.
 #include <signal.h>
 #include <glib.h>
 #include <glib/gi18n.h>
+#include <gio/gio.h>
 #include <gtk/gtk.h>
-#include <gconf/gconf-client.h>
 #if !USE_GDBUS
 #include <dbus/dbus-glib.h>
 #endif
@@ -72,8 +72,8 @@ typedef struct _SynceTrayIconPrivate SynceTrayIconPrivate;
 struct _SynceTrayIconPrivate {
 
   GtkStatusIcon *status_icon;
-  GConfClient *conf_client;
-  guint conf_watch_id;
+  GSettings *settings;
+  gulong settings_watch_id;
 #if ENABLE_UDEV_SUPPORT
   DccmClient *udev_client;
 #endif
@@ -511,27 +511,13 @@ static void
 uninit_vdccm_client_comms(SynceTrayIcon *self)
 {
         SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-        GError *error = NULL;
 
-        gboolean enable_vdccm = gconf_client_get_bool(priv->conf_client,
-                                                      "/apps/synce/trayicon/enable_vdccm",
-                                                      &error);
-        if (error) {
-                g_critical("%s: Error getting '/apps/synce/trayicon/enable_vdccm' from gconf: %s", G_STRFUNC, error->message);
-                g_error_free(error);
-                error = NULL;
-        }
+        gboolean enable_vdccm = g_settings_get_boolean(priv->settings, "enable-vdccm");
   
         if (!enable_vdccm)
                 return;
 
-        gboolean stop_vdccm = gconf_client_get_bool (priv->conf_client,
-                                                     "/apps/synce/trayicon/start_vdccm", &error);
-        if (error) {
-                g_critical("%s: Error getting '/apps/synce/trayicon/start_vdccm' from gconf: %s", G_STRFUNC, error->message);
-                g_error_free(error);
-                error = NULL;
-        }
+        gboolean stop_vdccm = g_settings_get_boolean(priv->settings, "start-vdccm");
 
         if (stop_vdccm)
                 stop_dccm();
@@ -670,26 +656,13 @@ init_vdccm_client_comms(SynceTrayIcon *self)
 {
         SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
         DccmClient *comms_client = NULL;
-        GError *error = NULL;
 
-        gboolean enable_vdccm = gconf_client_get_bool(priv->conf_client,
-                                                      "/apps/synce/trayicon/enable_vdccm",
-                                                      &error);
-        if (error) {
-                g_critical("%s: Error getting '/apps/synce/trayicon/enable_vdccm' from gconf: %s", G_STRFUNC, error->message);
-                g_error_free(error);
-                error = NULL;
-        }
+        gboolean enable_vdccm = g_settings_get_boolean(priv->settings, "enable-vdccm");
 
         if (!enable_vdccm)
                 return;
 
-        gboolean start_vdccm = gconf_client_get_bool (priv->conf_client, "/apps/synce/trayicon/start_vdccm", &error);
-        if (error) {
-                g_critical("%s: Error getting '/apps/synce/trayicon/start_vdccm' from gconf: %s", G_STRFUNC, error->message);
-                g_error_free(error);
-                error = NULL;
-        }
+        gboolean start_vdccm = g_settings_get_boolean(priv->settings, "start-vdccm");
 
         if (start_vdccm)
                 if (!(start_dccm(self))) {
@@ -897,7 +870,8 @@ menu_explore (GtkWidget *menu_item, SynceTrayIcon *self)
 static void
 menu_preferences (GtkWidget *button, SynceTrayIcon *self)
 {
-  run_prefs_dialog(self);
+  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+  run_prefs_dialog(priv->settings);
 }
 
 static void
@@ -1104,7 +1078,7 @@ trayicon_update_menu(SynceTrayIcon *self)
 		  gtk_widget_show(GTK_WIDGET(entry));
 
 #if ENABLE_VDCCM_SUPPORT
-                  if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
+                  if (g_settings_get_boolean(priv->settings, "enable-vdccm")) {
                           entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_DISCONNECT, NULL);
                           g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), self);
                           gtk_menu_shell_append(GTK_MENU_SHELL(device_menu), entry);
@@ -1127,7 +1101,7 @@ trayicon_update_menu(SynceTrayIcon *self)
   gtk_widget_show(GTK_WIDGET(entry));
 
 #if ENABLE_VDCCM_SUPPORT
-  if (gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/enable_vdccm", NULL)) {
+  if (g_settings_get_boolean(priv->settings, "enable-vdccm")) {
     if (dccm_is_running()) {
       entry = gtk_menu_item_new_with_label(_("Stop DCCM"));
       g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_stop_vdccm), self);
@@ -1201,21 +1175,15 @@ trayicon_popup_menu_cb(GtkStatusIcon *status_icon, guint button, guint activate_
 }
 
 static void
-prefs_changed_cb (GConfClient *client, guint id,
-		  GConfEntry *entry, gpointer data)
+prefs_changed_cb (GSettings *settings,
+		  gchar *key, gpointer data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(data);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
-  const gchar *key;
-  const GConfValue *value;
-
-  key = gconf_entry_get_key(entry);
-  value = gconf_entry_get_value(entry);
-
 #if ENABLE_VDCCM_SUPPORT
-  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/enable_vdccm"))) {
-    gboolean enable_vdccm = gconf_value_get_bool(value);
+  if (!(g_ascii_strcasecmp(key, "enable-vdccm"))) {
+    gboolean enable_vdccm = g_settings_get_boolean(priv->settings, key);
 
     if (enable_vdccm)
             init_vdccm_client_comms(self);
@@ -1226,8 +1194,8 @@ prefs_changed_cb (GConfClient *client, guint id,
   }
 #endif
 
-  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/show_disconnected"))) {
-    priv->show_disconnected = gconf_value_get_bool(value);
+  if (!(g_ascii_strcasecmp(key, "/apps/synce/trayicon/show-disconnected"))) {
+    priv->show_disconnected = g_settings_get_boolean(priv->settings, key);
     g_idle_add(update_status, self);
 
     return;
@@ -1303,7 +1271,6 @@ static void
 synce_trayicon_init(SynceTrayIcon *self)
 {
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-  GError *error = NULL;
 
   priv->disposed = FALSE;
   priv->menu = NULL;
@@ -1314,35 +1281,14 @@ synce_trayicon_init(SynceTrayIcon *self)
     notify_init ("synce-trayicon");
 
   /* 
-   * initialise gconf
+   * initialise gsettings
    */
-  priv->conf_client = gconf_client_get_default();
-  gconf_client_add_dir (priv->conf_client,
-                        "/apps/synce/trayicon",
-                        GCONF_CLIENT_PRELOAD_ONELEVEL,
-                        &error);
-  if (error) {
-    g_critical("%s: failed to add watch to gconf dir '/apps/synce/trayicon': %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    error = NULL;
-  }
+  priv->settings = g_settings_new("org.synce.SynceTrayicon");
 
-  priv->conf_watch_id = gconf_client_notify_add (priv->conf_client, 
-                                                 "/apps/synce/trayicon", 
-                                                 prefs_changed_cb, self, NULL, &error);
-  if (error) {
-          g_warning("%s: failed to add watch to gconf dir '/apps/synce/trayicon': %s", G_STRFUNC, error->message);
-          g_error_free(error);
-          error = NULL;
-  }                  
+  priv->settings_watch_id = g_signal_connect (G_OBJECT (priv->settings), "changed",
+                                              (GCallback)prefs_changed_cb, self);
 
-  priv->show_disconnected = gconf_client_get_bool(priv->conf_client, "/apps/synce/trayicon/show_disconnected", &error);
-  if (error) {
-          g_critical("%s: Error getting '/apps/synce/trayicon/show_disconnected' from gconf: %s", G_STRFUNC, error->message);
-          g_error_free(error);
-          error = NULL;
-  }
-
+  priv->show_disconnected = g_settings_get_boolean(priv->settings, "show-disconnected");
 
   /* 
    * initialise device list
@@ -1403,7 +1349,6 @@ synce_trayicon_dispose (GObject *obj)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(obj);
   SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
-  GError *error = NULL;
 
   if (priv->disposed) {
     return;
@@ -1423,18 +1368,9 @@ synce_trayicon_dispose (GObject *obj)
     g_object_unref(priv->menu);
   }
 
-  /* gconf */
-  gconf_client_notify_remove(priv->conf_client, priv->conf_watch_id);
-
-  gconf_client_remove_dir(priv->conf_client,
-			  "/apps/synce/trayicon",
-			  &error);
-  if (error) {
-    g_critical("%s: failed to remove watch to gconf dir '/apps/synce/trayicon': %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    error = NULL;
-  }
-  g_object_unref(priv->conf_client);
+  /* gsettings */
+  g_signal_handler_disconnect(priv->settings, priv->settings_watch_id);
+  g_object_unref(priv->settings);
 
   /* dccm comms */
   uninit_client_comms(self);
