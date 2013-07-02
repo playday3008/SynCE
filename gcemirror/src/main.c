@@ -46,7 +46,6 @@ pda_error_cb(CeScreen *ce_screen, gpointer user_data)
 {
         g_critical("%s: Could not contact PDA %s", G_STRFUNC, (gchar*)user_data);
         gtk_main_quit();
-        gtk_widget_destroy(GTK_WIDGET(ce_screen));
 }
 
 gint
@@ -95,6 +94,7 @@ main(gint argc, gchar *argv[])
         gtk_widget_show_all(GTK_WIDGET(ce_screen));
         gtk_main();
 
+        gtk_widget_destroy(GTK_WIDGET(ce_screen));
         g_free(pda_name);
         return 0;
 }

@@ -32,7 +32,7 @@
 #include <arpa/inet.h>
 #include <glib/gi18n.h>
 #include <synce.h>
-#include <rapi.h>
+#include <rapi2.h>
 #include <errno.h>
 
 #include <gdk/gdk.h>
@@ -699,7 +699,11 @@ ce_screen_do_synce_connect(CeScreen *self, const gchar *pda_name)
 
         HRESULT hr;
         DWORD last_error;
-        RapiConnection *rapiconn = NULL;
+	IRAPIDesktop *desktop = NULL;
+	IRAPIEnumDevices *enumdev = NULL;
+	IRAPIDevice *device = NULL;
+	IRAPISession *session = NULL;
+	RAPI_DEVICEINFO devinfo;
         SYSTEM_INFO system;
         PROCESS_INFORMATION proc_info = {0, 0, 0, 0};
         const gchar *device_address = NULL;
@@ -707,21 +711,58 @@ ce_screen_do_synce_connect(CeScreen *self, const gchar *pda_name)
         WCHAR *widestr = NULL;
         GError *error = NULL;
 
-        if (!(rapiconn = rapi_connection_from_name(pda_name))) {
-                g_critical("%s: failed to create rapi connection", G_STRFUNC);
-                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
-                return;
-        }
-        rapi_connection_select(rapiconn);
+	if (FAILED(hr = IRAPIDesktop_Get(&desktop)))
+	{
+	  g_critical("%s: failed to initialise RAPI: %d: %s",
+		     G_STRFUNC, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
 
-        if (FAILED(hr = CeRapiInit())) {
-                g_critical("%s: failed to initialise rapi connection: %s", G_STRFUNC, synce_strerror(hr));
-                rapi_connection_destroy(rapiconn);
-                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
-                return;
-        }
+	if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev)))
+	{
+	  g_critical("%s: failed to get connected devices: %d: %s",
+		     G_STRFUNC, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
 
-        device_address = rapi_connection_get_device_ip(rapiconn);
+	while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device)))
+	{
+	  if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo)))
+	  {
+	    g_critical("%s: failure to get device info", G_STRFUNC);
+	    goto error_exit;
+	  }
+	  if (strcmp(pda_name, devinfo.bstrName) == 0)
+	    break;
+	}
+
+	if (FAILED(hr))
+	{
+	  g_critical("%s: Could not find device '%s' in RAPI: %08x: %s",
+		     G_STRFUNC, priv->name, hr, synce_strerror_from_hresult(hr));
+	  device = NULL;
+	  goto error_exit;
+	}
+
+	IRAPIDevice_AddRef(device);
+	IRAPIEnumDevices_Release(enumdev);
+	enumdev = NULL;
+
+	if (FAILED(hr = IRAPIDevice_CreateSession(device, &session)))
+	{
+	  g_critical("%s: Could not create a session to device '%s': %08x: %s",
+		     G_STRFUNC, priv->name, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
+
+	if (FAILED(hr = IRAPISession_CeRapiInit(session)))
+	{
+	  g_critical("%s: Unable to initialize connection to device '%s': %08x: %s", 
+		     G_STRFUNC, priv->name, hr, synce_strerror_from_hresult(hr));
+	  goto error_exit;
+	}
+
+        device_address = IRAPIDevice_get_device_ip(device);
 
         if (!device_address) {
                 g_critical("%s: device address is NULL", G_STRFUNC);
@@ -751,7 +792,7 @@ ce_screen_do_synce_connect(CeScreen *self, const gchar *pda_name)
         if ((info == NULL) || (priv->force_install == TRUE)) {
                 g_debug("%s: copying screensnap to device", G_STRFUNC);
 
-                CeGetSystemInfo(&system);
+                IRAPISession_CeGetSystemInfo(session, &system);
 
                 switch(system.wProcessorArchitecture) {
                 case PROCESSOR_ARCHITECTURE_MIPS:
@@ -790,15 +831,15 @@ ce_screen_do_synce_connect(CeScreen *self, const gchar *pda_name)
 
         widestr = wstr_from_utf8("\\Windows\\screensnap.exe");
 
-        if (!CeCreateProcess(widestr, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, &proc_info)) {
+        if (!IRAPISession_CeCreateProcess(session, widestr, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, &proc_info)) {
                 wstr_free_string(widestr);
 
-                if (FAILED(hr = CeRapiGetError())) {
+                if (FAILED(hr = IRAPISession_CeRapiGetError(session))) {
                         g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(hr));
                         goto error_exit;
                 }
 
-                last_error = CeGetLastError();
+                last_error = IRAPISession_CeGetLastError(session);
                 g_critical(_("%s: failed to start screensnap process: %s"), G_STRFUNC, synce_strerror(last_error));
                 goto error_exit;
         }
@@ -806,14 +847,23 @@ ce_screen_do_synce_connect(CeScreen *self, const gchar *pda_name)
 
         ce_screen_connect_socket(self, device_address);
 
-        CeRapiUninit();
-        rapi_connection_destroy(rapiconn);
+        IRAPISession_CeRapiUninit(session);
+        IRAPISession_Release(session);
+	IRAPIDevice_Release(device);
+	IRAPIDesktop_Release(desktop);
 
         return;
 
  error_exit:
-        CeRapiUninit();
-        rapi_connection_destroy(rapiconn);
+	if (session)
+	{
+	  IRAPISession_CeRapiUninit(session);
+	  IRAPISession_Release(session);
+	}
+
+	if (device) IRAPIDevice_Release(device);
+	if (enumdev) IRAPIEnumDevices_Release(enumdev);
+	if (desktop) IRAPIDesktop_Release(desktop);
         g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
         return;
 }
@@ -1210,8 +1260,6 @@ ce_screen_init(CeScreen *self)
         priv->decoder_chain = g_object_new(XOR_DECODER_TYPE, "chain", priv->decoder_chain, NULL);
 
         priv->bmp_data = NULL;
-
-        g_signal_connect(G_OBJECT(self), "destroy", G_CALLBACK(ce_screen_quit_cb), NULL);
 }
 
 static void
