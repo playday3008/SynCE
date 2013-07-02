@@ -24,10 +24,6 @@ PKG_CHECK_MODULES(GLIB, glib-2.0 >= 2.18 gthread-2.0 gobject-2.0 gmodule-no-expo
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-PKG_CHECK_MODULES(DBUS, dbus-1, dbus_found=yes, dbus_found=no)
-AC_SUBST(DBUS_CFLAGS)
-AC_SUBST(DBUS_LIBS)
-
 AC_CHECK_LIB(gvfscommon, g_mount_info_ref, ,AC_MSG_ERROR([Required library libgvfscommon not found]))
 
 dnl Check if GLib version is high enough for GDBus
@@ -41,6 +37,10 @@ if test "$have_gdbus" = "yes"; then
 else
    use_gdbus=0;
    AC_MSG_RESULT([no])
+
+   PKG_CHECK_MODULES(DBUS, dbus-1)
+   AC_SUBST(DBUS_CFLAGS)
+   AC_SUBST(DBUS_LIBS)
 fi
 AC_DEFINE_UNQUOTED(USE_GDBUS, $use_gdbus, [Define to 1 if you want to use GDBus\
  support.])
