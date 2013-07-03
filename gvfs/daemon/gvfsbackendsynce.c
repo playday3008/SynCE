@@ -24,7 +24,7 @@
 
 #include <glib/gi18n.h>
 #include <synce_log.h>
-#include <rapi.h>
+#include <rapi2.h>
 #include <string.h>
 #include <stdlib.h>
 #include <syslog.h>
@@ -58,7 +58,8 @@ struct _GVfsBackendSynce
   GVfsBackend		backend;
 
   gchar *device_name;
-  RapiConnection *rapi_conn;
+  IRAPIDevice *device;
+  IRAPISession *session;
 #if GLIB_CHECK_VERSION (2, 32, 0)
   GMutex mutex;
 #else
@@ -228,7 +229,7 @@ log_to_syslog(const gchar *log_domain,
 
 
 static GError*
-g_error_from_rapi(gboolean *connection_error)
+g_error_from_rapi(IRAPISession *session, gboolean *connection_error)
 {
   GError *result = NULL;
   HRESULT hr;
@@ -238,8 +239,8 @@ g_error_from_rapi(gboolean *connection_error)
   if (connection_error)
     *connection_error = FALSE;
 
-  hr    = CeRapiGetError();
-  error = CeGetLastError();
+  hr    = IRAPISession_CeRapiGetError(session);
+  error = IRAPISession_CeGetLastError(session);
 
   if (FAILED(hr))
     {
@@ -725,15 +726,13 @@ synce_gvfs_query_info (GVfsBackend *backend,
   g_debug("%s: wstr_from_utf8(): %s", G_STRFUNC, location);
   tempwstr = wstr_from_utf8(location);
 
-  rapi_connection_select(synce_backend->rapi_conn);
-
   g_debug("%s: CeFindFirstFile()", G_STRFUNC);
-  handle = CeFindFirstFile(tempwstr, &entry);
+  handle = IRAPISession_CeFindFirstFile(synce_backend->session, tempwstr, &entry);
   if(handle == INVALID_HANDLE_VALUE)
     {
       g_debug("%s: CeFindFirstFile failed", G_STRFUNC);
 
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     }
   else
@@ -742,7 +741,7 @@ synce_gvfs_query_info (GVfsBackend *backend,
 
       get_file_attributes(synce_backend, info, index, &entry, matcher);
 
-      CeFindClose(handle);
+      IRAPISession_CeFindClose(synce_backend->session, handle);
 
       g_debug("%s: Name: %s", G_STRFUNC, g_file_info_get_name(info));
       g_debug("%s: Display Name: %s", G_STRFUNC, g_file_info_get_display_name(info));
@@ -806,17 +805,16 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
     }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   wide_path = wstr_from_utf8(location);
 
   g_debug("%s: CeFindFirstFile()", G_STRFUNC);
-  handle = CeFindFirstFile(wide_path, &entry);
+  handle = IRAPISession_CeFindFirstFile(synce_backend->session, wide_path, &entry);
   if(handle == INVALID_HANDLE_VALUE)
     {
       g_debug("%s: CeFindFirstFile failed", G_STRFUNC);
 
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       MUTEX_UNLOCK (synce_backend->mutex);
       wstr_free_string(wide_path);
@@ -825,7 +823,7 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
   else
     {
       g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
-      CeFindClose(handle);
+      IRAPISession_CeFindClose(synce_backend->session, handle);
 
       if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 	g_vfs_job_failed (G_VFS_JOB (job),
@@ -839,8 +837,9 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
     }
 
   g_debug("%s: CeCreateFile()", G_STRFUNC);
-  handle = CeCreateFile
+  handle = IRAPISession_CeCreateFile
     (
+     synce_backend->session,
      wide_path,
      GENERIC_READ,
      0,
@@ -851,7 +850,7 @@ synce_gvfs_open_for_read (GVfsBackend *backend,
      );
 
   if(handle == INVALID_HANDLE_VALUE) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free (error);
   } else {
@@ -901,11 +900,11 @@ synce_gvfs_read (GVfsBackend *backend,
   synce_handle = GPOINTER_TO_UINT(handle);
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   g_debug("%s: CeReadFile()", G_STRFUNC);
-  success = CeReadFile
+  success = IRAPISession_CeReadFile
     (
+     synce_backend->session,
      synce_handle,
      buffer,
      bytes_requested,
@@ -915,7 +914,7 @@ synce_gvfs_read (GVfsBackend *backend,
 
   if (!success)
     {
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       g_error_free (error);
     }
@@ -963,13 +962,12 @@ synce_gvfs_close_read (GVfsBackend *backend,
 
   g_debug("%s: CeCloseHandle()", G_STRFUNC);
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
-  success = CeCloseHandle(synce_handle);
+  success = IRAPISession_CeCloseHandle(synce_backend->session, synce_handle);
 
   if (success)
     g_vfs_job_succeeded (G_VFS_JOB (job));
   else {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free (error);
   }
@@ -1019,17 +1017,17 @@ synce_gvfs_seek_on_read (GVfsBackend *backend,
   }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   g_debug("%s: CeSetFilePointer()", G_STRFUNC);
-  retval = CeSetFilePointer (synce_handle,
+  retval = IRAPISession_CeSetFilePointer (synce_backend->session,
+                             synce_handle,
                              offset,
                              NULL,
                              move_method);
 
   if (retval == 0xFFFFFFFF)
     {
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       g_error_free (error);
     }
@@ -1108,13 +1106,13 @@ synce_gvfs_create (GVfsBackend *backend,
     }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   wide_path = wstr_from_utf8(location);
 
   g_debug("%s: CeCreateFile()", G_STRFUNC);
-  handle = CeCreateFile
+  handle = IRAPISession_CeCreateFile
     (
+     synce_backend->session,
      wide_path,
      GENERIC_WRITE,
      0,
@@ -1125,7 +1123,7 @@ synce_gvfs_create (GVfsBackend *backend,
      );
 
   if(handle == INVALID_HANDLE_VALUE) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free (error);
   } else {
@@ -1195,13 +1193,13 @@ synce_gvfs_append_to (GVfsBackend *backend,
     }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   wide_path = wstr_from_utf8(location);
 
   g_debug("%s: CeCreateFile()", G_STRFUNC);
-  handle = CeCreateFile
+  handle = IRAPISession_CeCreateFile
     (
+     synce_backend->session,
      wide_path,
      GENERIC_WRITE,
      0,
@@ -1214,7 +1212,7 @@ synce_gvfs_append_to (GVfsBackend *backend,
   wstr_free_string(wide_path);
 
   if(handle == INVALID_HANDLE_VALUE) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free (error);
     MUTEX_UNLOCK (synce_backend->mutex);
@@ -1222,13 +1220,14 @@ synce_gvfs_append_to (GVfsBackend *backend,
   }
 
   g_debug("%s: CeSetFilePointer()", G_STRFUNC);
-  retval = CeSetFilePointer (handle,
+  retval = IRAPISession_CeSetFilePointer (synce_backend->session,
+                             handle,
                              0,
                              NULL,
                              FILE_END);
 
   if (retval == 0xFFFFFFFF) {
-    error = g_error_from_rapi (NULL);
+    error = g_error_from_rapi (synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free (error);
     MUTEX_UNLOCK (synce_backend->mutex);
@@ -1319,13 +1318,13 @@ synce_gvfs_replace (GVfsBackend *backend,
     backup_filename = NULL;
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   wide_path = wstr_from_utf8(location);
 
   g_debug("%s: initial CeCreateFile()", G_STRFUNC);
-  handle = CeCreateFile
+  handle = IRAPISession_CeCreateFile
     (
+     synce_backend->session,
      wide_path,
      GENERIC_WRITE,
      0,
@@ -1336,7 +1335,7 @@ synce_gvfs_replace (GVfsBackend *backend,
      );
 
   if(handle == INVALID_HANDLE_VALUE) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
 
     if (error->code != G_IO_ERROR_EXISTS) {
 
@@ -1359,12 +1358,12 @@ synce_gvfs_replace (GVfsBackend *backend,
 	g_debug("%s: check etags", G_STRFUNC);
 	g_debug("%s: CeFindFirstFile()", G_STRFUNC);
 
-	find_handle = CeFindFirstFile(wide_path, &entry);
+	find_handle = IRAPISession_CeFindFirstFile(synce_backend->session, wide_path, &entry);
 	if (find_handle == INVALID_HANDLE_VALUE)
 	  {
 	    g_debug("%s: CeFindFirstFile failed", G_STRFUNC);
 
-	    error = g_error_from_rapi(NULL);
+	    error = g_error_from_rapi(synce_backend->session, NULL);
 	    g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
 	    g_error_free (error);
 	    MUTEX_UNLOCK (synce_backend->mutex);
@@ -1373,7 +1372,7 @@ synce_gvfs_replace (GVfsBackend *backend,
 	  }
 	g_debug("%s: CeFindFirstFile succeeded", G_STRFUNC);
 
-	CeFindClose(find_handle);
+	IRAPISession_CeFindClose(synce_backend->session, find_handle);
 
 	current_etag = create_etag (&entry);
 	if (strcmp (etag, current_etag) != 0)
@@ -1421,8 +1420,9 @@ synce_gvfs_replace (GVfsBackend *backend,
       wide_path = wstr_from_utf8(tmp_filename);
 
       g_debug("%s: try temp file CeCreateFile()", G_STRFUNC);
-      handle = CeCreateFile
+      handle = IRAPISession_CeCreateFile
 	(
+         synce_backend->session,
 	 wide_path,
 	 GENERIC_WRITE,
 	 0,
@@ -1436,7 +1436,7 @@ synce_gvfs_replace (GVfsBackend *backend,
 
       if(handle == INVALID_HANDLE_VALUE) {
 	g_free(tmp_filename);
-	error = g_error_from_rapi(NULL);
+	error = g_error_from_rapi(synce_backend->session, NULL);
 
 	if (error->code != G_IO_ERROR_EXISTS) {
 
@@ -1470,14 +1470,14 @@ synce_gvfs_replace (GVfsBackend *backend,
 	  WCHAR *wide_backup = wstr_from_utf8(backup_filename);
 	  wide_path = wstr_from_utf8(location);
 
-	  copied = CeCopyFile(wide_path, wide_backup, TRUE);
+	  copied = IRAPISession_CeCopyFile(synce_backend->session, wide_path, wide_backup, TRUE);
 
 	  wstr_free_string(wide_path);
 	  wstr_free_string(wide_backup);
 
 	  if (!copied)
 	    {
-	      error = g_error_from_rapi(NULL);
+	      error = g_error_from_rapi(synce_backend->session, NULL);
 	      g_error_free(error);
 
 	      g_vfs_job_failed (G_VFS_JOB (job),
@@ -1493,8 +1493,9 @@ synce_gvfs_replace (GVfsBackend *backend,
       wide_path = wstr_from_utf8(location);
 
       g_debug("%s: CeCreateFile()", G_STRFUNC);
-      handle = CeCreateFile
+      handle = IRAPISession_CeCreateFile
 	(
+         synce_backend->session,
 	 wide_path,
 	 GENERIC_WRITE,
 	 0,
@@ -1506,7 +1507,7 @@ synce_gvfs_replace (GVfsBackend *backend,
       wstr_free_string(wide_path);
 
       if(handle == INVALID_HANDLE_VALUE) {
-	error = g_error_from_rapi(NULL);
+	error = g_error_from_rapi(synce_backend->session, NULL);
 
 	g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
 	g_error_free (error);
@@ -1561,11 +1562,10 @@ synce_gvfs_close_write (GVfsBackend *backend,
 
   g_debug("%s: CeCloseHandle()", G_STRFUNC);
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
-  result = CeCloseHandle(handle->handle);
+  result = IRAPISession_CeCloseHandle(synce_backend->session, handle->handle);
 
   if (!result) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free (error);
 
@@ -1573,7 +1573,7 @@ synce_gvfs_close_write (GVfsBackend *backend,
       wide_path_1 = wstr_from_utf8(handle->tmp_filename);
 
       g_debug("%s: CeDeleteFile()", G_STRFUNC);
-      result = CeDeleteFile(wide_path_1);
+      result = IRAPISession_CeDeleteFile(synce_backend->session, wide_path_1);
 
       wstr_free_string(wide_path_1);
     }
@@ -1595,14 +1595,14 @@ synce_gvfs_close_write (GVfsBackend *backend,
 	  wide_path_2 = wstr_from_utf8(handle->backup_filename);
 	  wide_path_1 = wstr_from_utf8(handle->filename);
 
-	  result = CeMoveFile(wide_path_1, wide_path_2);
+	  result = IRAPISession_CeMoveFile(synce_backend->session, wide_path_1, wide_path_2);
 
 	  wstr_free_string(wide_path_1);
 	  wstr_free_string(wide_path_2);
 
 	  if (!result)
 	    {
-	      error = g_error_from_rapi(NULL);
+	      error = g_error_from_rapi(synce_backend->session, NULL);
 	      g_vfs_job_failed (G_VFS_JOB (job),
 				G_IO_ERROR, G_IO_ERROR_CANT_CREATE_BACKUP,
 				_("Backup file creation failed: %s"), error->message);
@@ -1610,7 +1610,7 @@ synce_gvfs_close_write (GVfsBackend *backend,
 
 	      wide_path_1 = wstr_from_utf8(handle->tmp_filename);
 	      g_debug("%s: CeDeleteFile()", G_STRFUNC);
-	      result = CeDeleteFile(wide_path_1);
+	      result = IRAPISession_CeDeleteFile(synce_backend->session, wide_path_1);
 
 	      wstr_free_string(wide_path_1);
 	      goto exit;
@@ -1620,7 +1620,7 @@ synce_gvfs_close_write (GVfsBackend *backend,
 	{
 	  wide_path_1 = wstr_from_utf8(handle->filename);
 	  g_debug("%s: CeDeleteFile()", G_STRFUNC);
-	  result = CeDeleteFile(wide_path_1);
+	  result = IRAPISession_CeDeleteFile(synce_backend->session, wide_path_1);
 	  wstr_free_string(wide_path_1);
 	}
 
@@ -1634,20 +1634,20 @@ synce_gvfs_close_write (GVfsBackend *backend,
       wide_path_1 = wstr_from_utf8(handle->tmp_filename);
       wide_path_2 = wstr_from_utf8(handle->filename);
 
-      result = CeMoveFile(wide_path_1, wide_path_2);
+      result = IRAPISession_CeMoveFile(synce_backend->session, wide_path_1, wide_path_2);
 
       wstr_free_string(wide_path_1);
       wstr_free_string(wide_path_2);
 
       if (!result)
 	{
-	  error = g_error_from_rapi(NULL);
+	  error = g_error_from_rapi(synce_backend->session, NULL);
 	  g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
 	  g_error_free (error);
 
 	  wide_path_1 = wstr_from_utf8(handle->tmp_filename);
 	  g_debug("%s: CeDeleteFile()", G_STRFUNC);
-	  result = CeDeleteFile(wide_path_1);
+	  result = IRAPISession_CeDeleteFile(synce_backend->session, wide_path_1);
 	  wstr_free_string(wide_path_1);
 
 	  goto exit;
@@ -1704,11 +1704,11 @@ synce_gvfs_write (GVfsBackend *backend,
   }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   g_debug("%s: CeWriteFile()", G_STRFUNC);
-  result = CeWriteFile
+  result = IRAPISession_CeWriteFile
     (
+     synce_backend->session,
      handle->handle,
      buffer,
      buffer_size,
@@ -1718,7 +1718,7 @@ synce_gvfs_write (GVfsBackend *backend,
 
 
   if (!result) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free(error);
   } else {
@@ -1770,17 +1770,17 @@ synce_gvfs_seek_on_write(GVfsBackend *backend,
   }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   g_debug("%s: CeSetFilePointer()", G_STRFUNC);
-  retval = CeSetFilePointer (handle->handle,
+  retval = IRAPISession_CeSetFilePointer (synce_backend->session,
+                             handle->handle,
                              offset,
                              NULL,
                              move_method);
 
   if (retval == 0xFFFFFFFF)
     {
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       g_error_free (error);
     }
@@ -1852,34 +1852,33 @@ synce_gvfs_delete (GVfsBackend *backend,
   }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   tempwstr = wstr_from_utf8(location);
 
   g_debug("%s: CeFindFirstFile()", G_STRFUNC);
-  handle = CeFindFirstFile(tempwstr, &entry);
+  handle = IRAPISession_CeFindFirstFile(synce_backend->session, tempwstr, &entry);
   if(handle == INVALID_HANDLE_VALUE) {
     MUTEX_UNLOCK (synce_backend->mutex);
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free(error);
     wstr_free_string(tempwstr);
     goto exit;
   }
 
-  CeFindClose(handle);
+  IRAPISession_CeFindClose(synce_backend->session, handle);
 
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-    result = CeRemoveDirectory(tempwstr);
+    result = IRAPISession_CeRemoveDirectory(synce_backend->session, tempwstr);
   else
-    result = CeDeleteFile(tempwstr);
+    result = IRAPISession_CeDeleteFile(synce_backend->session, tempwstr);
 
   MUTEX_UNLOCK (synce_backend->mutex);
 
   if (result)
     g_vfs_job_succeeded (G_VFS_JOB (job));
   else {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free (error);
   }
@@ -1948,14 +1947,13 @@ synce_gvfs_make_directory (GVfsBackend *backend,
   tempwstr = wstr_from_utf8(location);
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   g_debug("%s: CeCreateDirectory()", G_STRFUNC);
-  result = CeCreateDirectory(tempwstr, NULL);
+  result = IRAPISession_CeCreateDirectory(synce_backend->session, tempwstr, NULL);
   wstr_free_string(tempwstr);
 
   if(!result) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
     g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
     g_error_free(error);
   } else
@@ -2063,14 +2061,13 @@ synce_gvfs_move (GVfsBackend *backend,
   }
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   source_wstr = wstr_from_utf8(source_loc);
 
   g_debug("%s: CeFindFirstFile()", G_STRFUNC);
-  handle = CeFindFirstFile(source_wstr, &entry);
+  handle = IRAPISession_CeFindFirstFile(synce_backend->session, source_wstr, &entry);
   if(handle == INVALID_HANDLE_VALUE) {
-    error = g_error_from_rapi(NULL);
+    error = g_error_from_rapi(synce_backend->session, NULL);
 
     g_vfs_job_failed (G_VFS_JOB (job),
 		      G_IO_ERROR,
@@ -2084,7 +2081,7 @@ synce_gvfs_move (GVfsBackend *backend,
     goto exit;
   }
 
-  CeFindClose(handle);
+  IRAPISession_CeFindClose(synce_backend->session, handle);
 
   if (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
     source_is_dir = TRUE;
@@ -2094,7 +2091,7 @@ synce_gvfs_move (GVfsBackend *backend,
   dest_wstr = wstr_from_utf8(dest_loc);
 
   g_debug("%s: CeFindFirstFile()", G_STRFUNC);
-  handle = CeFindFirstFile(dest_wstr, &entry);
+  handle = IRAPISession_CeFindFirstFile(synce_backend->session, dest_wstr, &entry);
 
   if (handle != INVALID_HANDLE_VALUE)
     {
@@ -2123,7 +2120,7 @@ synce_gvfs_move (GVfsBackend *backend,
 	  goto exit;
 	}
     } else
-      CeFindClose(handle);
+      IRAPISession_CeFindClose(synce_backend->session, handle);
 
   if (g_vfs_job_is_cancelled (G_VFS_JOB (job))) {
     g_vfs_job_failed (G_VFS_JOB (job),
@@ -2139,14 +2136,14 @@ synce_gvfs_move (GVfsBackend *backend,
       backup_name = g_strconcat (dest_loc, "~", NULL);
       backup_wstr = wstr_from_utf8(backup_name);
 
-      result = CeMoveFile(dest_wstr, backup_wstr);
+      result = IRAPISession_CeMoveFile(synce_backend->session, dest_wstr, backup_wstr);
 
       wstr_free_string(backup_wstr);
       g_free(backup_name);
 
       if (!result)
 	{
-	  error = g_error_from_rapi(NULL);
+	  error = g_error_from_rapi(synce_backend->session, NULL);
 
 	  g_vfs_job_failed (G_VFS_JOB (job),
 			    G_IO_ERROR,
@@ -2165,11 +2162,11 @@ synce_gvfs_move (GVfsBackend *backend,
       /* Source is a dir, destination exists (and is not a dir, because that would have failed
 	 earlier), and we're overwriting. Manually remove the target so we can do the rename. */
 
-      result = CeDeleteFile(dest_wstr);
+      result = IRAPISession_CeDeleteFile(synce_backend->session, dest_wstr);
 
       if (!result)
 	{
-	  error = g_error_from_rapi(NULL);
+	  error = g_error_from_rapi(synce_backend->session, NULL);
 
 	  g_vfs_job_failed (G_VFS_JOB (job), G_IO_ERROR,
 			    error->code,
@@ -2190,11 +2187,11 @@ synce_gvfs_move (GVfsBackend *backend,
     goto exit;
   }
 
-  result = CeMoveFile(source_wstr, dest_wstr);
+  result = IRAPISession_CeMoveFile(synce_backend->session, source_wstr, dest_wstr);
 
   if (!result)
     {
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       g_error_free(error);
     }
@@ -2255,7 +2252,6 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
   g_file_info_set_attribute_uint32 (info, G_FILE_ATTRIBUTE_FILESYSTEM_USE_PREVIEW, G_FILESYSTEM_PREVIEW_TYPE_NEVER);
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   if (index == INDEX_FILESYSTEM) {
     gchar **split = g_strsplit(location, "\\", 0);
@@ -2264,13 +2260,14 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
 
       root_dir = g_strdup_printf("\\%s", split[1]);
       wide_root_dir = wstr_from_utf8(root_dir);
-      attributes = CeGetFileAttributes(wide_root_dir);
+      attributes = IRAPISession_CeGetFileAttributes(synce_backend->session, wide_root_dir);
 
       if ((attributes != 0xffffffff) && (attributes & FILE_ATTRIBUTE_TEMPORARY)) {
 
 	other_storage = TRUE;
 
-        if (CeGetDiskFreeSpaceEx(root_dir, 
+        if (IRAPISession_CeGetDiskFreeSpaceEx(synce_backend->session,
+                                 root_dir, 
                                  &FreeBytesAvailable, 
                                  &TotalNumberOfBytes, 
                                  &TotalNumberOfFreeBytes) != 0) {
@@ -2282,7 +2279,7 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
                                                   G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
                                                   TotalNumberOfFreeBytes);
         } else {
-                error = g_error_from_rapi(NULL);
+                error = g_error_from_rapi(synce_backend->session, NULL);
                 g_critical("%s: Failed to get store information: %s", G_STRFUNC, error->message);
                 g_error_free(error);
         }
@@ -2295,7 +2292,7 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
   }
 
   if (!other_storage) {
-    if (CeGetStoreInformation(&store)) {
+    if (IRAPISession_CeGetStoreInformation(synce_backend->session, &store)) {
       g_file_info_set_attribute_uint64 (info,
 					G_FILE_ATTRIBUTE_FILESYSTEM_SIZE,
 					store.dwStoreSize);
@@ -2304,7 +2301,7 @@ synce_gvfs_query_fs_info (GVfsBackend *backend,
 					G_FILE_ATTRIBUTE_FILESYSTEM_FREE,
 					store.dwFreeSize);
     } else {
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_critical("%s: Failed to get store information: %s", G_STRFUNC, error->message);
       g_error_free(error);
     }
@@ -2383,19 +2380,18 @@ synce_gvfs_set_display_name (GVfsBackend *backend,
   g_debug("%s: renaming %s to %s", G_STRFUNC, location, new_location);
 
   MUTEX_LOCK(synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   from_wstr = wstr_from_utf8(location);
   to_wstr = wstr_from_utf8(new_location);
 
-  result = CeMoveFile(from_wstr, to_wstr);
+  result = IRAPISession_CeMoveFile(synce_backend->session, from_wstr, to_wstr);
 
   wstr_free_string(from_wstr);
   wstr_free_string(to_wstr);
 
   if (!result)
     {
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       g_error_free(error);
     }
@@ -2547,14 +2543,13 @@ synce_gvfs_enumerate(GVfsBackend *backend,
 
   g_debug("%s: locking mutex", G_STRFUNC);
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
 
   g_debug("%s: CeFindAllFiles()", G_STRFUNC);
-  if (!CeFindAllFiles(tempwstr, optionflags, &itemcount, &data))
+  if (!IRAPISession_CeFindAllFiles(synce_backend->session, tempwstr, optionflags, &itemcount, &data))
     {
       g_warning("%s: CeFindAllFiles() failed", G_STRFUNC);
       wstr_free_string(tempwstr);
-      error = g_error_from_rapi(NULL);
+      error = g_error_from_rapi(synce_backend->session, NULL);
       MUTEX_UNLOCK (synce_backend->mutex);
       g_vfs_job_failed_from_error (G_VFS_JOB (job), error);
       g_error_free (error);
@@ -2586,7 +2581,7 @@ synce_gvfs_enumerate(GVfsBackend *backend,
   MUTEX_LOCK (synce_backend->mutex);
 
   g_debug("%s: CeRapiFreeBuffer()", G_STRFUNC);
-  hr = CeRapiFreeBuffer(data);
+  hr = IRAPISession_CeRapiFreeBuffer(synce_backend->session, data);
   if (FAILED(hr))
     g_warning("CeRapiFreeBuffer(): failed");
   MUTEX_UNLOCK (synce_backend->mutex);
@@ -2628,6 +2623,11 @@ synce_gvfs_mount (GVfsBackend *backend,
   GMountSpec *synce_mount_spec = NULL;
   gchar *display_name = NULL;
   HRESULT hr;
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
+  RAPI_DEVICEINFO devinfo;
 
   g_debug("%s: entering ...", G_STRFUNC);
 
@@ -2635,35 +2635,85 @@ synce_gvfs_mount (GVfsBackend *backend,
   g_debug("%s: hostname: %s", G_STRFUNC, synce_backend->device_name);
 
   MUTEX_LOCK (synce_backend->mutex);
-  synce_backend->rapi_conn = rapi_connection_from_name(synce_backend->device_name);
-  if (!synce_backend->rapi_conn) {
-    g_warning("%s: failed to obtain rapi connection", G_STRFUNC);
-    g_free(synce_backend->device_name);
+
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop))) {
+    g_critical("%s: failed to initialise RAPI: %d: %s", G_STRFUNC, hr, synce_strerror_from_hresult(hr));
     MUTEX_UNLOCK (synce_backend->mutex);
 
     g_vfs_job_failed (G_VFS_JOB (job),
 		      G_IO_ERROR, G_IO_ERROR_HOST_NOT_FOUND,
 		      _("Unable to connect to device"));
-    return;
+    goto error_exit;
   }
 
-  rapi_connection_select(synce_backend->rapi_conn);
-  hr = CeRapiInit();
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev))) {
+    g_critical("%s: failed to get connected devices: %d: %s", G_STRFUNC, hr, synce_strerror_from_hresult(hr));
+    MUTEX_UNLOCK (synce_backend->mutex);
 
-  if (FAILED(hr))
-    {
-      g_warning("%s: failed to initialize RAPI connection: %s", G_STRFUNC, synce_strerror(hr));
-      rapi_connection_destroy(synce_backend->rapi_conn);
-      g_free(synce_backend->device_name);
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_HOST_NOT_FOUND,
+		      _("Unable to connect to device"));
+    goto error_exit;
+  }
+
+  while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device))) {
+    if (synce_backend->device_name == NULL)
+      break;
+
+    if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo))) {
+      g_critical("%s: failed to get device info", G_STRFUNC);
       MUTEX_UNLOCK (synce_backend->mutex);
 
       g_vfs_job_failed (G_VFS_JOB (job),
-			G_IO_ERROR, G_IO_ERROR_FAILED,
-			_("Failed to initialize connection to device"));
-      return;
-    } else {
-      g_debug("%s: initialized connection for host '%s'", G_STRFUNC, synce_backend->device_name);
+                        G_IO_ERROR, G_IO_ERROR_HOST_NOT_FOUND,
+                        _("Unable to connect to device"));
+      goto error_exit;
     }
+    if (strcmp(synce_backend->device_name, devinfo.bstrName) == 0)
+      break;
+  }
+
+  if (FAILED(hr)) {
+    g_critical("%s: Could not find device '%s': %08x: %s", G_STRFUNC,
+               synce_backend->device_name?synce_backend->device_name:"(Default)",
+               hr, synce_strerror_from_hresult(hr));
+    MUTEX_UNLOCK (synce_backend->mutex);
+
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_HOST_NOT_FOUND,
+		      _("Unable to connect to device"));
+    goto error_exit;
+  }
+
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session))) {
+    g_critical("%s: Could not create a session to device: %08x: %s", G_STRFUNC, hr, synce_strerror_from_hresult(hr));
+    MUTEX_UNLOCK (synce_backend->mutex);
+
+    g_vfs_job_failed (G_VFS_JOB (job),
+		      G_IO_ERROR, G_IO_ERROR_HOST_NOT_FOUND,
+		      _("Unable to connect to device"));
+    goto error_exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session))) {
+    g_critical("%s: failed to initialize RAPI connection to device: %08x: %s", G_STRFUNC, hr, synce_strerror_from_hresult(hr));
+    MUTEX_UNLOCK (synce_backend->mutex);
+
+    g_vfs_job_failed (G_VFS_JOB (job),
+                      G_IO_ERROR, G_IO_ERROR_FAILED,
+                      _("Failed to initialize connection to device"));
+    goto error_exit;
+  }
+
+  g_debug("%s: initialized connection for host '%s'", G_STRFUNC, synce_backend->device_name);
+
+  synce_backend->device = device;
+  synce_backend->session = session;
+
   MUTEX_UNLOCK (synce_backend->mutex);
 
   /*
@@ -2690,6 +2740,19 @@ synce_gvfs_mount (GVfsBackend *backend,
   g_vfs_job_succeeded (G_VFS_JOB (job));
 
   g_debug("%s: leaving ...", G_STRFUNC);
+  return;
+
+error_exit:
+  if (session) {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
+  g_free(synce_backend->device_name);
+  return;
 }
 
 static void
@@ -2708,9 +2771,10 @@ synce_gvfs_unmount (GVfsBackend *backend,
   g_debug("%s: unmounting %s", G_STRFUNC, synce_backend->device_name);
 
   MUTEX_LOCK (synce_backend->mutex);
-  rapi_connection_select(synce_backend->rapi_conn);
-  CeRapiUninit();
-  rapi_connection_destroy(synce_backend->rapi_conn);
+  IRAPISession_CeRapiUninit(synce_backend->session);
+  IRAPISession_Release(synce_backend->session);
+  IRAPIDevice_Release(synce_backend->device);
+
   MUTEX_UNLOCK (synce_backend->mutex);
 
   g_free(synce_backend->device_name);

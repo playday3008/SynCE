@@ -56,7 +56,7 @@ dnl *** Check for libsynce ***
 dnl **************************
 
 dnl Check for libsynce
-PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.16)
+PKG_CHECK_MODULES(LIBSYNCE, libsynce >= 0.17)
 
 
 AC_ARG_WITH(gvfs-source, [  --with-gvfs-source=PATH     Location of the GVFS source tree.],
