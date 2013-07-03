@@ -48,6 +48,13 @@ pda_error_cb(CeScreen *ce_screen, gpointer user_data)
         gtk_main_quit();
 }
 
+static gboolean
+start_connect(gpointer data)
+{
+  ce_screen_connect(CE_SCREEN(data));
+  return FALSE;
+}
+
 gint
 main(gint argc, gchar *argv[])
 {
@@ -85,11 +92,11 @@ main(gint argc, gchar *argv[])
         g_debug("%s: ForceInstall: %d", G_STRFUNC, forceinstall);
         g_debug("%s: device: %s", G_STRFUNC, pda_name);
 
-        ce_screen = g_object_new(CE_SCREEN_TYPE, NULL);
+        ce_screen = g_object_new(CE_SCREEN_TYPE, "pda-name", pda_name, "synce", synce, "force-install", forceinstall, NULL);
 
         g_signal_connect(G_OBJECT(ce_screen), "pda-error", G_CALLBACK(pda_error_cb), pda_name);
 
-        ce_screen_connect(ce_screen, pda_name, synce, forceinstall);
+        g_idle_add(start_connect, ce_screen);
 
         gtk_widget_show_all(GTK_WIDGET(ce_screen));
         gtk_main();

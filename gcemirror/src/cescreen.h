@@ -65,6 +65,6 @@ GType ce_screen_get_type (void);
 #define CE_SCREEN_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj), CE_SCREEN_TYPE, CeScreenClass))
 
-void ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_device, gboolean force_install);
+void ce_screen_connect(CeScreen *self);
 
 #endif /* CESCREEN_H */

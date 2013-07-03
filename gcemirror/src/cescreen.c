@@ -66,6 +66,16 @@
 
 G_DEFINE_TYPE (CeScreen, ce_screen, GTK_TYPE_WINDOW)
 
+/* properties */
+enum
+{
+  PROP_PDANAME = 1,
+  PROP_SYNCE,
+  PROP_FORCEINSTALL,
+
+  LAST_PROPERTY
+};
+
 typedef struct _CeScreenPrivate CeScreenPrivate;
 struct _CeScreenPrivate
 {
@@ -89,6 +99,7 @@ struct _CeScreenPrivate
         guint32 header_size;
         guint32 bmp_size;
         gboolean force_install;
+        gboolean is_synce_device;
         GtkPrintSettings *print_settings;
         GtkPageSetup *default_print_page;
 };
@@ -894,22 +905,25 @@ ce_screen_gvfs_mount_ready(GObject *source_object, GAsyncResult *res, gpointer u
 
 
 void
-ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_device, gboolean force_install)
+ce_screen_connect(CeScreen *self)
 {
         CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
         GError *error = NULL;
 
-        priv->name = g_strdup(pda_name);
-        priv->force_install = force_install;
+        if (!(priv->name)) {
+                g_critical("%s: device name was not specified", G_STRFUNC);
+                g_signal_emit(self, CE_SCREEN_GET_CLASS(self)->signals[PDA_ERROR], 0);
+                return;
+        }
 
-        if (!is_synce_device)
-                return ce_screen_connect_socket(self, pda_name);
+        if (!priv->is_synce_device)
+                return ce_screen_connect_socket(self, priv->name);
 
         gchar *uri = NULL;
         GFile *remote_snap = NULL;
         GMount *mount = NULL;
 
-        uri = g_strdup_printf("synce://%s/Filesystem/Windows/screensnap.exe", pda_name);
+        uri = g_strdup_printf("synce://%s/Filesystem/Windows/screensnap.exe", priv->name);
         g_debug("%s: uri = %s", G_STRFUNC, uri);
         remote_snap = g_file_new_for_uri(uri);
         g_free(uri);
@@ -941,7 +955,7 @@ ce_screen_connect(CeScreen *self, const gchar *pda_name, gboolean is_synce_devic
                 goto exit;
         }
 
-        ce_screen_do_synce_connect(self, pda_name);
+        ce_screen_do_synce_connect(self, priv->name);
 
  exit:
         if (remote_snap) g_object_unref(remote_snap);
@@ -1149,6 +1163,9 @@ ce_screen_init(CeScreen *self)
         priv->pause = FALSE;
         priv->print_settings = NULL;
         priv->default_print_page = NULL;
+        priv->name = NULL;
+        priv->is_synce_device = TRUE;
+        priv->force_install = FALSE;
 
         /*
         gtk_window_set_default_size(GTK_WINDOW(self), 200, 200);
@@ -1301,14 +1318,97 @@ ce_screen_finalize(GObject *obj)
 }
 
 static void
+ce_screen_get_property (GObject    *obj,
+                        guint       property_id,
+                        GValue     *value,
+                        GParamSpec *pspec)
+{
+  CeScreen *self = CE_SCREEN (obj);
+  CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+  switch (property_id) {
+  case PROP_PDANAME:
+    g_value_set_string (value, priv->name);
+    break;
+  case PROP_SYNCE:
+    g_value_set_boolean (value, priv->is_synce_device);
+    break;
+  case PROP_FORCEINSTALL:
+    g_value_set_boolean (value, priv->force_install);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
+}
+
+static void
+ce_screen_set_property (GObject      *obj,
+                        guint         property_id,
+                        const GValue *value,
+                        GParamSpec   *pspec)
+{
+  CeScreen *self = CE_SCREEN (obj);
+  CeScreenPrivate *priv = CE_SCREEN_GET_PRIVATE (self);
+
+  switch (property_id) {
+  case PROP_PDANAME:
+    g_free (priv->name);
+    priv->name = g_value_dup_string (value);
+    break;
+  case PROP_SYNCE:
+    priv->is_synce_device = g_value_get_boolean (value);
+    break;
+  case PROP_FORCEINSTALL:
+    priv->force_install = g_value_get_boolean (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, property_id, pspec);
+    break;
+  }
+}
+
+
+static void
 ce_screen_class_init(CeScreenClass *klass)
 {
         GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+        GParamSpec *param_spec;
 
         g_type_class_add_private(klass, sizeof(CeScreenPrivate));
   
+        gobject_class->get_property = ce_screen_get_property;
+        gobject_class->set_property = ce_screen_set_property;
+
         gobject_class->dispose = ce_screen_dispose;
         gobject_class->finalize = ce_screen_finalize;
+
+        param_spec = g_param_spec_string ("pda-name", "Device name",
+                                          "Name of the device to connect to.",
+                                          NULL,
+                                          G_PARAM_CONSTRUCT_ONLY |
+                                          G_PARAM_READWRITE |
+                                          G_PARAM_STATIC_NICK |
+                                          G_PARAM_STATIC_BLURB);
+        g_object_class_install_property (gobject_class, PROP_PDANAME, param_spec);
+
+        param_spec = g_param_spec_boolean ("synce", "Device connection type",
+                                          "Whether to connect to the device over synce.",
+                                          TRUE,
+                                          G_PARAM_CONSTRUCT_ONLY |
+                                          G_PARAM_READWRITE |
+                                          G_PARAM_STATIC_NICK |
+                                          G_PARAM_STATIC_BLURB);
+        g_object_class_install_property (gobject_class, PROP_SYNCE, param_spec);
+
+        param_spec = g_param_spec_boolean ("force-install", "Force installation",
+                                          "Force installation of connection package.",
+                                          FALSE,
+                                          G_PARAM_CONSTRUCT_ONLY |
+                                          G_PARAM_READWRITE |
+                                          G_PARAM_STATIC_NICK |
+                                          G_PARAM_STATIC_BLURB);
+        g_object_class_install_property (gobject_class, PROP_FORCEINSTALL, param_spec);
 
         klass->signals[PDA_ERROR] = g_signal_new ("pda-error",
                                                      G_OBJECT_CLASS_TYPE (klass),
