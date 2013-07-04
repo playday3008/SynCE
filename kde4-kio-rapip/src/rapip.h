@@ -30,7 +30,7 @@
 #endif
 
 #include <kio/slavebase.h>
-#include <rapi.h>
+#include <rapi2.h>
 #include <KUrl>
 #include <QByteArray>
 
@@ -62,7 +62,7 @@ private:
     bool ceOk;
     bool isConnected;
     QString actualHost;
-    synce::RapiConnection *rapiconn;
+    synce::IRAPISession *session;
 };
 
 #endif

@@ -59,33 +59,74 @@ void kio_rapipProtocol::setHost(const QString& _host, quint16 /*_port*/,
 void kio_rapipProtocol::openConnection()
 {
     HRESULT hr;
+    synce::IRAPIDesktop *desktop = NULL;
+    synce::IRAPIEnumDevices *enumdev = NULL;
+    synce::IRAPIDevice *device = NULL;
+    synce::RAPI_DEVICEINFO devinfo;
+    const char *goodData = NULL;
 
-    if (!actualHost.isEmpty()) {
-      //See http://doc.trolltech.com/4.4/porting4.html#qstring for why this is done
-      QByteArray asciiData = actualHost.toAscii();
-      const char *goodData = asciiData.constData();
-      rapiconn = synce::rapi_connection_from_name(goodData);
-    } else {
-      rapiconn = synce::rapi_connection_from_name(NULL);
-    }
+    ceOk = false;
+    isConnected = false;
 
-    if (!rapiconn) {
-      ceOk = false;
-      isConnected = false;
+    if (FAILED(hr = synce::IRAPIDesktop_Get(&desktop))) {
       error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
       return;
     }
 
-    synce::rapi_connection_select(rapiconn);
+    if (FAILED(hr = synce::IRAPIDesktop_EnumDevices(desktop, &enumdev))) {
+      synce::IRAPIDesktop_Release(desktop);
+      error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
+      return;
+    }
+
+    if (!actualHost.isEmpty()) {
+      //See http://doc.trolltech.com/4.4/porting4.html#qstring for why this is done
+      QByteArray asciiData = actualHost.toAscii();
+      goodData = asciiData.constData();
+    } 
+
+    while (SUCCEEDED(hr = synce::IRAPIEnumDevices_Next(enumdev, &device))) {
+      if (goodData == NULL)
+        break;
+
+      if (FAILED(synce::IRAPIDevice_GetDeviceInfo(device, &devinfo))) {
+        synce::IRAPIEnumDevices_Release(enumdev);
+        synce::IRAPIDesktop_Release(desktop);
+        error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
+        return;
+      }
+      if (strcmp(goodData, devinfo.bstrName) == 0)
+        break;
+    }
+
+    if (FAILED(hr)) {
+      synce::IRAPIEnumDevices_Release(enumdev);
+      synce::IRAPIDesktop_Release(desktop);
+      error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
+      return;
+    }
+
+    synce::IRAPIDevice_AddRef(device);
+    synce::IRAPIEnumDevices_Release(enumdev);
+    enumdev = NULL;
+
+    if (FAILED(hr = synce::IRAPIDevice_CreateSession(device, &session))) {
+      synce::IRAPIDevice_Release(device);
+      synce::IRAPIDesktop_Release(desktop);
+      error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
+      return;
+    }
+
+    synce::IRAPIDevice_Release(device);
 
     ceOk = true;
 
-    hr = synce::CeRapiInit();
+    hr = synce::IRAPISession_CeRapiInit(session);
 
     if (FAILED(hr)) {
         ceOk = false;
         isConnected = false;
-	synce::rapi_connection_destroy(rapiconn);
+	synce::IRAPISession_Release(session);
         error(KIO::ERR_COULD_NOT_CONNECT, actualHost);
     } else {
         isConnected = true;
@@ -98,8 +139,8 @@ void kio_rapipProtocol::openConnection()
 void kio_rapipProtocol::closeConnection()
 {
     if (isConnected) {
-        synce::CeRapiUninit();
-	synce::rapi_connection_destroy(rapiconn);
+        synce::IRAPISession_CeRapiUninit(session);
+	synce::IRAPISession_Release(session);
     }
 
     isConnected = false;
@@ -112,7 +153,7 @@ QString kio_rapipProtocol::adjust_remote_path()
     QString returnPath;
 
     if (ceOk) {
-        if (synce::CeGetSpecialFolderPath(CSIDL_PERSONAL, sizeof(path), path)) {
+        if (synce::IRAPISession_CeGetSpecialFolderPath(session, CSIDL_PERSONAL, sizeof(path), path)) {
             returnPath = QString::fromUtf16(path);
         } else {
             ceOk = false;
@@ -154,7 +195,8 @@ bool kio_rapipProtocol::list_matching_files(QString &path)
     KUrl tmpUrl;
 
     if (ceOk) {
-        ceOk = synce::CeFindAllFiles(
+        ceOk = synce::IRAPISession_CeFindAllFiles(
+                   session,
                    path.utf16(),
                    (show_hidden_files ? 0 : FAF_ATTRIB_NO_HIDDEN) |
                    FAF_ATTRIBUTES|FAF_LASTWRITE_TIME|FAF_NAME|FAF_SIZE_LOW|FAF_OID,
@@ -187,7 +229,7 @@ bool kio_rapipProtocol::list_matching_files(QString &path)
         } else {
             closeConnection();
         }
-        synce::CeRapiFreeBuffer(find_data);
+        synce::IRAPISession_CeRapiFreeBuffer(session, find_data);
     }
 
     return success;
@@ -213,11 +255,11 @@ void kio_rapipProtocol::get(const KUrl& url)
             mt = KMimeType::findByUrl(url);
             mimeType(mt->name());
             qPath = url.path().replace("/", "\\");
-            HANDLE remote = synce::CeCreateFile(qPath.utf16(), GENERIC_READ, 0, NULL,
+            HANDLE remote = synce::IRAPISession_CeCreateFile(session, qPath.utf16(), GENERIC_READ, 0, NULL,
                                                 OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
             if (!(INVALID_HANDLE_VALUE == remote)) {
                 do {
-                    if ((ceOk = synce::CeReadFile(remote, buffer, ANYFILE_BUFFER_SIZE, &bytes_read, NULL))) {
+                    if ((ceOk = synce::IRAPISession_CeReadFile(session, remote, buffer, ANYFILE_BUFFER_SIZE, &bytes_read, NULL))) {
                         if (ceOk && bytes_read > 0) {
 			    /*QByteArray.setRawData and resetRawData are deprecated; this method WFM but 
 			     *is probably not optimal - Tejas Guruswamy <masterpatricko@gmail.com>
@@ -238,7 +280,7 @@ void kio_rapipProtocol::get(const KUrl& url)
                     error(KIO::ERR_COULD_NOT_READ, url.prettyUrl());
                     closeConnection();
                 }
-                synce::CeCloseHandle(remote);
+                synce::IRAPISession_CeCloseHandle(session, remote);
             } else {
                 error(KIO::ERR_CANNOT_OPEN_FOR_READING, url.prettyUrl());
                 closeConnection();
@@ -265,9 +307,9 @@ void kio_rapipProtocol::put(const KUrl& url, int /* permissions */, KIO::JobFlag
     if (ceOk) {
         if (checkRequestURL(url)) {
             qPath = url.path().replace("/", "\\");
-            if (synce::CeGetFileAttributes(qPath.utf16()) != 0xFFFFFFFF) {
+            if (synce::IRAPISession_CeGetFileAttributes(session, qPath.utf16()) != 0xFFFFFFFF) {
                 if (flags & KIO::Overwrite) {
-                    if (!(ceOk = synce::CeDeleteFile(qPath.utf16()))) {
+                    if (!(ceOk = synce::IRAPISession_CeDeleteFile(session, qPath.utf16()))) {
                         error(KIO::ERR_CANNOT_DELETE, url.prettyUrl());
                         closeConnection();
                         ceOk = false;
@@ -278,14 +320,14 @@ void kio_rapipProtocol::put(const KUrl& url, int /* permissions */, KIO::JobFlag
                 }
             }
             if (ceOk) {
-                Qt::HANDLE remote = synce::CeCreateFile(qPath.utf16(), GENERIC_WRITE, 0, NULL,
+                Qt::HANDLE remote = synce::IRAPISession_CeCreateFile(session, qPath.utf16(), GENERIC_WRITE, 0, NULL,
                                                     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
                 if (!(INVALID_HANDLE_VALUE == remote)) {
                     do {
                         dataReq();
                         result = readData(buffer);
                         if (result > 0) {
-                            ceOk = synce::CeWriteFile(remote, (unsigned char *) buffer.data(), buffer.size(), &bytes_written, NULL);
+                            ceOk = synce::IRAPISession_CeWriteFile(session, remote, (unsigned char *) buffer.data(), buffer.size(), &bytes_written, NULL);
                         }
                     } while (result > 0 && ceOk);
                     if (ceOk) {
@@ -294,7 +336,7 @@ void kio_rapipProtocol::put(const KUrl& url, int /* permissions */, KIO::JobFlag
                         error(KIO::ERR_COULD_NOT_WRITE, url.prettyUrl());
                         closeConnection();
                     }
-                    synce::CeCloseHandle(remote);
+                    synce::IRAPISession_CeCloseHandle(session, remote);
                 } else {
                     error(KIO::ERR_CANNOT_OPEN_FOR_WRITING, url.prettyUrl());
                     closeConnection();
@@ -347,7 +389,7 @@ void kio_rapipProtocol::mkdir(const KUrl& url, int /* permissions */)
     if (ceOk) {
         if (checkRequestURL(url)) {
             qPath = url.path().replace("/", "\\");
-            if (synce::CeCreateDirectory(qPath.utf16(), NULL)) {
+            if (synce::IRAPISession_CeCreateDirectory(session, qPath.utf16(), NULL)) {
                 finished();
             } else {
                 error(KIO::ERR_DIR_ALREADY_EXIST, url.prettyUrl());
@@ -372,9 +414,9 @@ void kio_rapipProtocol::del(const KUrl& url, bool isFile)
         if (checkRequestURL(url)) {
             qPath = url.path().replace("/", "\\");
             if (isFile) {
-                ceOk = synce::CeDeleteFile(qPath.utf16());
+                ceOk = synce::IRAPISession_CeDeleteFile(session, qPath.utf16());
             } else {
-                ceOk = synce::CeRemoveDirectory(qPath.utf16());
+                ceOk = synce::IRAPISession_CeRemoveDirectory(session, qPath.utf16());
             }
             if (ceOk) {
                 finished();
@@ -404,7 +446,7 @@ void kio_rapipProtocol::stat(const KUrl & url)
     if (ceOk) {
         if (checkRequestURL(url)) {
             qPath = url.path().replace("/","\\");
-            if ((attributes = synce::CeGetFileAttributes(qPath.utf16())) !=  0xFFFFFFFF) {
+            if ((attributes = synce::IRAPISession_CeGetFileAttributes(session, qPath.utf16())) !=  0xFFFFFFFF) {
 
 		udsEntry.insert( KIO::UDSEntry::UDS_NAME, url.fileName());
 		udsEntry.insert( KIO::UDSEntry::UDS_ACCESS, S_IRUSR | S_IRGRP | S_IROTH | S_IWUSR | S_IWGRP | S_IWOTH |S_IXUSR | S_IXGRP | S_IXOTH);
@@ -418,18 +460,18 @@ void kio_rapipProtocol::stat(const KUrl & url)
 
                 } else {
 		    int tmpFileSize;
-                    HANDLE remote = synce::CeCreateFile(qPath.utf16(), GENERIC_READ, 0, NULL,
+                    HANDLE remote = synce::IRAPISession_CeCreateFile(session, qPath.utf16(), GENERIC_READ, 0, NULL,
                                                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 		    /* For Qt4 inserting udsEntries is a one step process so tmpFile size is used
 		     * to hold the file size instead of assigning it inside the if-block
 		     */
                     if (!(INVALID_HANDLE_VALUE == remote)) {
-                        if ((fileSize = synce::CeGetFileSize(remote, NULL)) != 0xFFFFFFFF) {
+                        if ((fileSize = synce::IRAPISession_CeGetFileSize(session, remote, NULL)) != 0xFFFFFFFF) {
                             tmpFileSize = fileSize;
                         } else {
                             tmpFileSize = 0;
                         }
-                        synce::CeCloseHandle(remote);
+                        synce::IRAPISession_CeCloseHandle(session, remote);
                     } else {
                         tmpFileSize = 0;
                     }
@@ -444,7 +486,7 @@ void kio_rapipProtocol::stat(const KUrl & url)
                 statEntry(udsEntry);
                 finished();
             } else {
-                unsigned int lastError = synce::CeGetLastError();
+                unsigned int lastError = synce::IRAPISession_CeGetLastError(session);
                 if (lastError == S_OK) {
                     closeConnection();
                     redirection(url);
@@ -491,7 +533,7 @@ void kio_rapipProtocol::mimetype( const KUrl& url)
     if (ceOk) {
         if (checkRequestURL(url)) {
             qPath = url.path();
-            if ((attributes = synce::CeGetFileAttributes(qPath.utf16())) !=  0xFFFFFFFF) {
+            if ((attributes = synce::IRAPISession_CeGetFileAttributes(session, qPath.utf16())) !=  0xFFFFFFFF) {
                 if (attributes & FILE_ATTRIBUTE_DIRECTORY) {
                     mimeType("inode/directory");
                 } else {
@@ -523,9 +565,9 @@ void kio_rapipProtocol::rename(const KUrl& src, const KUrl& dst, KIO::JobFlags f
         if (checkRequestURL(src) && checkRequestURL(dst)) {
             sPath = src.path().replace("/", "\\");
             dPath = dst.path().replace("/", "\\");
-            if (synce::CeGetFileAttributes(dPath.utf16()) !=  0xFFFFFFFF) {
+            if (synce::IRAPISession_CeGetFileAttributes(session, dPath.utf16()) !=  0xFFFFFFFF) {
                 if (flags & KIO::Overwrite) {
-                    if (!(ceOk = synce::CeDeleteFile(dPath.utf16()))) {
+                    if (!(ceOk = synce::IRAPISession_CeDeleteFile(session, dPath.utf16()))) {
                         error(KIO::ERR_CANNOT_DELETE, dst.prettyUrl());
                         closeConnection();
                         ceOk = false;
@@ -536,8 +578,8 @@ void kio_rapipProtocol::rename(const KUrl& src, const KUrl& dst, KIO::JobFlags f
                 }
             }
             if (ceOk) {
-                if (synce::CeGetFileAttributes(sPath.utf16()) !=  0xFFFFFFFF) {
-                    if (synce::CeMoveFile(sPath.utf16(), dPath.utf16())) {
+                if (synce::IRAPISession_CeGetFileAttributes(session, sPath.utf16()) !=  0xFFFFFFFF) {
+                    if (synce::IRAPISession_CeMoveFile(session, sPath.utf16(), dPath.utf16())) {
                         finished();
                     } else {
                         error(KIO::ERR_CANNOT_RENAME, dst.prettyUrl());
@@ -568,9 +610,9 @@ void kio_rapipProtocol::copy(const KUrl& src, const KUrl& dst, int /* permission
         if (checkRequestURL(src) && checkRequestURL(dst)) {
             sPath = src.path().replace("/", "\\");
             dPath = dst.path().replace("/", "\\");
-            if (synce::CeGetFileAttributes(dPath.utf16()) !=  0xFFFFFFFF) {
+            if (synce::IRAPISession_CeGetFileAttributes(session, dPath.utf16()) !=  0xFFFFFFFF) {
                 if (flags & KIO::Overwrite) {
-                    if (!(ceOk = synce::CeDeleteFile(dPath.utf16()))) {
+                    if (!(ceOk = synce::IRAPISession_CeDeleteFile(session, dPath.utf16()))) {
                         error(KIO::ERR_CANNOT_DELETE, dst.prettyUrl());
                         closeConnection();
                         ceOk = false;
@@ -581,8 +623,8 @@ void kio_rapipProtocol::copy(const KUrl& src, const KUrl& dst, int /* permission
                 }
             }
             if (ceOk) {
-                if (synce::CeGetFileAttributes(sPath.utf16()) !=  0xFFFFFFFF) {
-                    if (synce::CeCopyFile(sPath.utf16(), dPath.utf16(), true)) {
+                if (synce::IRAPISession_CeGetFileAttributes(session, sPath.utf16()) !=  0xFFFFFFFF) {
+                    if (synce::IRAPISession_CeCopyFile(session, sPath.utf16(), dPath.utf16(), true)) {
                         finished();
                     } else {
                         error(KIO::ERR_CANNOT_RENAME, dst.prettyUrl());
