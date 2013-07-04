@@ -23,7 +23,7 @@ include (KDE4Defaults)
 include (MacroLibrary)
 include(MacroOptionalAddSubdirectory)
 
-pkg_check_modules(SYNCE libsynce>=0.17)
+pkg_check_modules(SYNCE REQUIRED libsynce>=0.17)
 
 add_definitions (${SYNCE_CFLAGS} ${QT_DEFINITIONS} ${KDE4_DEFINITIONS})
 include_directories (${SYNCE_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${KDE4_INCLUDES})
