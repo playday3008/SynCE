@@ -25,3 +25,4 @@
 
 bool Ce::initialized = false;
 int Ce::used = 0;
+synce::IRAPISession *Ce::session = NULL;

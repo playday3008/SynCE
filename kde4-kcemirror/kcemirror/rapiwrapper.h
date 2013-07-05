@@ -28,11 +28,12 @@
 #include <config.h>
 #endif
 
-#include <rapi.h>
+#include <rapi2.h>
 #include <stdio.h>
 
 #include <kurl.h>
 #include <qstring.h>
+#include <KDebug>
 
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
@@ -49,25 +50,68 @@ public:
     static bool rapiInit(QString host)
     {
         HRESULT hr;
+        synce::IRAPIDesktop *desktop = NULL;
+        synce::IRAPIEnumDevices *enumdev = NULL;
+        synce::IRAPIDevice *device = NULL;
+        synce::RAPI_DEVICEINFO devinfo;
         bool ret = false;
 
-        if (!host.isEmpty()) {
-            const char *hostc = host.toAscii().constData();
-            synce::synce_set_connection_filename(hostc);
-        } else {
-            synce::synce_set_default_connection_filename();
-        }
-
-        if (!initialized) {
-            hr = synce::CeRapiInit();
-            if (!FAILED(hr)) {
-                ret = true;
-                initialized = true;
-                used++;
-            }
-        } else {
+        if (initialized) {
             ret = true;
             used++;
+            return ret;
+        }
+
+        kDebug(2120) << "connecting to device " << host << endl;
+
+        if (FAILED(hr = synce::IRAPIDesktop_Get(&desktop))) {
+          return ret;
+        }
+
+        if (FAILED(hr = synce::IRAPIDesktop_EnumDevices(desktop, &enumdev))) {
+          synce::IRAPIDesktop_Release(desktop);
+          return ret;
+        }
+
+        while (SUCCEEDED(hr = synce::IRAPIEnumDevices_Next(enumdev, &device))) {
+          if (host.isEmpty())
+            break;
+
+          if (FAILED(synce::IRAPIDevice_GetDeviceInfo(device, &devinfo))) {
+            synce::IRAPIEnumDevices_Release(enumdev);
+            synce::IRAPIDesktop_Release(desktop);
+            return ret;
+          }
+          if (strcmp(host.toAscii().constData(), devinfo.bstrName) == 0)
+            break;
+        }
+
+        if (FAILED(hr)) {
+          synce::IRAPIEnumDevices_Release(enumdev);
+          synce::IRAPIDesktop_Release(desktop);
+          return ret;
+        }
+
+        synce::IRAPIDevice_AddRef(device);
+        synce::IRAPIEnumDevices_Release(enumdev);
+        enumdev = NULL;
+
+        if (FAILED(hr = synce::IRAPIDevice_CreateSession(device, &session))) {
+          synce::IRAPIDevice_Release(device);
+          synce::IRAPIDesktop_Release(desktop);
+          return ret;
+        }
+
+        synce::IRAPIDevice_Release(device);
+
+        hr = synce::IRAPISession_CeRapiInit(session);
+        if (!FAILED(hr)) {
+            ret = true;
+            initialized = true;
+            used++;
+        } else {
+            synce::IRAPISession_Release(session);
+            session = NULL;
         }
 
         return ret;
@@ -79,12 +123,26 @@ public:
         if (initialized) {
             used--;
             if (!used) {
-                synce::CeRapiUninit();
+                synce::IRAPISession_CeRapiUninit(session);
+                IRAPISession_Release(session);
+                session = NULL;
                 initialized = false;
             }
         }
 
         return true;
+    }
+
+
+    static QString getDeviceIp()
+    {
+        const char *device_ip = NULL;
+        synce::IRAPIDevice *device = NULL;
+
+        device = synce::IRAPISession_get_device(session);
+        device_ip = synce::IRAPIDevice_get_device_ip(device);
+        synce::IRAPIDevice_Release(device);
+        return QString(device_ip);
     }
 
 
@@ -102,7 +160,8 @@ public:
     {
         bool ret = false;
 
-        if ((ret = CeCreateProcess(lpApplicationName,
+        if ((ret = IRAPISession_CeCreateProcess(session,
+                                  lpApplicationName,
                                   lpCommandLine,
                                   lpProcessAttributes,
                                   lpThreadAttributes,
@@ -112,8 +171,8 @@ public:
                                   lpCurrentDirectory,
                                   lpStartupInfo,
                                    lpProcessInformation))) {
-            synce::CeCloseHandle(lpProcessInformation->hProcess);
-            synce::CeCloseHandle(lpProcessInformation->hThread);
+            synce::IRAPISession_CeCloseHandle(session, lpProcessInformation->hProcess);
+            synce::IRAPISession_CeCloseHandle(session, lpProcessInformation->hThread);
         }
 
         return ret;
@@ -126,7 +185,7 @@ public:
     {
         bool ret = false;
 
-        ret = synce::CeCreateDirectory(lpPathName, lpSecurityAttributes);
+        ret = synce::IRAPISession_CeCreateDirectory(session, lpPathName, lpSecurityAttributes);
 
         return ret;
     }
@@ -139,7 +198,7 @@ public:
     {
         bool ret = false;
 
-        ret = synce::CeCopyFile(lpExistingFileName, lpNewFileName,
+        ret = synce::IRAPISession_CeCopyFile(session, lpExistingFileName, lpNewFileName,
                 bFailIfExists);
 
         return ret;
@@ -157,7 +216,8 @@ public:
     {
         HANDLE h;
 
-        h = synce::CeCreateFile(lpFileName,
+        h = synce::IRAPISession_CeCreateFile(session,
+                                lpFileName,
                                 dwDesiredAccess,
                                 dwShareMode,
                                 lpSecurityAttributes,
@@ -168,9 +228,9 @@ public:
         return h;
     }
 
-    static HRESULT rapiInvokeA(
-        LPCSTR pDllPath,
-        LPCSTR pFunctionName,
+    static HRESULT rapiInvoke(
+        LPCWSTR pDllPath,
+        LPCWSTR pFunctionName,
         DWORD cbInput,
         const BYTE *pInput,
         DWORD *pcbOutput,
@@ -180,7 +240,8 @@ public:
     {
         HRESULT hr;
 
-        hr = CeRapiInvokeA(
+        hr = IRAPISession_CeRapiInvoke(
+                 session,
                  pDllPath,
                  pFunctionName,
                  cbInput,
@@ -201,7 +262,8 @@ public:
         LPDWORD lpNumberOfBytesWritten,
         synce::LPOVERLAPPED lpOverlapped)
     {
-        return synce::CeWriteFile(
+        return synce::IRAPISession_CeWriteFile(
+                   session,
                    hFile,
                    lpBuffer,
                    nNumberOfBytesToWrite,
@@ -215,14 +277,14 @@ public:
         memset(version, 0, sizeof(version));
         version->dwOSVersionInfoSize = sizeof(version);
 
-        return synce::CeGetVersionEx(version);
+        return synce::IRAPISession_CeGetVersionEx(session, version);
     }
 
 
     static void getSystemInfo(synce::SYSTEM_INFO *system)
     {
         memset(system, 0, sizeof(system));
-        synce::CeGetSystemInfo(system);
+        synce::IRAPISession_CeGetSystemInfo(session, system);
     }
 
 
@@ -230,20 +292,20 @@ public:
             bool boolval)
     {
         memset(power, 0, sizeof(synce::SYSTEM_POWER_STATUS_EX));
-        return synce::CeGetSystemPowerStatusEx(power, boolval);
+        return synce::IRAPISession_CeGetSystemPowerStatusEx(session, power, boolval);
     }
 
 
     static bool getStoreInformation(synce::STORE_INFORMATION *store)
     {
         memset(store, 0, sizeof(store));
-        return synce::CeGetStoreInformation(store);
+        return synce::IRAPISession_CeGetStoreInformation(session, store);
     }
 
 
     static bool closeHandle(Qt::HANDLE hObject)
     {
-        return synce::CeCloseHandle(hObject);
+        return synce::IRAPISession_CeCloseHandle(session, hObject);
     }
 
 
@@ -259,6 +321,7 @@ private:
 
     static bool initialized;
     static int used;
+    static synce::IRAPISession* session;
 
 public:
     typedef struct _AnyFile AnyFile;

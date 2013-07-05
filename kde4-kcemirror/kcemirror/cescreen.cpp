@@ -184,19 +184,12 @@ bool CeScreen::connectPda(QString pdaName, bool isSynCeDevice, bool forceInstall
     this->pdaName = pdaName;
 
     if (isSynCeDevice) {
-	synce::SynceInfo *dev_info = synce::synce_info_new(pdaName.toAscii().constData());
-	if (dev_info)
-          deviceAddress = QString(synce::synce_info_get_device_ip(dev_info));
-	else
-          deviceAddress = QString("");
-
-	if (dev_info) synce::synce_info_destroy(dev_info);
-
-        if (deviceAddress.isEmpty()) {
+        if (!Ce::rapiInit(pdaName)) {
             return false;
         }
 
-        if (!Ce::rapiInit(pdaName)) {
+        deviceAddress = Ce::getDeviceIp();
+        if (deviceAddress.isEmpty()) {
             return false;
         }
 
