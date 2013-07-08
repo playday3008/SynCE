@@ -13,11 +13,12 @@
 
 
 #include <rapitypes.h>
+#include <rapi2.h>
 #include "cache.h"
 
 // Calculate the size of the power message file.
 // (which *must* be constant through all the execution!)
-void power_init(void);
+void power_init(IRAPISession *session);
 
 // Extract power information from the structure
 char *getACLineStatus(SYSTEM_POWER_STATUS_EX *d);
@@ -31,14 +32,14 @@ int getBackupBatteryLifeTime(SYSTEM_POWER_STATUS_EX *d);
 int getBackupBatteryFullLifeTime(SYSTEM_POWER_STATUS_EX *d);
 
 // Return a power status structure from the device
-SYSTEM_POWER_STATUS_EX *GetPowerStatus(void);
+SYSTEM_POWER_STATUS_EX *GetPowerStatus(IRAPISession *session);
 
 // The size of the power message: 
 int get_power_file_size(void);
 
-int read_power_status(char *buf,size_t size,off_t offset);
+int read_power_status(IRAPISession *session, char *buf,size_t size,off_t offset);
 
 // Return a message
-char *power_message(void);
+char *power_message(IRAPISession *session);
 
 #endif

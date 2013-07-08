@@ -14,6 +14,7 @@
 #include <string.h>
 #include <fuse.h>
 #include <errno.h>
+#include <rapi2.h>
 
 #include "special_names.h"
 
@@ -26,9 +27,9 @@
 #include "registry.h"
 
 
-void special_init(void)
+void special_init(IRAPISession *session)
 {
-  power_init();
+  power_init(session);
 }
 
 
@@ -57,7 +58,7 @@ int path_is_proc(char *path)
 }
 
 
-int special_fill_dir(const char *path,void *buf,fuse_fill_dir_t filler)
+int special_fill_dir(IRAPISession *session, const char *path,void *buf,fuse_fill_dir_t filler)
 {
   VERB("Special_fill_dir in %s\n",path);
   //  /proc  files
@@ -70,17 +71,17 @@ int special_fill_dir(const char *path,void *buf,fuse_fill_dir_t filler)
 
   if(strncmp(PROC REGISTRY,path,proclen+registrylen)==0) {
     VERB("putting registry files! .\n");
-    registry_fill_dir(path,buf,filler);
+    registry_fill_dir(session, path,buf,filler);
   }
   return 0;
 }
 
-void special_getattr(const char *path,struct stat *stbuf)
+void special_getattr(IRAPISession *session, const char *path,struct stat *stbuf)
 {
   VERB("Special_getattr in %s\n",path);
 
   if(path_is_in_registry(path))
-    registry_getattr(path,stbuf);
+    registry_getattr(session, path,stbuf);
 
   if(strcmp(PROC POWER_STATUS_NAME,path)==0) {
     VERB("Special_getattr on power file\n");
@@ -118,15 +119,15 @@ void special_set_proc(void *buf,fuse_fill_dir_t filler)
   filler(buf,strdup(PROC+1),0,0);
 }
 
-int special_read_file(const char *path,void *buf,size_t size,off_t offset)
+int special_read_file(IRAPISession *session, const char *path,void *buf,size_t size,off_t offset)
 {
   VERB("Special_read_file in %s\n",path);
   if(strcmp(PROC POWER_STATUS_NAME,path)==0) 
-    return read_power_status(buf,size,offset);
+    return read_power_status(session, buf,size,offset);
 
   if(strncmp(PROC REGISTRY,path,proclen+registrylen)==0) {
     VERB("Special read on a registry file! .\n");
-    return registry_read(path,buf,size,offset);
+    return registry_read(session, path,buf,size,offset);
   }
   
   assert(0);

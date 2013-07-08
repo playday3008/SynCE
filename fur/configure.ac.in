@@ -6,11 +6,11 @@ PKG_CONFIG_PATH=/usr/local/lib:$PKG_CONFIG_PATH
 AC_LANG(C)
 
 AC_CHECK_LIB([synce],
-             [CeCreateFile],
+             [IRAPISession_CeCreateFile],
              [LDFLAGS="$LDFLAGS -lsynce"],
              [AC_MSG_ERROR(libsynce must be present!)])
 
-AC_CHECK_HEADERS([rapi.h synce.h],
+AC_CHECK_HEADERS([rapi2.h synce.h],
                  [],
                  [AC_MSG_ERROR(Synce and rapi must be present !)])
 

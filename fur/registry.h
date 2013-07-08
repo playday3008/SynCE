@@ -12,13 +12,14 @@
 #define REGISTRY_H
 
 #include <fuse.h>
+#include <rapi2.h>
 
-void registry_fill_dir(const char *path,void *buf,fuse_fill_dir_t filler);
+void registry_fill_dir(IRAPISession *session, const char *path,void *buf,fuse_fill_dir_t filler);
 
 int path_is_in_registry(const char *path);
 
-int registry_read(const char *path,void *buf,size_t size,off_t offset);
+int registry_read(IRAPISession *session, const char *path,void *buf,size_t size,off_t offset);
 
-void registry_getattr(const char *path,struct stat *stbuf);
+void registry_getattr(IRAPISession *session, const char *path,struct stat *stbuf);
 
 #endif

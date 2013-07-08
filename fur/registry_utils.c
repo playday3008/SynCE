@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <errno.h> 
-#include <rapi.h> 
+#include <rapi2.h> 
 
 #include "special_names.h"
 #include "macros.h"
@@ -12,7 +12,7 @@
 
 //FIXME fixed max registry name length
 #define MAX_ATTRNAME 1000
-void GetAttributes(HKEY base,void *buf,fuse_fill_dir_t filler)
+void GetAttributes(IRAPISession *session, HKEY base,void *buf,fuse_fill_dir_t filler)
 {
   LPWSTR lpName;			
   DWORD num=MAX_ATTRNAME;
@@ -21,14 +21,14 @@ void GetAttributes(HKEY base,void *buf,fuse_fill_dir_t filler)
   {
     int i=0;
 
-    if(CeRegEnumValue(base,0,lpName,&num,NULL,NULL,NULL,NULL)!=ERROR_SUCCESS) {
+    if(IRAPISession_CeRegEnumValue(session, base,0,lpName,&num,NULL,NULL,NULL,NULL)!=ERROR_SUCCESS) {
       VERB("Failed!\n");
       return;
     }
 
     num=MAX_ATTRNAME;
     VERB("Getting values...\n");
-    while(CeRegEnumValue(base,i,lpName,&num,NULL,NULL,NULL,NULL)==ERROR_SUCCESS) {
+    while(IRAPISession_CeRegEnumValue(session, base,i,lpName,&num,NULL,NULL,NULL,NULL)==ERROR_SUCCESS) {
       char *string=wstr_to_current(lpName);
       printf("New value (%d) is: %s\n",i,string);
       filler(buf,string,0,0);
@@ -42,7 +42,7 @@ void GetAttributes(HKEY base,void *buf,fuse_fill_dir_t filler)
 
 
 // Data must be read entirely until the offset
-int ReadAttribute(const char *path,void *buf,size_t size,off_t offset)
+int ReadAttribute(IRAPISession *session, const char *path,void *buf,size_t size,off_t offset)
 {
   HKEY key;
   char *attrname;
@@ -55,7 +55,7 @@ int ReadAttribute(const char *path,void *buf,size_t size,off_t offset)
     return -EIO;
 
   // Open the key
-  if((key=fakePathOpen(path,0))==0) {
+  if((key=fakePathOpen(session, path,0))==0) {
     VERB("Key not opened in GetAttribSize (%s)!\n",path);
     free(tmp);
     return -EIO;
@@ -65,15 +65,15 @@ int ReadAttribute(const char *path,void *buf,size_t size,off_t offset)
   lattrname=wstr_from_current(attrname);
   if(lattrname==NULL) {
     VERB("String not created in GetAttribSize (%s)!\n",attrname);
-    CeRegCloseKey(key);
+    IRAPISession_CeRegCloseKey(session, key);
     free(tmp);
     return -EIO;
   }
 
-  if(CeRegQueryValueEx(key,lattrname,NULL,NULL,tmp,(LPDWORD) &got)!=ERROR_SUCCESS) {
+  if(IRAPISession_CeRegQueryValueEx(session, key,lattrname,NULL,NULL,tmp,(LPDWORD) &got)!=ERROR_SUCCESS) {
     VERB("CeRegQueryValueEx failed!\n");
     VERB("Attrname=%s\n",attrname);
-    CeRegCloseKey(key);
+    IRAPISession_CeRegCloseKey(session, key);
     free(lattrname);
     free(tmp);
     return -EIO;
@@ -81,7 +81,7 @@ int ReadAttribute(const char *path,void *buf,size_t size,off_t offset)
 
   memcpy(buf,tmp+offset,size);
   free(tmp);
-  CeRegCloseKey(key);
+  IRAPISession_CeRegCloseKey(session, key);
 
   free(lattrname);
   return size;
@@ -89,7 +89,7 @@ int ReadAttribute(const char *path,void *buf,size_t size,off_t offset)
 
 }
 
-int GetAttribSize(const char *path)
+int GetAttribSize(IRAPISession *session, const char *path)
 {
   HKEY key;
   char *attrname;
@@ -97,7 +97,7 @@ int GetAttribSize(const char *path)
   int size;
 
   // Open the key
-  if((key=fakePathOpen(path,0))==0) {
+  if((key=fakePathOpen(session, path,0))==0) {
     VERB("Key not opened in GetAttribSize (%s)!\n",path);
     return -EIO;
   }
@@ -106,11 +106,11 @@ int GetAttribSize(const char *path)
   lattrname=wstr_from_current(attrname);
   if(lattrname==NULL) {
     VERB("String not created in GetAttribSize (%s)!\n",attrname);
-    CeRegCloseKey(key);
+    IRAPISession_CeRegCloseKey(session, key);
     return -EIO;
   }
 
-  if(CeRegQueryValueEx(key,lattrname,NULL,NULL,NULL,(LPDWORD) &size)!=ERROR_SUCCESS) {
+  if(IRAPISession_CeRegQueryValueEx(session, key,lattrname,NULL,NULL,NULL,(LPDWORD) &size)!=ERROR_SUCCESS) {
     VERB("CeRegQueryValueEx failed!\n");
     VERB("Attrname=%s\n",attrname);
     free(lattrname);
@@ -122,7 +122,7 @@ int GetAttribSize(const char *path)
 
 //FIXME fixed max registry name length
 #define MAX_REGNAME 1000
-void GetKeys(HKEY base,void *buf,fuse_fill_dir_t filler)
+void GetKeys(IRAPISession *session, HKEY base,void *buf,fuse_fill_dir_t filler)
 {
   LPWSTR lpName;			
   DWORD num=MAX_REGNAME;
@@ -131,14 +131,14 @@ void GetKeys(HKEY base,void *buf,fuse_fill_dir_t filler)
   {
     int i=0;
 
-    if(CeRegEnumKeyEx(base,0,lpName,&num,NULL,NULL,NULL,NULL)!=0) {
+    if(IRAPISession_CeRegEnumKeyEx(session, base,0,lpName,&num,NULL,NULL,NULL,NULL)!=0) {
       VERB("Failed!\n");
       return;
     }
 
     num=MAX_REGNAME;
     VERB("Getting subkeys...\n");
-    while(!CeRegEnumKeyEx(base,i,lpName,&num,NULL,NULL,NULL,NULL)) {
+    while(!IRAPISession_CeRegEnumKeyEx(session, base,i,lpName,&num,NULL,NULL,NULL,NULL)) {
       char *string=wstr_to_current(lpName);
       printf("New key (%d) is: %s\n",i,string);
       filler(buf,string,0,0);
@@ -186,7 +186,7 @@ char **path2list(const char *fake_path,int isdir)
 }
 
 // Apre la chiave che si trova alla fine del path
-HKEY fakePathOpen(const char *fake_path,int isdir)
+HKEY fakePathOpen(IRAPISession *session, const char *fake_path,int isdir)
 {
   char **array=path2list(fake_path,isdir);
   HKEY keytype=-1;
@@ -221,15 +221,15 @@ HKEY fakePathOpen(const char *fake_path,int isdir)
   i=3;
   while(array[i]!=NULL) {
     LPWSTR s;
-    if(CeRegOpenKeyEx(keytype,s=wstr_from_current(array[i]),0,0,&newkey)!=0) {
+    if(IRAPISession_CeRegOpenKeyEx(session, keytype,s=wstr_from_current(array[i]),0,0,&newkey)!=0) {
       free(s);
       free(array[0]-1);
-      CeRegCloseKey(keytype);
+      IRAPISession_CeRegCloseKey(session, keytype);
       VERB("Key not opened\n");
       return 0;
     }      
     free(s);
-    CeRegCloseKey(keytype);
+    IRAPISession_CeRegCloseKey(session, keytype);
     keytype=newkey;
     VERB("%s opened as key 0x%8.8x!\n",array[i],keytype);
     i++;   
@@ -240,24 +240,24 @@ HKEY fakePathOpen(const char *fake_path,int isdir)
   return keytype;
 }
 
-void ListRegDir(const char *fake_path,void *buf,fuse_fill_dir_t filler)
+void ListRegDir(IRAPISession *session, const char *fake_path,void *buf,fuse_fill_dir_t filler)
 {
-  HKEY key=fakePathOpen(fake_path,1);
+  HKEY key=fakePathOpen(session, fake_path,1);
   if(key==0)
      return;
   printf("The key to be opened is= 0x%8.8x\n",key);
 
-  GetAttributes(key,buf,filler);
-  GetKeys(key,buf,filler);
+  GetAttributes(session, key,buf,filler);
+  GetKeys(session, key,buf,filler);
 
-  CeRegCloseKey(key);
+  IRAPISession_CeRegCloseKey(session, key);
 }
 
-int PathIsAKey(const char *fake_path)
+int PathIsAKey(IRAPISession *session, const char *fake_path)
 {
   HKEY key;
-  if((key=fakePathOpen(fake_path,1))==0)
+  if((key=fakePathOpen(session, fake_path,1))==0)
      return 0;
-  CeRegCloseKey(key);
+  IRAPISession_CeRegCloseKey(session, key);
   return 1;
 }

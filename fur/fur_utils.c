@@ -10,7 +10,7 @@
 */
 #include <stdlib.h>
 #include <stdio.h>
-#include <rapi.h>
+#include <rapi2.h>
 #include <synce.h>
 #include <assert.h>
 #include <sys/types.h>
@@ -36,12 +36,12 @@ FILE *logfile;
 // get/set time of the library
 time_t mount_time;
 
-void ReinitRAPI(void)
+void ReinitRAPI(IRAPISession *session)
 {
     HRESULT hr;
 
-    CeRapiUninit();
-    if(FAILED(hr = CeRapiInit())) {
+    IRAPISession_CeRapiUninit(session);
+    if(FAILED(hr = IRAPISession_CeRapiInit(session))) {
       printf("Rapi not initialized!: %s\n", synce_strerror(hr));
       exit(1);
     }
@@ -97,7 +97,7 @@ void Unix2CeFlags(int flags,DWORD *ceflags,DWORD *ceshare)
   *ceshare=*ceflags & GENERIC_WRITE?0:FILE_SHARE_READ;
 }
 
-int Unlink(const char *path)
+int Unlink(IRAPISession *session, const char *path)
 {
   LPWSTR s;
   int cache_index;
@@ -110,7 +110,7 @@ int Unlink(const char *path)
 
   print_cache_entry(cache_index);
       
-  if(!CeDeleteFile((LPCWSTR) (s=path2cepath(path,0)))) {
+  if(!IRAPISession_CeDeleteFile(session, (LPCWSTR) (s=path2cepath(path,0)))) {
     free(s);
     return -EIO;
   } else {
@@ -120,7 +120,7 @@ int Unlink(const char *path)
   }
 }
 
-int Rename(const char *src,const char *dst)
+int Rename(IRAPISession *session, const char *src,const char *dst)
 {
   LPWSTR s,t;
   int index1,index2;
@@ -132,12 +132,12 @@ int Rename(const char *src,const char *dst)
     return -EBUSY;
   }
 
-  if(getAttrib(dst)) {
+  if(getAttrib(session, dst)) {
     VERB("File %s gia' presente: lo cancello...",dst);
-    Unlink(dst);
+    Unlink(session, dst);
   }
 
-  if(CeMoveFile(s=path2cepath(src,0),t=path2cepath(dst,0))) {
+  if(IRAPISession_CeMoveFile(session, s=path2cepath(src,0),t=path2cepath(dst,0))) {
     free(s);
     free(t);
     VERB("Rename of %s to %s succeded!\n",src,dst);
@@ -150,10 +150,10 @@ int Rename(const char *src,const char *dst)
   }
 }
 
-int RmDir(const char *path)
+int RmDir(IRAPISession *session, const char *path)
 {
   LPWSTR s;
-  if(!CeRemoveDirectory(s=path2cepath(path,0))) {
+  if(!IRAPISession_CeRemoveDirectory(session, s=path2cepath(path,0))) {
     free(s);
     VERB("RmDir on %s failed!\n",path);
     return 1;
@@ -164,10 +164,10 @@ int RmDir(const char *path)
   }
 }
 
-int MkDir(const char *path,mode_t flag)
+int MkDir(IRAPISession *session, const char *path,mode_t flag)
 {
   LPWSTR s;
-  if(!CeCreateDirectory(s=path2cepath(path,0),NULL)) {
+  if(!IRAPISession_CeCreateDirectory(session, s=path2cepath(path,0),NULL)) {
     free(s);
     VERB("MkDir on %s failed!\n",path);
     return 1;
@@ -178,7 +178,7 @@ int MkDir(const char *path,mode_t flag)
   }
 }
 
-int MkNod(const char *path,int mode,int dev)
+int MkNod(IRAPISession *session, const char *path,int mode,int dev)
 {
   LPWSTR s;
   HANDLE handle;
@@ -191,29 +191,29 @@ int MkNod(const char *path,int mode,int dev)
   }
 
   VERB("MkNod check for file %s existance\n",path);
-  handle=CeCreateFile(s=path2cepath(path,0),0,0,0,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,0);
+  handle=IRAPISession_CeCreateFile(session, s=path2cepath(path,0),0,0,0,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,0);
   free(s);
   if(handle==0) {
     VERB("in Mknod: check for precedent file failed!\n");
     return 1;
   }
-  CeCloseHandle(handle);
+  IRAPISession_CeCloseHandle(session, handle);
 
   VERB("MkNod create the file %s\n",path);
-  handle=CeCreateFile(s=path2cepath(path,0),GENERIC_WRITE,0,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,0);
+  handle=IRAPISession_CeCreateFile(session, s=path2cepath(path,0),GENERIC_WRITE,0,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,0);
   free(s);
   if(handle==0) {
     VERB("in Mknod: creation of a empty failed!\n");
     return 1;  
   }
   
-  CeCloseHandle(handle);
+  IRAPISession_CeCloseHandle(session, handle);
   VERB("Node %s created!\n",path);
   return 0;
 }
 
 // return a handle to the file or NULL
-int OpenFile(const char *path,int flags)
+int OpenFile(IRAPISession *session, const char *path,int flags)
 {
   LPWSTR s;
   DWORD ceflags,ceshare;
@@ -242,7 +242,7 @@ int OpenFile(const char *path,int flags)
   Unix2CeFlags(flags,&ceflags,&ceshare);
   
   // Get the handle
-  handle=(HANDLE) CeCreateFile(s=path2cepath(path,0),ceflags,ceshare,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
+  handle=(HANDLE) IRAPISession_CeCreateFile(session, s=path2cepath(path,0),ceflags,ceshare,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
   free(s);
 
   // Check if the handle is OK
@@ -256,7 +256,7 @@ int OpenFile(const char *path,int flags)
   return 0;
 }
 
-void ReleaseFile(const char *path)
+void ReleaseFile(IRAPISession *session, const char *path)
 {
   int res;
   int index;
@@ -273,7 +273,7 @@ void ReleaseFile(const char *path)
     return;
   }
 
-  res=CeCloseHandle(opened[index].h);
+  res=IRAPISession_CeCloseHandle(session, opened[index].h);
   if(!res) {
     VERB("CeCloseHandle failed to close %s!\n",opened[index].path);
   } else {
@@ -282,52 +282,52 @@ void ReleaseFile(const char *path)
   cache_free(index);
 }
 
-int tell(int index)
+int tell(IRAPISession *session, int index)
 {
   VERB("Tell of %s called!\n",opened[index].path);
-  return CeSetFilePointer(opened[index].h,0,NULL,FILE_CURRENT);
+  return IRAPISession_CeSetFilePointer(session, opened[index].h,0,NULL,FILE_CURRENT);
 }
 
 
-int GetOneFileSize(int index)
+int GetOneFileSize(IRAPISession *session, int index)
 {
   int result;
-  int current=tell(index);
+  int current=tell(session, index);
   
   assert(current==opened[index].offset);
 
   VERB("Attempting GetOneFileSize on %s (%d)\n",opened[index].path,index);
-  result=CeSetFilePointer(opened[index].h,0,NULL,FILE_END);
-  CeSetFilePointer(opened[index].h,current,NULL,FILE_BEGIN);
+  result=IRAPISession_CeSetFilePointer(session, opened[index].h,0,NULL,FILE_END);
+  IRAPISession_CeSetFilePointer(session, opened[index].h,current,NULL,FILE_BEGIN);
   VERB("File size is: %d\n",result);
   return result;
 }
 
-int Truncate(const char *path,off_t newsize)
+int Truncate(IRAPISession *session, const char *path,off_t newsize)
 {
   int index;
   int removeme=0;
 
   index=cache_find_name(path);
   if(index<0) {
-    if(OpenFile(path,O_WRONLY))
+    if(OpenFile(session, path,O_WRONLY))
       return -EIO;
     removeme++;
   }
   index=cache_find_name(path);
   assert(index>=0);
 
-  opened[index].offset=CeSetFilePointer(opened[index].h,newsize,NULL,FILE_BEGIN);
+  opened[index].offset=IRAPISession_CeSetFilePointer(session, opened[index].h,newsize,NULL,FILE_BEGIN);
   // Now set end of file is a null operation
 /*   CeSetEndOfFile(opened[index].h); */
 
   if(removeme)
-    ReleaseFile(path);
+    ReleaseFile(session, path);
 
   return 0;
 }
 
-int readFile(const char *path,void *buffer,size_t size,off_t offset)
+int readFile(IRAPISession *session, const char *path,void *buffer,size_t size,off_t offset)
 {
   BOOL result;
   DWORD got;
@@ -335,7 +335,7 @@ int readFile(const char *path,void *buffer,size_t size,off_t offset)
   HANDLE handle;
   
   if(index<0) {
-    OpenFile(path,O_RDWR);
+    OpenFile(session, path,O_RDWR);
   //FIXME check on open
     index=cache_find_name(path);
   }
@@ -352,7 +352,7 @@ int readFile(const char *path,void *buffer,size_t size,off_t offset)
   }
 
   if(offset!=opened[index].offset) {
-    if((opened[index].offset=CeSetFilePointer((HANDLE) handle,offset,NULL,FILE_BEGIN))==-1) {
+    if((opened[index].offset=IRAPISession_CeSetFilePointer(session, (HANDLE) handle,offset,NULL,FILE_BEGIN))==-1) {
       VERB("File pointer not moved!\n");
       return -EIO;
     }
@@ -361,7 +361,7 @@ int readFile(const char *path,void *buffer,size_t size,off_t offset)
 
   
   // Read the data in the (pre)filled buffer
-  result=CeReadFile((HANDLE) handle,(LPVOID) buffer,(DWORD) size,&got,NULL);
+  result=IRAPISession_CeReadFile(session, (HANDLE) handle,(LPVOID) buffer,(DWORD) size,&got,NULL);
   if(result==-1) {
     VERB("Data not read!\n");
     opened[index].offset=-1;
@@ -374,7 +374,7 @@ int readFile(const char *path,void *buffer,size_t size,off_t offset)
 
 // Likely _Heavily_bugged_ im not sure to have handled the 
 // offset fine
-int writeFile(const char *path,const void *buffer,size_t size,off_t offset)
+int writeFile(IRAPISession *session, const char *path,const void *buffer,size_t size,off_t offset)
 {
   BOOL result;
   DWORD got;
@@ -394,7 +394,7 @@ int writeFile(const char *path,const void *buffer,size_t size,off_t offset)
   }
 
   if(offset!=opened[index].offset) {
-    if((opened[index].offset=CeSetFilePointer((HANDLE) handle,offset,NULL,FILE_BEGIN))==-1) {
+    if((opened[index].offset=IRAPISession_CeSetFilePointer(session, (HANDLE) handle,offset,NULL,FILE_BEGIN))==-1) {
       VERB("File pointer not moved!\n");
       return -1;
     }
@@ -402,7 +402,7 @@ int writeFile(const char *path,const void *buffer,size_t size,off_t offset)
   }
 
   // Read the data in the (pre)filled buffer
-  result=CeWriteFile((HANDLE) handle,(LPVOID) buffer,(DWORD) size,&got,NULL);
+  result=IRAPISession_CeWriteFile(session, (HANDLE) handle,(LPVOID) buffer,(DWORD) size,&got,NULL);
   if(result==-1) {
     VERB("Data not read!\n");
     opened[index].offset=-1;
@@ -454,12 +454,12 @@ LPWSTR path2cepath(const char *path,int dir)
   return s;
 }
 
-int getAttrib(const char *path)
+int getAttrib(IRAPISession *session, const char *path)
 {
   LPWSTR s;
   int result;
 
-  result=CeGetFileAttributes(s=path2cepath(path,0));
+  result=IRAPISession_CeGetFileAttributes(session, s=path2cepath(path,0));
   free(s);
 
   return result;
@@ -518,7 +518,7 @@ time_t convertCeTime(FILETIME *ftime)
     return 0;
 }
 
-void getFileInfo(const char *path, CE_FIND_DATA **data, unsigned int *count, int* fsize, time_t *atime, time_t *mtime, time_t *ctime)
+void getFileInfo(IRAPISession *session, const char *path, CE_FIND_DATA **data, unsigned int *count, int* fsize, time_t *atime, time_t *mtime, time_t *ctime)
 {
   CE_FIND_DATA *fdata;
   unsigned int mcount;
@@ -533,7 +533,7 @@ void getFileInfo(const char *path, CE_FIND_DATA **data, unsigned int *count, int
   memset(mtime, 0, sizeof(time_t));
   memset(ctime, 0, sizeof(time_t));
 
-  if((res=getStats(path,&fdata,&mcount))==1)
+  if((res=getStats(session, path,&fdata,&mcount))==1)
     return;
   
   // removed: let fur handle (imho buggy) fs situations where 2 differents 
@@ -554,11 +554,11 @@ void getFileInfo(const char *path, CE_FIND_DATA **data, unsigned int *count, int
   if(data!=NULL) 
     *data=fdata;
   else
-    CeRapiFreeBuffer(fdata);
+    IRAPISession_CeRapiFreeBuffer(session, fdata);
     
 }
 
-int getStats(const char *path,CE_FIND_DATA **data,unsigned int *count)
+int getStats(IRAPISession *session, const char *path,CE_FIND_DATA **data,unsigned int *count)
 {
   LPWSTR s;
   BOOL result;
@@ -566,14 +566,14 @@ int getStats(const char *path,CE_FIND_DATA **data,unsigned int *count)
 
   VERB("Attributes requested for %s\n",path);
   
-  result=CeFindAllFiles((LPCWSTR) (s=path2cepath(path,0)),FAF_ATTRIBUTES|FAF_SIZE_LOW|FAF_OID|FAF_CREATION_TIME|FAF_LASTACCESS_TIME|FAF_LASTWRITE_TIME, count,data);
+  result=IRAPISession_CeFindAllFiles(session, (LPCWSTR) (s=path2cepath(path,0)),FAF_ATTRIBUTES|FAF_SIZE_LOW|FAF_OID|FAF_CREATION_TIME|FAF_LASTACCESS_TIME|FAF_LASTWRITE_TIME, count,data);
   free(s);
   if(!result) {
 
     // WORK AROUND
     // If the Windows directory is read, the RAPI library gets somehow broken
     // So reopen it to tget it working again
-    ReinitRAPI();
+    ReinitRAPI(session);
 
     VERB("** Failed to read file list in getAttributes!\n");
     return 1;
@@ -585,7 +585,7 @@ int getStats(const char *path,CE_FIND_DATA **data,unsigned int *count)
 }
 
 
-char **getFileList(const char *path)
+char **getFileList(IRAPISession *session, const char *path)
 {
   LPWSTR s;
   int isdir;
@@ -602,14 +602,14 @@ char **getFileList(const char *path)
   
   isdir=1;
   
-  result=CeFindAllFiles(s=path2cepath(path,isdir),(hiddenp?0:FAF_ATTRIB_NO_HIDDEN)|FAF_NAME,&fcount,&find_data);
+  result=IRAPISession_CeFindAllFiles(session, s=path2cepath(path,isdir),(hiddenp?0:FAF_ATTRIB_NO_HIDDEN)|FAF_NAME,&fcount,&find_data);
   free(s);
   if(!result) {
 
     // WORK AROUND
     // If the Windows directory is read, the RAPI library gets somehow broken
     // So reopen it to tget it working again
-    ReinitRAPI();
+    ReinitRAPI(session);
 
     VERB("** Failed to read file list in getFileList!\n");
     return NULL;    
@@ -617,7 +617,7 @@ char **getFileList(const char *path)
 
   filelist=(char **) calloc(fcount+1,sizeof(char *));
   if(filelist==NULL) {
-    CeRapiFreeBuffer(find_data);
+    IRAPISession_CeRapiFreeBuffer(session, find_data);
     VERB("*** Error allocating memory in getFileList\n");
     return NULL;
   }
@@ -628,12 +628,12 @@ char **getFileList(const char *path)
       for(;i>=0;i--)
 	free(filelist[i]);
       free(filelist);
-      CeRapiFreeBuffer(find_data);
+      IRAPISession_CeRapiFreeBuffer(session, find_data);
       return NULL;
     }
   }
 
-  CeRapiFreeBuffer(find_data);
+  IRAPISession_CeRapiFreeBuffer(session, find_data);
   return filelist;
 }
 
@@ -645,11 +645,11 @@ void finalize(void)
 #endif
 
 
-int init(void)
+int init(IRAPISession *session)
 {
   int i;
   init_names();
-  special_init();
+  special_init(session);
 
 /*   char *message=power_message(); */
 /*   printf("%d\n",strlen(message)); */

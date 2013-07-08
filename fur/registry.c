@@ -17,9 +17,9 @@
 #include "fur_utils.h"
 
 
-int registry_read(const char *path,void *buf,size_t size,off_t offset)
+int registry_read(IRAPISession *session, const char *path,void *buf,size_t size,off_t offset)
 {
-  return ReadAttribute(path,buf,size,offset);
+  return ReadAttribute(session, path,buf,size,offset);
 }
 
 int path_is_in_registry(const char *path)
@@ -45,7 +45,7 @@ int path_is_registry(const char *path)
   return 0;
 }
 
-void registry_fill_dir(const char *path,void *buf,fuse_fill_dir_t filler)
+void registry_fill_dir(IRAPISession *session, const char *path,void *buf,fuse_fill_dir_t filler)
 {
   if(path_is_registry(path)) {
     filler(buf,LOCAL+1,0,0);
@@ -54,10 +54,10 @@ void registry_fill_dir(const char *path,void *buf,fuse_fill_dir_t filler)
     filler(buf,USER+1,0,0);
     return;
   } 
-  ListRegDir(path,buf,filler);
+  ListRegDir(session, path,buf,filler);
 }
 
-void registry_getattr(const char *path,struct stat *stbuf)
+void registry_getattr(IRAPISession *session, const char *path,struct stat *stbuf)
 {
   VERB("registry_getattr in %s\n",path);
 
@@ -98,7 +98,7 @@ void registry_getattr(const char *path,struct stat *stbuf)
   }
 
   // Treat it as a directory
-  if(PathIsAKey(path)) {
+  if(PathIsAKey(session, path)) {
     VERB("Special_getattr on %s\n",path);
     stbuf->st_mode=S_IFDIR | 0500;
     stbuf->st_nlink=2;
@@ -112,7 +112,7 @@ void registry_getattr(const char *path,struct stat *stbuf)
     stbuf->st_uid=getfileuid(NULL);
     stbuf->st_gid=getfilegid(NULL);
     
-    stbuf->st_size= GetAttribSize(path);
+    stbuf->st_size= GetAttribSize(session, path);
     return;
   }
 

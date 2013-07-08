@@ -11,7 +11,7 @@
 #ifndef FUR_UTILS_H
 #define FUR_UTILS_H
 #include <synce.h>
-#include <rapitypes.h>
+#include <rapi2.h>
 #include "cache.h"
 #include <stdio.h>
 
@@ -24,7 +24,7 @@ extern FILE *logfile;
 
 
 void finalize(void);
-int init(void);
+int init(IRAPISession *session);
 
 // Convert a ascii path in wide char format, used in the 
 // RAPI protocol.
@@ -39,30 +39,30 @@ gid_t getfilegid(const char *path);
 void Unix2CeFlags(int flags, DWORD *ceflags, DWORD *ceshare);
 
 // Self explanatory 
-int Unlink(const char *path);
-int Rename(const char *src, const char *dst);
-int RmDir(const char *path);
-int MkDir(const char *path, mode_t flag);
-int MkNod(const char *path, int mode, int dev);
-int OpenFile(const char *path, int flags);
-void ReleaseFile(const char *path);
+int Unlink(IRAPISession *session, const char *path);
+int Rename(IRAPISession *session, const char *src, const char *dst);
+int RmDir(IRAPISession *session, const char *path);
+int MkDir(IRAPISession *session, const char *path, mode_t flag);
+int MkNod(IRAPISession *session, const char *path, int mode, int dev);
+int OpenFile(IRAPISession *session, const char *path, int flags);
+void ReleaseFile(IRAPISession *session, const char *path);
 // Bugged(Tm)
-int readFile(const char *path, void *buffer, size_t size, off_t offset);
-int writeFile(const char *path, const void *buffer, size_t size, off_t offset);
+int readFile(IRAPISession *session, const char *path, void *buffer, size_t size, off_t offset);
+int writeFile(IRAPISession *session, const char *path, const void *buffer, size_t size, off_t offset);
 
 // This actually is a kludge to overcome the absence of 
 // SetFilePointer in the librapi2. Hopefully they will disappear, 
 // some day...
-int Truncate(const char *path,off_t offset);
+int Truncate(IRAPISession *session, const char *path,off_t offset);
 
 
 // Utility which need to be rewritten due the lack of a caching
 // machanism of some sort.
-int getAttrib(const char *path);
+int getAttrib(IRAPISession *session, const char *path);
 int isDir(int attrib);
-void getFileInfo(const char *path, CE_FIND_DATA **data, unsigned int *count, int* fsize, time_t *atime, time_t *mtime, time_t *ctime);
-int getStats(const char *path, CE_FIND_DATA **data, unsigned int *count);
-char **getFileList(const char *path);
+void getFileInfo(IRAPISession *session, const char *path, CE_FIND_DATA **data, unsigned int *count, int* fsize, time_t *atime, time_t *mtime, time_t *ctime);
+int getStats(IRAPISession *session, const char *path, CE_FIND_DATA **data, unsigned int *count);
+char **getFileList(IRAPISession *session, const char *path);
 
 // Convert the flags of unix to flags apt to the
 // rapi implementation (and also build the share perm. flags)

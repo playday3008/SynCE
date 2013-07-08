@@ -13,13 +13,13 @@
 #include "macros.h"
 #include <stdlib.h>
 #include <string.h>
-#include <rapi.h>
+#include <rapi2.h>
 
 int power_message_size;
 
-void power_init(void)
+void power_init(IRAPISession *session)
 {
-  char *tmp=power_message();
+  char *tmp=power_message(session);
   if(tmp==NULL) {
     ERR("Power init failed! (strange indeed...)\n");
     exit(1);
@@ -34,13 +34,13 @@ int get_power_file_size(void)
 }
 
 
-int read_power_status(char *buf,size_t size,off_t offset)
+int read_power_status(IRAPISession *session, char *buf,size_t size,off_t offset)
 {
   char *message=NULL;
   int maxlen;
   int toread;
 
-  message=power_message();
+  message=power_message(session);
   maxlen=strlen(message)-offset;
   if(maxlen<=0) {
     free(message);
@@ -103,21 +103,21 @@ int getBackupBatteryFullLifeTime(SYSTEM_POWER_STATUS_EX *d)
   return d->BackupBatteryFullLifeTime;
 }
 
-SYSTEM_POWER_STATUS_EX *GetPowerStatus(void)
+SYSTEM_POWER_STATUS_EX *GetPowerStatus(IRAPISession *session)
 {
   SYSTEM_POWER_STATUS_EX *d;
   d=(SYSTEM_POWER_STATUS_EX *) calloc(1,sizeof(SYSTEM_POWER_STATUS_EX));
   
-  CeGetSystemPowerStatusEx(d,TRUE);
+  IRAPISession_CeGetSystemPowerStatusEx(session, d,TRUE);
   return d;
 }
 
 #define MSG_SIZE 500
-char *power_message(void)
+char *power_message(IRAPISession *session)
 {
   char *result;
 
-  SYSTEM_POWER_STATUS_EX *d=GetPowerStatus();
+  SYSTEM_POWER_STATUS_EX *d=GetPowerStatus(session);
   
   if(d==NULL)
     return NULL;
@@ -146,7 +146,7 @@ char *power_message(void)
 	  getBackupBatteryLifeTime(d),
 	  getBackupBatteryFullLifeTime(d));
 
-  CeRapiFreeBuffer(d);
+  IRAPISession_CeRapiFreeBuffer(session, d);
 
   return result;
 }

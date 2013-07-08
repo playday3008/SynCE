@@ -88,7 +88,7 @@
 
 
 #define SIMIL_PROC
-#define FUSE_USE_VERSION 22
+#define FUSE_USE_VERSION 26
 #include <time.h>
 #include <fuse.h>
 #include <stdlib.h>
@@ -97,18 +97,24 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <rapi.h>
+#include <rapi2.h>
 
 #include "macros.h"
 #include "special.h"
 #include "fur_utils.h"
 
 
+struct fur_state {
+  IRAPISession *session;
+};
+
+#define FUR_DATA ((struct fur_state *) fuse_get_context()->private_data)
+
 static int rapi_mknod(const char *path, mode_t mode, dev_t dev)
 {
   int result;
   VERB(" ** rapi_mknod **\n");
-  result=MkNod(path,mode,dev);
+  result=MkNod(FUR_DATA->session,path,mode,dev);
   return result;
 }
 
@@ -116,7 +122,7 @@ static int rapi_unlink(const char *path)
 {
   int res;
   VERB(" ** rapi_unlink **\n");
-  res=Unlink(path);
+  res=Unlink(FUR_DATA->session,path);
   return res;
 }
 
@@ -124,7 +130,7 @@ static int rapi_rename(const char *src,const char *dst)
 {
   int res;
   VERB(" ** rapi_rename **\n");
-  res=Rename(src,dst);
+  res=Rename(FUR_DATA->session,src,dst);
   return res;
 }
 
@@ -133,7 +139,7 @@ static int rapi_rmdir(const char *path)
 {
   int res;
   VERB(" ** rapi_rmdir **\n");
-  res=RmDir(path);
+  res=RmDir(FUR_DATA->session,path);
   return res;
 }
 
@@ -143,7 +149,7 @@ static int rapi_mkdir(const char *path,mode_t flags)
 {
   VERB(" ** rapi_mkdir **\n");
 
-  if(!MkDir(path,flags)) {
+  if(!MkDir(FUR_DATA->session,path,flags)) {
     return 0;
   } else {
     return -EPERM;
@@ -178,13 +184,13 @@ static int rapi_getattr(const char *path, struct stat *stbuf)
 
 #ifdef SIMIL_PROC
   if(path_is_special(path)) {
-    special_getattr(path,stbuf);
+    special_getattr(FUR_DATA->session,path,stbuf);
     return res;
   }
 #endif
 
   
-  attrib=getAttrib(path);
+  attrib=getAttrib(FUR_DATA->session,path);
   isdir=isDir(attrib);
 /*   mode=getMode(attrib); */
 
@@ -194,7 +200,7 @@ static int rapi_getattr(const char *path, struct stat *stbuf)
     stbuf->st_mode = S_IFDIR | 0700;
     stbuf->st_nlink = 2;
 
-    getFileInfo(path, NULL, NULL, &size, &atime, &mtime, &ctime);
+    getFileInfo(FUR_DATA->session, path, NULL, NULL, &size, &atime, &mtime, &ctime);
     stbuf->st_atime = atime;
     stbuf->st_ctime = ctime;
     stbuf->st_mtime = mtime;
@@ -209,7 +215,7 @@ static int rapi_getattr(const char *path, struct stat *stbuf)
       stbuf->st_mode = S_IFREG | 0700;
       stbuf->st_nlink = 1;
       // FIXME use a single call!
-      getFileInfo(path, NULL, NULL, &size, &atime, &mtime, &ctime);
+      getFileInfo(FUR_DATA->session, path, NULL, NULL, &size, &atime, &mtime, &ctime);
       stbuf->st_size = size;
       stbuf->st_atime = atime;
       stbuf->st_ctime = ctime;
@@ -249,13 +255,14 @@ static int rapi_readdir(const char *path,void *buf,fuse_fill_dir_t filler,off_t 
   // If we are in proc, fill only special files
   if(path_is_special(path)) {
     VERB("**** path %s IS special! ****\n",path);
-    special_fill_dir(path,buf,filler);
+    special_fill_dir(FUR_DATA->session, path,buf,filler);
     return 0;
-  } else
+  } else {
     VERB("**** path %s is NOT special! ****\n",path);  
+  }
 #endif   
 
-  if((result=getAttrib(path))==-1) {
+  if((result=getAttrib(FUR_DATA->session,path))==-1) {
     return -ENOENT;
   }
 
@@ -264,7 +271,7 @@ static int rapi_readdir(const char *path,void *buf,fuse_fill_dir_t filler,off_t 
   }
     
   // Inserting the list of Device files
-  rapifiles=getFileList(path);
+  rapifiles=getFileList(FUR_DATA->session,path);
 
 
   if(rapifiles==NULL) {
@@ -293,7 +300,7 @@ static int rapi_release(const char *path, struct fuse_file_info *fi)
   }
 #endif
 
-  ReleaseFile(path);
+  ReleaseFile(FUR_DATA->session,path);
   return 0;
 }
 
@@ -309,7 +316,7 @@ static int rapi_open(const char *path, struct fuse_file_info *fi)
   }
 #endif
   
-  res=OpenFile(path,fi->flags);
+  res=OpenFile(FUR_DATA->session,path,fi->flags);
   return res;
 }
 
@@ -320,12 +327,12 @@ static int rapi_read(const char *path, char *buf, size_t size, off_t offset,stru
   VERB(" ** rapi_read **\n");
 #ifdef SIMIL_PROC
   if(path_is_special(path)) {
-    result=special_read_file(path,buf,size,offset);
+    result=special_read_file(FUR_DATA->session,path,buf,size,offset);
     return result;
   }
 #endif
 
-  if((result=readFile(path,buf,size,offset))==-1) {
+  if((result=readFile(FUR_DATA->session,path,buf,size,offset))==-1) {
     return -EIO;
   }
   return result;
@@ -337,7 +344,7 @@ static int rapi_write(const char *path, const char *buf, size_t size, off_t offs
 
   VERB(" ** rapi_write **\n");
 
-  if((result=writeFile(path,buf,size,offset))==-1) {
+  if((result=writeFile(FUR_DATA->session,path,buf,size,offset))==-1) {
     return -EIO;
   }
   return result;
@@ -354,7 +361,19 @@ static int rapi_chmod(const char *path, mode_t mode)
 }
 #endif
 
-static struct fuse_operations hello_oper = {
+static void *
+rapi_init(struct fuse_conn_info *conn)
+{
+  return FUR_DATA;
+}
+
+
+static void
+rapi_destroy(void *userdata)
+{
+}
+
+static struct fuse_operations fur_oper = {
   .getattr	= rapi_getattr,
   .readdir	= rapi_readdir,
   .open	        = rapi_open,
@@ -369,30 +388,101 @@ static struct fuse_operations hello_oper = {
 #ifdef VOID_CHMOD
   .chmod        = rapi_chmod,
 #endif
-  .rename       = rapi_rename
+  .rename       = rapi_rename,
+  .init         = rapi_init,
+  .destroy      = rapi_destroy
 };
+
 
 int main(int argc, char *argv[])
 {
-  int retval;
+  int retval = -1;
   HRESULT hr;
-  struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
- 
+  IRAPIDesktop *desktop = NULL;
+  IRAPIEnumDevices *enumdev = NULL;
+  IRAPIDevice *device = NULL;
+  IRAPISession *session = NULL;
+  RAPI_DEVICEINFO devinfo;
+  struct fur_state *fur_data = NULL;
+  char *pdaname = NULL;
 
-  // Initialize the RAPI support
-  if(FAILED(hr = CeRapiInit())) {
-    printf("Rapi not initialized!: %s\n", synce_strerror(hr));
-    exit(1);
+  fur_data = malloc(sizeof(struct fur_state));
+  if (fur_data == NULL) {
+    fprintf(stderr, "Failed to allocate state information");
+    return retval;
   }
-  
-  init();
+
+  struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
   fuse_opt_parse(&args, NULL, NULL, NULL);
   fuse_opt_add_arg(&args, "-s");
-  retval=fuse_main(args.argc, args.argv, &hello_oper);
+
+  /* Initialize RAPI connection */
+
+  if (FAILED(hr = IRAPIDesktop_Get(&desktop))) {
+    fprintf(stderr, "%s: failed to initialise RAPI: %d: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPIDesktop_EnumDevices(desktop, &enumdev))) {
+    fprintf(stderr, "%s: failed to get connected devices: %d: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device))) {
+    if (pdaname == NULL)
+      break;
+
+    if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo))) {
+      fprintf(stderr, "%s: failure to get device info\n", argv[0]);
+      goto exit;
+    }
+    if (strcmp(pdaname, devinfo.bstrName) == 0)
+      break;
+  }
+
+  if (FAILED(hr)) {
+    fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
+            argv[0],
+            pdaname?pdaname:"(Default)", hr, synce_strerror_from_hresult(hr));
+    device = NULL;
+    goto exit;
+  }
+
+  IRAPIDevice_AddRef(device);
+  IRAPIEnumDevices_Release(enumdev);
+  enumdev = NULL;
+
+  if (FAILED(hr = IRAPIDevice_CreateSession(device, &session))) {
+    fprintf(stderr, "%s: Could not create a session to device: %08x: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  if (FAILED(hr = IRAPISession_CeRapiInit(session))) {
+    fprintf(stderr, "%s: Unable to initialize connection to device: %08x: %s\n", 
+            argv[0], hr, synce_strerror_from_hresult(hr));
+    goto exit;
+  }
+
+  fur_data->session = session;
+  
+  init(session);
+  retval=fuse_main(args.argc, args.argv, &fur_oper, fur_data);
+
+exit:
+  /* Finalize RAPI */
+  if (session) {
+    IRAPISession_CeRapiUninit(session);
+    IRAPISession_Release(session);
+  }
+  if (device) IRAPIDevice_Release(device);
+  if (enumdev) IRAPIEnumDevices_Release(enumdev);
+  if (desktop) IRAPIDesktop_Release(desktop);
 
   fuse_opt_free_args(&args);
-  // Finalize RAPI
-  CeRapiUninit();
+  free(fur_data);
 
   return retval;
 }
