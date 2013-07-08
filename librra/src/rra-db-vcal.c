@@ -1,6 +1,6 @@
 /* $Id$ */
 #include <stdio.h>
-#include <rapi.h>
+#include <rapitypes.h>
 #include "dbstream.h"
 #include "appointment.h"
 #include <stdlib.h>
