@@ -98,6 +98,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <rapi2.h>
+#include <stddef.h>
 
 #include "macros.h"
 #include "special.h"
@@ -394,6 +395,13 @@ static struct fuse_operations fur_oper = {
 };
 
 
+struct option_data {
+  char *device_name;
+#ifdef VERBOSE
+  char *logfile;
+#endif
+};
+
 int main(int argc, char *argv[])
 {
   int retval = -1;
@@ -404,7 +412,7 @@ int main(int argc, char *argv[])
   IRAPISession *session = NULL;
   RAPI_DEVICEINFO devinfo;
   struct fur_state *fur_data = NULL;
-  char *pdaname = NULL;
+  struct option_data opt_data;
 
   fur_data = malloc(sizeof(struct fur_state));
   if (fur_data == NULL) {
@@ -412,8 +420,20 @@ int main(int argc, char *argv[])
     return retval;
   }
 
+  /* parse args */
+
   struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-  fuse_opt_parse(&args, NULL, NULL, NULL);
+
+  static const struct fuse_opt options[] = {
+    { "--device=%s", offsetof(struct option_data, device_name), -1 },
+#ifdef VERBOSE
+    { "--logfile=%s", offsetof(struct option_data, logfile), -1 },
+#endif
+    FUSE_OPT_END
+  };
+
+  memset(&opt_data, 0, sizeof(opt_data));
+  fuse_opt_parse(&args, &opt_data, options, NULL);
   fuse_opt_add_arg(&args, "-s");
 
   /* Initialize RAPI connection */
@@ -431,21 +451,21 @@ int main(int argc, char *argv[])
   }
 
   while (SUCCEEDED(hr = IRAPIEnumDevices_Next(enumdev, &device))) {
-    if (pdaname == NULL)
+    if (opt_data.device_name == NULL)
       break;
 
     if (FAILED(IRAPIDevice_GetDeviceInfo(device, &devinfo))) {
       fprintf(stderr, "%s: failure to get device info\n", argv[0]);
       goto exit;
     }
-    if (strcmp(pdaname, devinfo.bstrName) == 0)
+    if (strcmp(opt_data.device_name, devinfo.bstrName) == 0)
       break;
   }
 
   if (FAILED(hr)) {
     fprintf(stderr, "%s: Could not find device '%s': %08x: %s\n", 
             argv[0],
-            pdaname?pdaname:"(Default)", hr, synce_strerror_from_hresult(hr));
+            opt_data.device_name?opt_data.device_name:"(Default)", hr, synce_strerror_from_hresult(hr));
     device = NULL;
     goto exit;
   }
@@ -467,8 +487,12 @@ int main(int argc, char *argv[])
   }
 
   fur_data->session = session;
-  
+
+#ifdef VERBOSE
+  init(session, opt_data.logfile);
+#else
   init(session);
+#endif
   retval=fuse_main(args.argc, args.argv, &fur_oper, fur_data);
 
 exit:

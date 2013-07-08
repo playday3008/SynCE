@@ -645,7 +645,11 @@ void finalize(void)
 #endif
 
 
+#ifdef VERBOSE
+int init(IRAPISession *session, const char *logfile)
+#else
 int init(IRAPISession *session)
+#endif
 {
   int i;
   init_names();
@@ -656,7 +660,10 @@ int init(IRAPISession *session)
 /*   exit(0); */
 
 #ifdef VERBOSE
-  logfile=fopen("log.txt","w");
+  if (logfile == NULL)
+    logfile=fopen("log.txt","w");
+  else
+    logfile=fopen(logfile,"w");
 #endif
 
   for(i=0;i<TMPSIZE;i++) {

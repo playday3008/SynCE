@@ -24,7 +24,11 @@ extern FILE *logfile;
 
 
 void finalize(void);
+#ifdef VERBOSE
+int init(IRAPISession *session, const char *logfile);
+#else
 int init(IRAPISession *session);
+#endif
 
 // Convert a ascii path in wide char format, used in the 
 // RAPI protocol.
