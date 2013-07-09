@@ -14,7 +14,7 @@ AC_PROG_LIBTOOL
 AC_PROG_MAKE_SET
 
 dnl Check for SynCE libs
-PKG_CHECK_MODULES(LIBRAPI2, librapi2 >= 0.9.1)
+PKG_CHECK_MODULES(LIBRAPI2, libsynce >= 0.16)
 
 PKG_CHECK_MODULES(GTK, 
                   glib-2.0       \
