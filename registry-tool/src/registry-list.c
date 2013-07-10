@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <string.h>
-#include <rapi.h>
+#include <rapitypes.h>
 
 #include "registry-list.h"
 #include "registry-access.h"
@@ -93,7 +93,7 @@ convert_value_data(REG_VALUE_INFO *reg_val_item, gchar **data_string)
 }
 
 static void
-setup_registry_value_list_store(gchar *keyname, GtkTreeView *registry_value_listview)
+setup_registry_value_list_store(IRAPISession *session, gchar *keyname, GtkTreeView *registry_value_listview)
 {
   gchar *data_str;
   const gchar *type_str;
@@ -104,7 +104,7 @@ setup_registry_value_list_store(gchar *keyname, GtkTreeView *registry_value_list
   REG_VALUE_INFO *reg_val_item;
   GtkTreeIter iter;
 
-  reg_val_list = enum_registry_values(reg_val_list, keyname);
+  reg_val_list = enum_registry_values(session, reg_val_list, keyname);
 
   tmplist = reg_val_list;
 
@@ -152,7 +152,7 @@ registry_value_list_selection_changed (GtkTreeSelection *selection, gpointer use
 }
 
 void
-setup_registry_value_list_view(GtkTreeView *registry_value_listview) 
+setup_registry_value_list_view(struct reg_info *registry_info)
 {
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
@@ -160,7 +160,7 @@ setup_registry_value_list_view(GtkTreeView *registry_value_listview)
 
   GtkListStore *store = gtk_list_store_new (VALUE_N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
-  gtk_tree_view_set_model (registry_value_listview, GTK_TREE_MODEL (store));
+  gtk_tree_view_set_model (GTK_TREE_VIEW(registry_info->registry_value_listview), GTK_TREE_MODEL (store));
   g_object_unref (G_OBJECT (store));
 
   renderer = gtk_cell_renderer_text_new ();
@@ -168,28 +168,28 @@ setup_registry_value_list_view(GtkTreeView *registry_value_listview)
 						    renderer,
 						    "text", VALUE_NAME_COLUMN,
 						    NULL);
-  gtk_tree_view_append_column (registry_value_listview, column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(registry_info->registry_value_listview), column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes("Type",
 						    renderer,
 						    "text", VALUE_TYPE_COLUMN,
 						    NULL);
-  gtk_tree_view_append_column (registry_value_listview, column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(registry_info->registry_value_listview), column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes("Value",
 						    renderer,
 						    "text", VALUE_DATA_COLUMN,
 						    NULL);
-  gtk_tree_view_append_column (registry_value_listview, column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(registry_info->registry_value_listview), column);
 
-  selection = gtk_tree_view_get_selection (registry_value_listview);
+  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(registry_info->registry_value_listview));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
   g_signal_connect (G_OBJECT (selection), "changed",
-		    G_CALLBACK (registry_value_list_selection_changed), NULL);
+		    G_CALLBACK (registry_value_list_selection_changed), registry_info);
 
-  gtk_widget_show (GTK_WIDGET(registry_value_listview));
+  gtk_widget_show (GTK_WIDGET(registry_info->registry_value_listview));
 }
 
 
@@ -198,7 +198,8 @@ registry_key_tree_selection_changed (GtkTreeSelection *selection, gpointer user_
 {
   GtkTreeIter iter, curr_iter, parent_iter;
   GtkTreeModel *model;
-  GtkTreeView *registry_value_listview = GTK_TREE_VIEW(user_data);
+  struct reg_info *registry_info = user_data;
+  GtkTreeView *registry_value_listview = GTK_TREE_VIEW(registry_info->registry_value_listview);
 
   gchar *keyname, *tmpname, *keypath;
 
@@ -223,13 +224,14 @@ registry_key_tree_selection_changed (GtkTreeSelection *selection, gpointer user_
       curr_iter = parent_iter;
     }
 
-  setup_registry_value_list_store(keypath, registry_value_listview);
+  setup_registry_value_list_store(registry_info->session, keypath, registry_value_listview);
 
   g_free(keypath);
 }
 
 static void
-setup_registry_key_branch_store(GtkTreeStore *store,
+setup_registry_key_branch_store(IRAPISession *session,
+                                GtkTreeStore *store,
 				char *key_name,
 				char *parent_key_name,
 				GtkTreeIter *parent,
@@ -249,7 +251,7 @@ setup_registry_key_branch_store(GtkTreeStore *store,
   else
     full_key_name = g_strdup(key_name);
 
-  registrylist = enum_registry_key(registrylist, full_key_name, progressbar); 
+  registrylist = enum_registry_key(session, registrylist, full_key_name, progressbar); 
 
   tmplist = registrylist;
 
@@ -264,7 +266,7 @@ setup_registry_key_branch_store(GtkTreeStore *store,
 			-1);
 
     if (depth > 0)
-      setup_registry_key_branch_store(store, reg_item->name, full_key_name, &iter, progressbar, depth);
+      setup_registry_key_branch_store(session, store, reg_item->name, full_key_name, &iter, progressbar, depth);
 
     g_free(reg_item->name);
     g_free(reg_item->class);
@@ -279,7 +281,7 @@ setup_registry_key_branch_store(GtkTreeStore *store,
 }
 
 void
-setup_registry_key_tree_store(GtkTreeView *registry_key_treeview) 
+setup_registry_key_tree_store(struct reg_info *registry_info)
 {
   GtkWidget *fetchwindow, *progressbar;
   GtkTreeIter iter;
@@ -316,30 +318,30 @@ setup_registry_key_tree_store(GtkTreeView *registry_key_treeview)
 		      KEY_NAME_COLUMN, "HKEY_LOCAL_MACHINE",
 		      KEY_CLASS_COLUMN, "",
 		      -1);
-  setup_registry_key_branch_store(store, "", "HKEY_LOCAL_MACHINE", &iter, progressbar, 1);
+  setup_registry_key_branch_store(registry_info->session, store, "", "HKEY_LOCAL_MACHINE", &iter, progressbar, 1);
 
   gtk_tree_store_append (store, &iter, NULL);  /* Acquire an iterator */
   gtk_tree_store_set (store, &iter,
 		      KEY_NAME_COLUMN, "HKEY_CLASSES_ROOT",
 		      KEY_CLASS_COLUMN, "",
 		      -1);
-  setup_registry_key_branch_store(store, "", "HKEY_CLASSES_ROOT", &iter, progressbar, 1);
+  setup_registry_key_branch_store(registry_info->session, store, "", "HKEY_CLASSES_ROOT", &iter, progressbar, 1);
 
   gtk_tree_store_append (store, &iter, NULL);  /* Acquire an iterator */
   gtk_tree_store_set (store, &iter,
 		      KEY_NAME_COLUMN, "HKEY_CURRENT_USER",
 		      KEY_CLASS_COLUMN, "",
 		      -1);
-  setup_registry_key_branch_store(store, "", "HKEY_CURRENT_USER", &iter, progressbar, 1);
+  setup_registry_key_branch_store(registry_info->session, store, "", "HKEY_CURRENT_USER", &iter, progressbar, 1);
 
   gtk_tree_store_append (store, &iter, NULL);  /* Acquire an iterator */
   gtk_tree_store_set (store, &iter,
 		      KEY_NAME_COLUMN, "HKEY_USERS",
 		      KEY_CLASS_COLUMN, "",
 		      -1);
-  setup_registry_key_branch_store(store, "", "HKEY_USERS", &iter, progressbar, 1);
+  setup_registry_key_branch_store(registry_info->session, store, "", "HKEY_USERS", &iter, progressbar, 1);
 
-  gtk_tree_view_set_model (registry_key_treeview, GTK_TREE_MODEL (store));
+  gtk_tree_view_set_model (GTK_TREE_VIEW(registry_info->registry_key_treeview), GTK_TREE_MODEL (store));
   g_object_unref (G_OBJECT (store));
 
   gtk_widget_destroy(fetchwindow);
@@ -357,6 +359,7 @@ registry_key_tree_view_row_expanded(GtkTreeView *treeview,
   GtkWidget *fetchwindow, *progressbar;
   gchar *keyname, *tmpname, *keypath;
   gboolean have_child;
+  struct reg_info *registry_info = user_data;
 
   GtkBuilder *builder = gtk_builder_new();
   guint builder_res;
@@ -405,7 +408,7 @@ registry_key_tree_view_row_expanded(GtkTreeView *treeview,
     {
       gtk_tree_model_get (model, &child_iter, KEY_NAME_COLUMN, &keyname, -1);
 
-      setup_registry_key_branch_store((GtkTreeStore*)model, keyname, keypath, &child_iter, progressbar, 1);
+      setup_registry_key_branch_store(registry_info->session, (GtkTreeStore*)model, keyname, keypath, &child_iter, progressbar, 1);
 
       g_free(keyname);
       have_child = gtk_tree_model_iter_next(model, &child_iter);
@@ -478,14 +481,14 @@ registry_key_tree_view_row_collapsed(GtkTreeView *treeview,
 
 
 void
-setup_registry_key_tree_view(GtkTreeView *registry_key_treeview, GtkTreeView *registry_value_listview) 
+setup_registry_key_tree_view(struct reg_info *registry_info)
 {
   GtkTreeStore *store = gtk_tree_store_new (KEY_N_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *column;
   GtkTreeSelection *selection;
 
-  gtk_tree_view_set_model (registry_key_treeview, GTK_TREE_MODEL (store));
+  gtk_tree_view_set_model (GTK_TREE_VIEW(registry_info->registry_key_treeview), GTK_TREE_MODEL (store));
   g_object_unref (G_OBJECT (store));
 
   renderer = gtk_cell_renderer_text_new ();
@@ -493,25 +496,25 @@ setup_registry_key_tree_view(GtkTreeView *registry_key_treeview, GtkTreeView *re
 						    renderer,
 						    "text", KEY_NAME_COLUMN,
 						    NULL);
-  gtk_tree_view_append_column (registry_key_treeview, column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(registry_info->registry_key_treeview), column);
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes("Class",
 						    renderer,
 						    "text", KEY_CLASS_COLUMN,
 						    NULL);
-  gtk_tree_view_append_column (registry_key_treeview, column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW(registry_info->registry_key_treeview), column);
 
-  selection = gtk_tree_view_get_selection (registry_key_treeview);
+  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW(registry_info->registry_key_treeview));
   gtk_tree_selection_set_mode (selection, GTK_SELECTION_SINGLE);
   g_signal_connect(G_OBJECT (selection), "changed",
-		   G_CALLBACK (registry_key_tree_selection_changed), registry_value_listview);
+		   G_CALLBACK (registry_key_tree_selection_changed), registry_info);
 
-  g_signal_connect(G_OBJECT(registry_key_treeview), "row-expanded",
-		   G_CALLBACK(registry_key_tree_view_row_expanded), NULL);
-  g_signal_connect(G_OBJECT(registry_key_treeview), "row-collapsed",
-		   G_CALLBACK(registry_key_tree_view_row_collapsed), NULL);
+  g_signal_connect(G_OBJECT(registry_info->registry_key_treeview), "row-expanded",
+		   G_CALLBACK(registry_key_tree_view_row_expanded), registry_info);
+  g_signal_connect(G_OBJECT(registry_info->registry_key_treeview), "row-collapsed",
+		   G_CALLBACK(registry_key_tree_view_row_collapsed), registry_info);
 
-  gtk_widget_show (GTK_WIDGET(registry_key_treeview));
+  gtk_widget_show (GTK_WIDGET(registry_info->registry_key_treeview));
 }
 

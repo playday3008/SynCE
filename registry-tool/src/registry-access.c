@@ -20,7 +20,7 @@
 #include "config.h"
 #endif
 
-#include <rapi.h>
+#include <rapi2.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <string.h>
@@ -56,7 +56,7 @@ extract_hive(const gchar *full_key_path, HKEY *hive, gchar **sub_key)
 
 
 GList *
-enum_registry_values(GList *list, gchar *key_path)
+enum_registry_values(IRAPISession *session, GList *list, gchar *key_path)
 {
   HKEY key, hkey;
   WCHAR* key_name = NULL;
@@ -73,13 +73,14 @@ enum_registry_values(GList *list, gchar *key_path)
 
   key_name = wstr_from_ascii(tmp_subkey);
 
-  result = CeRegOpenKeyEx(hkey, key_name, 0, 0, &key);
+  result = IRAPISession_CeRegOpenKeyEx(session, hkey, key_name, 0, 0, &key);
   if (result != ERROR_SUCCESS) {
     g_warning("%s: Unable to open key %s", G_STRFUNC, key_path);
     return(list);
   }
 
-  result = CeRegQueryInfoKey(key,
+  result = IRAPISession_CeRegQueryInfoKey(session,
+                             key,
 			     NULL, NULL,   /* class name and name size */
 			     NULL,         /* unused */
 			     &num_subkeys, &max_subkey_name_len, &max_subkey_class_len,
@@ -99,7 +100,8 @@ enum_registry_values(GList *list, gchar *key_path)
     DWORD type;
     DWORD data_size = 0;
 
-    result = CeRegEnumValue(key, index,
+    result = IRAPISession_CeRegEnumValue(session,
+                            key, index,
 			    value_name, &name_size,
 			    NULL, NULL,
 			    NULL, &data_size);
@@ -115,7 +117,7 @@ enum_registry_values(GList *list, gchar *key_path)
 
     gchar *tmpname = wstr_to_utf8(value_name);
 
-    result = CeRegQueryValueEx(key, value_name, NULL, &type, NULL, &data_size);
+    result = IRAPISession_CeRegQueryValueEx(session, key, value_name, NULL, &type, NULL, &data_size);
     if (result != ERROR_SUCCESS) {
       g_warning("%s: Failed to get value %s: %s", G_STRFUNC, tmpname,
 		synce_strerror(result));
@@ -123,7 +125,7 @@ enum_registry_values(GList *list, gchar *key_path)
     }
 
     data = g_malloc0(data_size);
-    result = CeRegQueryValueEx(key, value_name, NULL, &type, data, &data_size);
+    result = IRAPISession_CeRegQueryValueEx(session, key, value_name, NULL, &type, data, &data_size);
     if (result != ERROR_SUCCESS) {
       g_warning("%s: Failed to get value %s: %s", G_STRFUNC, tmpname,
 		synce_strerror(result));
@@ -146,12 +148,12 @@ enum_registry_values(GList *list, gchar *key_path)
 
   g_free(value_name);
 
-  CeRegCloseKey(key);
+  IRAPISession_CeRegCloseKey(session, key);
   return(list);
 }
 
 
-GList* enum_registry_key(GList *list, char *key_name, GtkWidget *progressbar) 
+GList* enum_registry_key(IRAPISession *session, GList *list, char *key_name, GtkWidget *progressbar) 
 {
   LONG result;
   HKEY parent_key, hkey;
@@ -172,7 +174,7 @@ GList* enum_registry_key(GList *list, char *key_name, GtkWidget *progressbar)
 
   parent_key_name = wstr_from_ascii(tmp_subkey);
 
-  result = CeRegOpenKeyEx(hkey, parent_key_name, 0, 0, &parent_key);
+  result = IRAPISession_CeRegOpenKeyEx(session, hkey, parent_key_name, 0, 0, &parent_key);
 
   if (result != ERROR_SUCCESS) {
       g_warning("%s: Unable to open registry key %s: %s", G_STRFUNC, key_name,
@@ -186,7 +188,7 @@ GList* enum_registry_key(GList *list, char *key_name, GtkWidget *progressbar)
     WCHAR wide_class[MAX_PATH];
     DWORD class_size = sizeof(wide_class);
 
-    result = CeRegEnumKeyEx(parent_key, i, wide_name, &name_size, 
+    result = IRAPISession_CeRegEnumKeyEx(session, parent_key, i, wide_name, &name_size, 
 			    NULL, wide_class, &class_size, NULL);
 
     if (result == ERROR_NO_MORE_ITEMS) break;
@@ -203,7 +205,7 @@ GList* enum_registry_key(GList *list, char *key_name, GtkWidget *progressbar)
     list = g_list_append(list,key_info);
   }
 
-  CeRegCloseKey(parent_key);
+  IRAPISession_CeRegCloseKey(session, parent_key);
 
   return (list);
 }
