@@ -448,14 +448,18 @@ synce_device_manager_get_connected_devices (SynceDbusDeviceManager *interface,
 
     gchar *obj_path;
     SynceDevice *device = ((DeviceEntry*)device_entry_iter->data)->device;
-    if (device == NULL)
+    if (device == NULL) {
       /* interface is not yet ready */
+      device_entry_iter = g_slist_next(device_entry_iter);
       continue;
+    }
 
     g_object_get (device, "object-path", &obj_path, NULL);
-    if (obj_path == NULL)
+    if (obj_path == NULL) {
       /* device is not yet ready */
+      device_entry_iter = g_slist_next(device_entry_iter);
       continue;
+    }
 
     g_debug("%s: found device %s with object path %s", G_STRFUNC, ((DeviceEntry*)device_entry_iter->data)->device_path, obj_path);
 
