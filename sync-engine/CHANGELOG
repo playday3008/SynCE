@@ -1228,3 +1228,8 @@ modify our plugin to match
 * plugins/synce-opensync-plugin-3x.py - don't return sink from
   initialize func, accept optional data parameter in discover,
   change plugin name to synce-sync
+
+25/07/2013 - Mark Ellis
+-----------------------
+0.16 release
+
