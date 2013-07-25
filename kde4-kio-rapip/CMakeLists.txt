@@ -6,7 +6,7 @@ include (InstallRequiredSystemLibraries)
 
 # configuration to build source packages
 set (CPACK_PACKAGE_NAME "kde4-kio-rapip")
-set (CPACK_PACKAGE_VERSION "0.3")
+set (CPACK_PACKAGE_VERSION "0.4")
 set (CPACK_PACKAGE_VENDOR "The SynCE Project")
 set (CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/README )
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "KIOSlave used to browse through a Windows Mobile PDA filesystem" )
