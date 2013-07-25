@@ -1,3 +1,7 @@
+2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* 0.17 release
+
 2012-08-21  Mark Ellis  <mark@mpellis.org.uk>
 
 	* tools/pkillall.c - report error codes from CeKillAllApps
