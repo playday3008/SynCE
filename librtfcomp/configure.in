@@ -1,5 +1,5 @@
 AC_PREREQ(2.53)
-AC_INIT([librtfcomp], [1.2])
+AC_INIT([librtfcomp], [1.3])
 AC_CONFIG_SRCDIR(src/rtfcomp.c)
 AM_INIT_AUTOMAKE([1.9 foreign])
 
