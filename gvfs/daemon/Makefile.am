@@ -13,9 +13,7 @@ INCLUDES =					\
 	-DGVFS_LOCALEDIR=\""$(localedir)"\"     \
 	-DG_DISABLE_DEPRECATED
 
-if !USE_GDBUS
 INCLUDES += $(DBUS_CFLAGS) -DDBUS_API_SUBJECT_TO_CHANGE
-endif
 
 noinst_LTLIBRARIES = libdaemon.la
 
@@ -147,6 +145,4 @@ gvfsd_synce_CPPFLAGS = \
 
 gvfsd_synce_LDADD = libdaemon.la $(LIBSYNCE_LIBS) $(GLIB_LIBS)
 
-if !USE_GDBUS
 gvfsd_synce_LDADD += $(DBUS_LIBS)
-endif

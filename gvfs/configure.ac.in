@@ -95,6 +95,13 @@ fi
 
 if test "$gvfs_major_ver" -eq 1 -a "$gvfs_minor_ver" -gt 12; then
 AC_DEFINE(GVFS_POST_1_12, 1, [Define if building against gvfs post version 1.12])
+else
+dnl up until 1.12, we need libdbus for gvfs, even if synce is using gdbus
+    if test "$use_gdbus" = "1"; then
+        PKG_CHECK_MODULES(DBUS, dbus-1 dbus-glib-1)
+        AC_SUBST(DBUS_CFLAGS)
+        AC_SUBST(DBUS_LIBS)
+    fi
 fi
 
 AM_CONDITIONAL(GVFS_VERSION_1_0, test "$gvfs_major_ver" -ge 1 )
