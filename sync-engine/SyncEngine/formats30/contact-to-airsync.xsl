@@ -236,11 +236,11 @@
 
             <!-- Opensync 0.3x - Anniversary and Birthday are handled the same way -->
 
-            <xsl:for-each select="Anniversary[position() = 1]">
+            <xsl:for-each select="Anniversary/Content[position() = 1]">
                 <C1:Anniversary><xsl:value-of select="contact:AnniversaryToAirsync()"/></C1:Anniversary>
             </xsl:for-each>
 
-            <xsl:for-each select="Birthday[position() = 1]">
+            <xsl:for-each select="Birthday/Content[position() = 1]">
                 <C1:Birthday><xsl:value-of select="contact:BirthdayToAirsync()"/></C1:Birthday>
             </xsl:for-each>
 

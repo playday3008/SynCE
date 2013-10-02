@@ -251,7 +251,7 @@ class ItemSink(opensync.ObjTypeSinkCallbacks):
 		self.objtype,self.format = SUPPORTED_ITEM_TYPES[item]
 		self.logger = logging.getLogger("SynCE.ItemSink("+self.objtype+")")
 		opensync.ObjTypeSinkCallbacks.__init__(self, self.objtype)
-		self.sink.add_objformat(opensync.ObjFormatSink(self.format))
+		self.sink.add_objformat_sink(opensync.ObjFormatSink(self.format))
 
 	#
 	# connect
@@ -433,9 +433,13 @@ def discover(info, data):
 	config = opensync.PluginConfig()
 
 	for sink in info.objtypes:
+		sink.available = False
 		for wmtype in SyncTypes:
 			if OBJ_TYPE_TO_ITEM_TYPE[sink.get_name()] == wmtype:
 				sink.available = True
+				# in committed_all we actually finish the sync, so
+				# need to increase the default timeout
+				sink.set_committedall_timeout(300)
 
 				# create a new resource and add it to the config
 				res = opensync.PluginResource()

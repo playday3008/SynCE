@@ -57,41 +57,41 @@
 
             <xsl:for-each select="(C1:HomeCity | C1:HomeCountry | C1:HomePostalCode | C1:HomeState | C1:HomeStreet)[position() = 1]">
                 <Address Location="Home">
+                    <xsl:for-each select="../C1:HomeStreet">
+                        <Street><xsl:value-of select="."/></Street>
+                    </xsl:for-each>
                     <xsl:for-each select="../C1:HomeCity">
                         <Locality><xsl:value-of select="."/></Locality>
-                    </xsl:for-each>
-                    <xsl:for-each select="../C1:HomeCountry">
-                        <Country><xsl:value-of select="."/></Country>
-                    </xsl:for-each>
-                    <xsl:for-each select="../C1:HomePostalCode">
-                        <PostalCode><xsl:value-of select="."/></PostalCode>
                     </xsl:for-each>
                     <xsl:for-each select="../C1:HomeState">
                         <Region><xsl:value-of select="."/></Region>
                     </xsl:for-each>
-                    <xsl:for-each select="../C1:HomeStreet">
-                        <Street><xsl:value-of select="."/></Street>
+                    <xsl:for-each select="../C1:HomePostalCode">
+                        <PostalCode><xsl:value-of select="."/></PostalCode>
+                    </xsl:for-each>
+                    <xsl:for-each select="../C1:HomeCountry">
+                        <Country><xsl:value-of select="."/></Country>
                     </xsl:for-each>
                 </Address>
             </xsl:for-each>
 
             <xsl:for-each select="(C1:BusinessCity | C1:BusinessCountry | C1:BusinessPostalCode | C1:BusinessState | C1:BusinessStreet)[position() = 1]">
                 <Address Location="Work">
-                    <Locality><xsl:value-of select="../C1:BusinessCity"/></Locality>
-                    <Country><xsl:value-of select="../C1:BusinessCountry"/></Country>
-                    <PostalCode><xsl:value-of select="../C1:BusinessPostalCode"/></PostalCode>
-                    <Region><xsl:value-of select="../C1:BusinessState"/></Region>
                     <Street><xsl:value-of select="../C1:BusinessStreet"/></Street>
+                    <Locality><xsl:value-of select="../C1:BusinessCity"/></Locality>
+                    <Region><xsl:value-of select="../C1:BusinessState"/></Region>
+                    <PostalCode><xsl:value-of select="../C1:BusinessPostalCode"/></PostalCode>
+                    <Country><xsl:value-of select="../C1:BusinessCountry"/></Country>
                 </Address>
             </xsl:for-each>
 
             <xsl:for-each select="(C1:OtherCity | C1:OtherCountry | C1:OtherPostalCode | C1:OtherState | C1:OtherStreet)[position() = 1]">
                 <Address Location="Other">
-                    <Locality><xsl:value-of select="../C1:OtherCity"/></Locality>
-                    <Country><xsl:value-of select="../C1:OtherCountry"/></Country>
-                    <PostalCode><xsl:value-of select="../C1:OtherPostalCode"/></PostalCode>
-                    <Region><xsl:value-of select="../C1:OtherState"/></Region>
                     <Street><xsl:value-of select="../C1:OtherStreet"/></Street>
+                    <Locality><xsl:value-of select="../C1:OtherCity"/></Locality>
+                    <Region><xsl:value-of select="../C1:OtherState"/></Region>
+                    <PostalCode><xsl:value-of select="../C1:OtherPostalCode"/></PostalCode>
+                    <Country><xsl:value-of select="../C1:OtherCountry"/></Country>
                 </Address>
             </xsl:for-each>
 
@@ -215,11 +215,11 @@
             </xsl:for-each>
 
             <xsl:for-each select="C1:Anniversary[position() = 1]">
-                <Anniversary><xsl:value-of select="contact:AnniversaryFromAirsync()"/></Anniversary>
+                <Anniversary><Content><xsl:value-of select="contact:AnniversaryFromAirsync()"/></Content></Anniversary>
             </xsl:for-each>
 
             <xsl:for-each select="C1:Birthday[position() = 1]">
-                <Birthday><xsl:value-of select="contact:BirthdayFromAirsync()"/></Birthday>
+                <Birthday><Content><xsl:value-of select="contact:BirthdayFromAirsync()"/></Content></Birthday>
             </xsl:for-each>
 
             <xsl:for-each select="C1:Rtf">

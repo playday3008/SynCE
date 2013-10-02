@@ -41,7 +41,7 @@
 		<!-- OpenSync 0.3 - 'Transparency' becomes TimeTransparency -->
 
                 <xsl:for-each select="C:BusyStatus[position() = 1]">
-                    <TimeTransparency><xsl:value-of select="event:TimeTransparencyFromAirsync()"/></TimeTransparency>
+                    <TimeTransparency><Content><xsl:value-of select="event:TimeTransparencyFromAirsync()"/></Content></TimeTransparency>
                 </xsl:for-each>
 
 		<!-- OpenSync 0.3 - LastModified remains the same, TimezoneID is an attribute, and the date value type is specced -->

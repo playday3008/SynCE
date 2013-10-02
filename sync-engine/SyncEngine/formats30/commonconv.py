@@ -467,15 +467,6 @@ def RecurrenceRuleFromAirsync(ctx):
 	weekofmonth_node = xml2util.FindChildNode(src_node, "WeekOfMonth")
 	monthofyear_node = xml2util.FindChildNode(src_node, "MonthOfYear")
 
-	# Add the common nodes that don't really require conversion
-
-	if until_node != None:
-		dst_node.newChild(None, "Until", "%s" % xml2util.GetNodeValue(until_node))
-	if occurrences_node != None:
-		dst_node.newChild(None, "Count", "%s" % xml2util.GetNodeValue(occurrences_node))
-	if interval_node != None:
-		dst_node.newChild(None, "Interval", "%s" % xml2util.GetNodeValue(interval_node))
-
 	if type_node != None:
 		type = int(xml2util.GetNodeValue(type_node))
 		
@@ -488,31 +479,67 @@ def RecurrenceRuleFromAirsync(ctx):
         	if type == 0:
 			
 			dst_node.newChild(None, "Frequency", "DAILY")
+			if until_node != None:
+				dst_node.newChild(None, "Until", "%s" % xml2util.GetNodeValue(until_node))
+			if occurrences_node != None:
+				dst_node.newChild(None, "Count", "%s" % xml2util.GetNodeValue(occurrences_node))
+			if interval_node != None:
+				dst_node.newChild(None, "Interval", "%s" % xml2util.GetNodeValue(interval_node))
 			
 		elif type == 1:
 			
 			dst_node.newChild(None, "Frequency", "WEEKLY")
+			if until_node != None:
+				dst_node.newChild(None, "Until", "%s" % xml2util.GetNodeValue(until_node))
+			if occurrences_node != None:
+				dst_node.newChild(None, "Count", "%s" % xml2util.GetNodeValue(occurrences_node))
+			if interval_node != None:
+				dst_node.newChild(None, "Interval", "%s" % xml2util.GetNodeValue(interval_node))
 			dst_node.newChild(None, "ByDay", "%s" % AirsyncDaysToVcalDays(xml2util.GetNodeValue(dayofweek_node)))
 		
 		elif type == 2:
 
 			dst_node.newChild(None, "Frequency", "MONTHLY")
+			if until_node != None:
+				dst_node.newChild(None, "Until", "%s" % xml2util.GetNodeValue(until_node))
+			if occurrences_node != None:
+				dst_node.newChild(None, "Count", "%s" % xml2util.GetNodeValue(occurrences_node))
+			if interval_node != None:
+				dst_node.newChild(None, "Interval", "%s" % xml2util.GetNodeValue(interval_node))
 			dst_node.newChild(None, "ByMonthDay", "%s" % xml2util.GetNodeValue(dayofmonth_node))
 			
 		elif type == 3:
 			
 			dst_node.newChild(None, "Frequency", "MONTHLY")
+			if until_node != None:
+				dst_node.newChild(None, "Until", "%s" % xml2util.GetNodeValue(until_node))
+			if occurrences_node != None:
+				dst_node.newChild(None, "Count", "%s" % xml2util.GetNodeValue(occurrences_node))
+			if interval_node != None:
+				dst_node.newChild(None, "Interval", "%s" % xml2util.GetNodeValue(interval_node))
 			dst_node.newChild(None, "ByDay", "%s" % GenerateVcalByDay(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
 
 		elif type == 5:
 
 			dst_node.newChild(None, "Frequency", "YEARLY")
+			if until_node != None:
+				dst_node.newChild(None, "Until", "%s" % xml2util.GetNodeValue(until_node))
+			if occurrences_node != None:
+				dst_node.newChild(None, "Count", "%s" % xml2util.GetNodeValue(occurrences_node))
+			if interval_node != None:
+				dst_node.newChild(None, "Interval", "%s" % xml2util.GetNodeValue(interval_node))
 			dst_node.newChild(None, "ByMonth", "%s" % xml2util.GetNodeValue(monthofyear_node))
 			dst_node.newChild(None, "ByMonthDay", "%s" % xml2util.GetNodeValue(dayofmonth_node))
 
 		elif type == 6:
 
 			dst_node.newChild(None, "Frequency", "YEARLY")
+			if until_node != None:
+				dst_node.newChild(None, "Until", "%s" % xml2util.GetNodeValue(until_node))
+			if occurrences_node != None:
+				dst_node.newChild(None, "Count", "%s" % xml2util.GetNodeValue(occurrences_node))
+			if interval_node != None:
+				dst_node.newChild(None, "Interval", "%s" % xml2util.GetNodeValue(interval_node))
 			dst_node.newChild(None, "ByMonth", "%s" % xml2util.GetNodeValue(monthofyear_node))
 			dst_node.newChild(None, "ByDay", "%s" % GenerateVcalByDay(xml2util.GetNodeValue(weekofmonth_node), xml2util.GetNodeValue(dayofweek_node)))
 
