@@ -6,6 +6,14 @@ import dbus
 sys.path.insert(0, "..")
 from SyncEngine.constants import *
 
+#
+# On WM6, deleting a partnership removes all PIM items that
+# are tied only to that partnership. With a lot of items,
+# this can take longer than the default dbus timeout, so we
+# increase this to 3 minutes for the deletion command
+#
+DELETE_TIMEOUT = 180000
+
 try:
 	engine = dbus.Interface(dbus.SessionBus().get_object(DBUS_SYNCENGINE_BUSNAME, DBUS_SYNCENGINE_OBJPATH), DBUS_SYNCENGINE_BUSNAME)
 except:
@@ -66,7 +74,7 @@ try:
 	print "Deleting partnership..."
 	sys.stdout.flush()
 	id,guid,name,hostname,devicename,storetype,items = pships[i]
-	engine.DeletePartnership(id,guid)
+	engine.DeletePartnership(id,guid,timeout=DELETE_TIMEOUT)
 	print "Partnership deleted"
 
 except dbus.DBusException,e:
