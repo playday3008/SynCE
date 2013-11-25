@@ -1051,9 +1051,12 @@ def FileUnpack(data):
 	if retval != 1:
 		raise RRAError("Failed to unpack file data")
 
-	if file_size > 0:
-		value = PyString_FromStringAndSize(<char *>file_content, file_size)
-		free(file_content)
+	if ftype == RRA_FILE_TYPE_FILE:
+		if file_size > 0:
+			value = PyString_FromStringAndSize(<char *>file_content, file_size)
+			free(file_content)
+		else:
+			value = PyString_FromStringAndSize(<char *>"", 0)
 	else:
 		value = None
 
