@@ -761,7 +761,8 @@ class FileProcessor(Processor):
 		if self.thread.stopping:
 			return False
 		
-		ft,path,df = self._unpack_file(data)
+		ft,path,df = pyrra.FileUnpack(data)
+		self.logger.debug("unpacked data - name %s" % path)
 		
 		# get full path to file (or dir) to write
 		
@@ -770,7 +771,7 @@ class FileProcessor(Processor):
 	
 		# is it a file?
 			
-		if (ft & 0x10) == 0:
+		if (ft & pyrra.RRA_FILE_TYPE_DIRECTORY) == 0:
 			dirs,file = os.path.split(fullpath)
 			try:
 				if not os.path.isdir(dirs):
@@ -779,8 +780,8 @@ class FileProcessor(Processor):
 				f=open(fullpath,"wb")
 				f.write(df)
 				f.close()
-			except:
-				self.logger.debug("WARNING: Unable to create file %s" % fullpath)
+			except Exception, e:
+				self.logger.debug("WARNING: Unable to create file %s: %s", fullpath, e)
 		
 		# is it a dir? Handle the brain-damaged RRA sequence of sending a 
 		# delete before a name change. We would have handled the delete, so look for the
@@ -840,17 +841,24 @@ class FileProcessor(Processor):
 
 	def CB_Reader(self, index, maxlen):
 		
+		# This callback is called multiple times for the same file if the
+		# file size is greater than maxlen
+		# On the first call for a file, we use pyrra.FilePack() to produce
+		# an RRA header, and append file content up to maxlen. On subsequent
+		# calls for that file, we simply read maxlen of data
+		
 		first = False
 		d = ""
 		rlen = maxlen
 		
-		# clean up after us if the previous read
-		# went south
-		
+		# retrieve file info if we are in the middle of a file
 		if self.rdrdata != None:
 			idx,fd,ftype = self.rdrdata
 			
+			# this shouldn't happen, if it does we abandon the
+			# previous file
 			if index != idx:
+				self.logger.warning("reader requested new file before end of previous file")
 				if fd != 0:
 					fd.close()
 				self.rdrdata = None
@@ -862,27 +870,27 @@ class FileProcessor(Processor):
 			if self.readeroids[index] == 0:
 				path = self.fdb.dbnew[index].name
 				if self.fdb.dbnew[index].isDir:
-					ftype = 0x10
+					ftype = pyrra.RRA_FILE_TYPE_DIRECTORY
 				else:
-					ftype = 0x20
+					ftype = pyrra.RRA_FILE_TYPE_FILE
 			else:
 				path = self.fdb.db[self.readeroids[index]].name
 				if self.fdb.db[self.readeroids[index]].isDir:
-					ftype = 0x10
+					ftype = pyrra.RRA_FILE_TYPE_DIRECTORY
 				else:
-					ftype = 0x20
+					ftype = pyrra.RRA_FILE_TYPE_FILE
 				
 			fullpath = os.path.join(self.fdb.syncdir, path)
 			fd = 0
-			if (ftype & 0x10) == 0:
+			if (ftype & pyrra.RRA_FILE_TYPE_DIRECTORY) == 0:
 				fd = open(fullpath,"rb")
 				
 			self.rdrdata = (index,fd,ftype)
 			
-			d += self._fhdr(ftype,path)
+			d = pyrra.FilePack(ftype,path)
 			rlen -= len(d)
 		
-		if (ftype & 0x10) == 0:
+		if (ftype & pyrra.RRA_FILE_TYPE_DIRECTORY) == 0:
 			d += fd.read(rlen)
 			if len(d) == 0:
 				fd.close()
@@ -892,37 +900,6 @@ class FileProcessor(Processor):
 			
 		self.logger.debug("reader returning file of len %d" % len(d))
 		return d
-
-	#
-	# _unpack_file
-	# 
-	# Unpack a file from the RRAC data block - returns type, path and data
-	#
-	
-	def _unpack_file(self,s):
-		
-		ftype = struct.unpack("<I",s[0:4])
-		# need to find the end of the name
-		pos=4
-		while pos < len(s):
-			v=struct.unpack("<H",s[pos:pos+2])
-			if v[0] == 0:
-				break
-			pos += 2
-		winpathname = util.decode_wstr(s[4:pos])
-		pth=winpathname.replace("\\","/")
-		data = s[pos+2:]
-		self.logger.debug("unpacking data - name %s" % pth)
-		return ftype[0],pth,data
-
-	#
-	# _fhdr
-	# 
-	# Pack a file into a string usable as an RRAC data block
-	#
-
-	def _fhdr(self,ftype, pth):
-		return struct.pack("<I",ftype) + util.encode_wstr(pth.replace("/","\\"))
 
 ###############################################################################
 # ObjTypeHandler
