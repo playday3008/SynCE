@@ -1,0 +1,5 @@
+[RemoteVolumeMonitor]
+Name=GProxyVolumeMonitorSynce
+DBusName=org.gtk.Private.SynceVolumeMonitor
+IsNative=false
+

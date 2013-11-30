@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=org.gtk.Private.SynceVolumeMonitor
+Exec=@libexecdir@/gvfs-synce-volume-monitor
+

@@ -3,7 +3,8 @@ SUBDIRS = \
 	pixmaps \
 	po \
 	data \
-	gvfs
+	gvfs \
+	monitor
 
 EXTRA_DIST = \
 	intltool-extract.in	\

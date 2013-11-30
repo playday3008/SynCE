@@ -157,4 +157,7 @@ AC_OUTPUT([
 	gvfs/Makefile
 	gvfs/common/Makefile
 	gvfs/daemon/Makefile
+	gvfs/monitor/Makefile
+	gvfs/monitor/proxy/Makefile
+	monitor/Makefile
 ])
