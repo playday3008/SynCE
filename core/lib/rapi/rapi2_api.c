@@ -1600,6 +1600,12 @@ IRAPIDevice_get_local_ip(IRAPIDevice *self)
   return synce_info_get_local_ip(self->info);
 }
 
+const char *
+IRAPIDevice_get_obj_path(IRAPIDevice *self)
+{
+  return self->obj_path;
+}
+
 /** @} */
 
 /*

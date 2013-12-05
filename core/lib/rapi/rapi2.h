@@ -414,6 +414,7 @@ const char * IRAPIDevice_get_os_name(IRAPIDevice *self);
 const char * IRAPIDevice_get_model(IRAPIDevice *self);
 const char * IRAPIDevice_get_device_ip(IRAPIDevice *self);
 const char * IRAPIDevice_get_local_ip(IRAPIDevice *self);
+const char * IRAPIDevice_get_obj_path(IRAPIDevice *self);
 
 
 /* IRAPIEnumDevices */
