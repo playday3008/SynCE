@@ -17,4 +17,4 @@ Settings -> Remove programs on your Windows CE device."
 	exit 1
 fi
 
-@bindir@/prun unload.exe "$1"
+@bindir@/synce-prun unload.exe "$1"

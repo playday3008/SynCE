@@ -7,33 +7,33 @@ noinst_PROGRAMS = oidinfo
 
 oidinfo_SOURCES = oidinfo.c
 
-bin_PROGRAMS = pcp \
-	pls \
-	pmkdir \
-	pmv \
-	prm \
-	prmdir \
-	prun \
-	pstatus \
+bin_PROGRAMS = synce-pcp \
+	synce-pls \
+	synce-pmkdir \
+	synce-pmv \
+	synce-prm \
+	synce-prmdir \
+	synce-prun \
+	synce-pstatus \
 	rapiconfig \
-	pkillall \
-	pshortcut \
-	psettime \
+	synce-pkillall \
+	synce-pshortcut \
+	synce-psettime \
 	synce-list-programs \
 	synce-registry \
 	synce-database
 
-pcp_SOURCES    = pcommon.c pcp.c
-pls_SOURCES    = pcommon.c pls.c
-pmkdir_SOURCES = pcommon.c pmkdir.c
-pmv_SOURCES    = pcommon.c pmv.c
-prm_SOURCES    = pcommon.c prm.c
-prmdir_SOURCES = pcommon.c prmdir.c
-prun_SOURCES   = pcommon.c prun.c
-pstatus_SOURCES= pstatus.c
-pkillall_SOURCES=pkillall.c
-pshortcut_SOURCES=pcommon.c pshortcut.c
-psettime_SOURCES=psettime.c
+synce_pcp_SOURCES    = pcommon.c pcp.c
+synce_pls_SOURCES    = pcommon.c pls.c
+synce_pmkdir_SOURCES = pcommon.c pmkdir.c
+synce_pmv_SOURCES    = pcommon.c pmv.c
+synce_prm_SOURCES    = pcommon.c prm.c
+synce_prmdir_SOURCES = pcommon.c prmdir.c
+synce_prun_SOURCES   = pcommon.c prun.c
+synce_pstatus_SOURCES= pstatus.c
+synce_pkillall_SOURCES=pkillall.c
+synce_pshortcut_SOURCES=pcommon.c pshortcut.c
+synce_psettime_SOURCES=psettime.c
 
 rapiconfig_SOURCES = rapiconfig.c
 
