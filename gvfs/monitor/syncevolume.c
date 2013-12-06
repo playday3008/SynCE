@@ -81,6 +81,12 @@ g_vfs_synce_volume_can_mount (GVolume *volume)
 }
 
 static gboolean
+g_vfs_synce_volume_can_eject (GVolume *volume)
+{
+  return FALSE;
+}
+
+static gboolean
 g_vfs_synce_volume_should_automount (GVolume *volume)
 {
   return TRUE;
@@ -209,6 +215,12 @@ g_vfs_synce_volume_get_activation_root (GVolume *volume)
   return g_object_ref (root);
 }
 
+static const gchar *
+g_vfs_synce_volume_get_sort_key (GVolume *volume)
+{
+  return NULL;
+}
+
 GVfsSynceVolume *
 g_vfs_synce_volume_new (GVolumeMonitor *monitor,
                         IRAPIDevice *device)
@@ -281,18 +293,28 @@ g_vfs_synce_volume_iface_init (GVolumeIface *iface)
 {
   iface->get_name = g_vfs_synce_volume_get_name;
   iface->get_icon = g_vfs_synce_volume_get_icon;
+#if GLIB_CHECK_VERSION(2,34,0)
   iface->get_symbolic_icon = g_vfs_synce_volume_get_symbolic_icon;
+#endif
   iface->get_uuid = g_vfs_synce_volume_get_uuid;
   iface->get_drive = g_vfs_synce_volume_get_drive;
   iface->get_mount = g_vfs_synce_volume_get_mount;
   iface->can_mount = g_vfs_synce_volume_can_mount;
+  iface->can_eject = g_vfs_synce_volume_can_eject;
   iface->should_automount = g_vfs_synce_volume_should_automount;
   iface->mount_fn = g_vfs_synce_volume_mount;
   iface->mount_finish = g_vfs_synce_volume_mount_finish;
   iface->eject = NULL;
   iface->eject_finish = NULL;
+#if GLIB_CHECK_VERSION(2,22,0)
+  iface->eject_with_operation = NULL;
+  iface->eject_with_operation_finish = NULL;
+#endif
   iface->get_identifier = g_vfs_synce_volume_get_identifier;
   iface->enumerate_identifiers = g_vfs_synce_volume_enumerate_identifiers;
   iface->get_activation_root = g_vfs_synce_volume_get_activation_root;
+#if GLIB_CHECK_VERSION(2,32,0)
+  iface->get_sort_key = g_vfs_synce_volume_get_sort_key;
+#endif
 }
 
