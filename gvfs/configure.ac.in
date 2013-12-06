@@ -4,7 +4,7 @@ AC_PREREQ(2.53)
 AC_INIT(synce-gvfs, @@VERSION@@)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_SRCDIR(daemon/gvfsbackendsynce.c)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([1.4])
 	
 AM_SANITY_CHECK
 

@@ -3,7 +3,7 @@ gvfs_src_dir = @with_gvfs_source@
 
 mountdir = $(datadir)/gvfs/mounts
 
-INCLUDES =					\
+AM_CPPFLAGS =					\
 	-I$(gvfs_src_dir)			\
 	-I$(gvfs_src_dir)/common		\
 	-I$(gvfs_src_dir)/daemon		\
@@ -13,7 +13,7 @@ INCLUDES =					\
 	-DGVFS_LOCALEDIR=\""$(localedir)"\"     \
 	-DG_DISABLE_DEPRECATED
 
-INCLUDES += $(DBUS_CFLAGS) -DDBUS_API_SUBJECT_TO_CHANGE
+AM_CPPFLAGS += $(DBUS_CFLAGS) -DDBUS_API_SUBJECT_TO_CHANGE
 
 noinst_LTLIBRARIES = libdaemon.la
 
