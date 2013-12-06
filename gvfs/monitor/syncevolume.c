@@ -19,8 +19,6 @@ struct _GVfsSynceVolume {
 
   GVolumeMonitor *monitor;
 
-  char *uuid;
-
   char *name;
   char *icon;
   char *symbolic_icon;
@@ -135,9 +133,9 @@ g_vfs_synce_volume_mount (GVolume             *volume,
   ActivationMountOp *data;
   GFile *root;
 
-  g_print ("g_vfs_synce_volume_mount (can_mount=%d uuid=%s)\n",
+  g_print ("g_vfs_synce_volume_mount (can_mount=%d name=%s)\n",
            g_vfs_synce_volume_can_mount (volume),
-           synce_volume->uuid);
+           synce_volume->name);
 
   root = g_object_get_data (G_OBJECT (volume), "root");
 
@@ -249,7 +247,6 @@ g_vfs_synce_volume_finalize (GObject *object)
   self = G_VFS_SYNCE_VOLUME(object);
 
   self->monitor = NULL;
-  g_free (self->uuid);
   g_free (self->name);
   g_free (self->icon);
   g_free (self->symbolic_icon);
@@ -268,7 +265,6 @@ static void
 g_vfs_synce_volume_init (GVfsSynceVolume *self)
 {
   self->monitor = NULL;
-  self->uuid = NULL;
   self->name = NULL;
   self->device = NULL;
 
