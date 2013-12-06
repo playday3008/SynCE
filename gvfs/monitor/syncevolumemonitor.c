@@ -77,19 +77,20 @@ g_vfs_synce_monitor_remove_volume (GVfsSynceVolumeMonitor *self,
 {
   GVfsSynceVolume *volume = NULL;
   GList *l;
+  const gchar *obj_path = NULL;
+
+  obj_path = IRAPIDevice_get_obj_path(device);
 
   for (l = self->volumes; l != NULL; l = l->next)
     {
       volume = l->data;
-      gchar *vol_name = g_volume_get_name(G_VOLUME(volume));
-      if (strcmp(vol_name, IRAPIDevice_get_name(device)) == 0) {
-        g_print ("removing volume for device '%s'\n", vol_name);
+      if (volume && g_vfs_synce_volume_has_obj_path (volume, obj_path)) {
+        g_print ("removing volume for device '%s'\n", obj_path);
         self->volumes = g_list_remove (self->volumes, volume);
         g_signal_emit_by_name (self, "volume-removed", volume);
         g_object_unref (volume);
         break;
       }
-      g_free(vol_name);
     }
 }
 

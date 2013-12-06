@@ -216,6 +216,12 @@ g_vfs_synce_volume_get_sort_key (GVolume *volume)
   return NULL;
 }
 
+gboolean g_vfs_synce_volume_has_obj_path(GVfsSynceVolume *volume, const char *obj_path)
+{
+  g_return_val_if_fail (obj_path != NULL, FALSE);
+  return (g_strcmp0 (IRAPIDevice_get_obj_path(volume->device), obj_path) == 0);
+}
+
 GVfsSynceVolume *
 g_vfs_synce_volume_new (GVolumeMonitor *monitor,
                         IRAPIDevice *device)

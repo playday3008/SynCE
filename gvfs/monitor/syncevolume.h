@@ -34,6 +34,8 @@ GType g_vfs_synce_volume_get_type (void) G_GNUC_CONST;
 GVfsSynceVolume *g_vfs_synce_volume_new (GVolumeMonitor *monitor,
                                          IRAPIDevice *device);
 
+gboolean g_vfs_synce_volume_has_obj_path(GVfsSynceVolume *volume, const char *obj_path);
+
 G_END_DECLS
 
 #endif /* GVFS_MONITOR_SYNCE_SYNCE_VOLUME_H */
