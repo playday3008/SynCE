@@ -146,6 +146,7 @@ g_vfs_synce_volume_mount (GVolume             *volume,
   data->callback = callback;
   data->user_data = user_data;
   data->root = root;
+  g_object_ref(data->root);
 
   g_file_mount_enclosing_volume (root,
                                  0,
