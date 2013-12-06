@@ -89,7 +89,7 @@ g_vfs_synce_volume_can_eject (GVolume *volume)
 static gboolean
 g_vfs_synce_volume_should_automount (GVolume *volume)
 {
-  return TRUE;
+  return FALSE;
 }
 
 static GDrive *
