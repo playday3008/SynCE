@@ -275,7 +275,7 @@ g_vfs_synce_volume_init (GVfsSynceVolume *self)
   self->device = NULL;
 
   self->icon = g_strdup ("synce-gvfs");
-  self->symbolic_icon = g_strdup ("synce-gvfs");
+  self->symbolic_icon = g_strdup ("phone-symbolic");
   self->icon_fallback = NULL;
 }
 
