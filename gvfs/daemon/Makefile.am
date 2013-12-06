@@ -141,7 +141,8 @@ gvfsd_synce_CPPFLAGS = \
 	$(LIBSYNCE_CFLAGS) \
 	-DBACKEND_TYPES='"synce", G_VFS_TYPE_BACKEND_SYNCE,' \
 	-DGVFS_LOG_DOMAIN=\"synce-gvfs\" \
-	-DG_LOG_DOMAIN=\"synce-gvfs\"
+	-DG_LOG_DOMAIN=\"synce-gvfs\" \
+	$(AM_CPPFLAGS)
 
 gvfsd_synce_LDADD = libdaemon.la $(LIBSYNCE_LIBS) $(GLIB_LIBS)
 
