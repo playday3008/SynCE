@@ -178,8 +178,8 @@ g_vfs_synce_volume_get_identifier (GVolume              *volume,
   char *id;
 
   id = NULL;
-  if (g_str_equal (kind, G_VOLUME_IDENTIFIER_KIND_LABEL) != FALSE)
-    id = g_strdup (synce_volume->uuid);
+  if (g_str_equal (kind, G_VOLUME_IDENTIFIER_KIND_CLASS) != FALSE)
+    id = g_strdup ("device");
 
   return id;
 }
@@ -192,11 +192,7 @@ g_vfs_synce_volume_enumerate_identifiers (GVolume *volume)
 
   res = g_ptr_array_new ();
 
-  if (synce_volume->name)
-    {
-        g_ptr_array_add (res,
-                         g_strdup (G_VOLUME_IDENTIFIER_KIND_LABEL));
-    }
+  g_ptr_array_add (res, g_strdup(G_VOLUME_IDENTIFIER_KIND_CLASS));
 
   /* Null-terminate */
   g_ptr_array_add (res, NULL);
