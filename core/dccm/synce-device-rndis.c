@@ -579,7 +579,6 @@ synce_device_rndis_client_event_cb(GObject *source_object,
 void
 synce_device_rndis_client_connected (SynceDeviceRndis *self, GSocketConnection *conn)
 {
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE(self);
   SynceDeviceRndisPrivate *priv_rndis = SYNCE_DEVICE_RNDIS_GET_PRIVATE (self);
 
   g_object_ref(conn);

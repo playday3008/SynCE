@@ -213,9 +213,6 @@ synce_device_manager_control_dispose (GObject *obj)
 static void
 synce_device_manager_control_finalize (GObject *obj)
 {
-  SynceDeviceManagerControl *self = SYNCE_DEVICE_MANAGER_CONTROL (obj);
-  SynceDeviceManagerControlPrivate *priv = SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE (self);
-
   G_OBJECT_CLASS (synce_device_manager_control_parent_class)->finalize (obj);
 }
 

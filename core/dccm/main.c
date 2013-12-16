@@ -60,9 +60,8 @@ bus_acquired_handler(G_GNUC_UNUSED GDBusConnection *connection, G_GNUC_UNUSED co
 }
 
 static void
-name_acquired_handler(G_GNUC_UNUSED GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, gpointer user_data)
+name_acquired_handler(G_GNUC_UNUSED GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, G_GNUC_UNUSED gpointer user_data)
 {
-  GMainLoop *mainloop = (GMainLoop*)user_data;
   g_debug("%s: bus name acquired", G_STRFUNC);
 }
 
