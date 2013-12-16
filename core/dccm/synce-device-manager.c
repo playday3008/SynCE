@@ -122,7 +122,7 @@ synce_device_manager_device_sends_disconnected_cb(SynceDevice *device,
 
 static void
 synce_device_manager_device_obj_path_changed_cb(GObject    *obj,
-						GParamSpec *param,
+						G_GNUC_UNUSED GParamSpec *param,
 						gpointer    user_data)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
@@ -148,7 +148,7 @@ synce_device_manager_device_obj_path_changed_cb(GObject    *obj,
 static gboolean
 synce_device_manager_client_connected_cb(GSocketService *server,
 					 GSocketConnection *conn,
-					 GObject *source_object,
+					 G_GNUC_UNUSED GObject *source_object,
 					 gpointer user_data)
 {
   if (conn == NULL) {
@@ -351,7 +351,7 @@ synce_device_manager_check_interface_cb (gpointer userdata)
 
 
 static void
-synce_device_manager_device_connected_cb(SynceDeviceManagerControl *device_manager_control,
+synce_device_manager_device_connected_cb(G_GNUC_UNUSED SynceDeviceManagerControl *device_manager_control,
 					 gchar *device_path,
 					 gchar *device_ip,
 					 gchar *local_ip,
@@ -387,7 +387,7 @@ synce_device_manager_device_connected_cb(SynceDeviceManagerControl *device_manag
 
 
 static void
-synce_device_manager_device_disconnected_cb(SynceDeviceManagerControl *device_manager_control,
+synce_device_manager_device_disconnected_cb(G_GNUC_UNUSED SynceDeviceManagerControl *device_manager_control,
 					    gchar *device_path,
 					    gpointer userdata)
 {

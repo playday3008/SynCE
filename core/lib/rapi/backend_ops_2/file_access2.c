@@ -12,7 +12,7 @@ HANDLE _CeCreateFile2(
         LPCWSTR lpFileName,
         DWORD dwDesiredAccess,
         DWORD dwShareMode,
-        LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+        LPSECURITY_ATTRIBUTES lpSecurityAttributes SYNCE_UNUSED,
         DWORD dwCreationDisposition,
         DWORD dwFlagsAndAttributes,
         HANDLE hTemplateFile)
@@ -45,7 +45,7 @@ BOOL _CeReadFile2(
         LPVOID lpBuffer,
         DWORD nNumberOfBytesToRead,
         LPDWORD lpNumberOfBytesRead,
-        LPOVERLAPPED lpOverlapped)
+        LPOVERLAPPED lpOverlapped SYNCE_UNUSED)
 {
     BOOL return_value = 0;
     uint32_t bytes_read = 0;
@@ -92,7 +92,7 @@ BOOL _CeWriteFile2(
         LPCVOID lpBuffer,
         DWORD nNumberOfBytesToWrite,
         LPDWORD lpNumberOfBytesWritten,
-        LPOVERLAPPED lpOverlapped)
+        LPOVERLAPPED lpOverlapped SYNCE_UNUSED)
 {
     BOOL return_value = 0;
     uint32_t bytes_written = 0;

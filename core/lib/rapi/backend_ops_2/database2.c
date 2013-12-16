@@ -25,10 +25,10 @@
 
 CEOID _NotImplementedCeCreateDatabase2(
 		RapiContext *context,
-		LPWSTR lpszName,
-		DWORD dwDbaseType,
-		WORD wNumSortOrder,
-		SORTORDERSPEC *rgSortSpecs)
+		LPWSTR lpszName SYNCE_UNUSED,
+		DWORD dwDbaseType SYNCE_UNUSED,
+		WORD wNumSortOrder SYNCE_UNUSED,
+		SORTORDERSPEC *rgSortSpecs SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -37,7 +37,7 @@ CEOID _NotImplementedCeCreateDatabase2(
 
 BOOL _NotImplementedCeDeleteDatabase2(/*{{{*/
 		RapiContext *context,
-		CEOID oid)
+		CEOID oid SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -46,10 +46,10 @@ BOOL _NotImplementedCeDeleteDatabase2(/*{{{*/
 
 BOOL _NotImplementedCeFindAllDatabases2(/*{{{*/
 		RapiContext *context,
-		DWORD dwDbaseType,
-		WORD wFlags,
-		LPWORD cFindData,
-		LPLPCEDB_FIND_DATA ppFindData)
+		DWORD dwDbaseType SYNCE_UNUSED,
+		WORD wFlags SYNCE_UNUSED,
+		LPWORD cFindData SYNCE_UNUSED,
+		LPLPCEDB_FIND_DATA ppFindData SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -58,7 +58,7 @@ BOOL _NotImplementedCeFindAllDatabases2(/*{{{*/
 
 HANDLE _NotImplementedCeFindFirstDatabase2(/*{{{*/
 		RapiContext *context,
-		DWORD dwDbaseType)
+		DWORD dwDbaseType SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -67,7 +67,7 @@ HANDLE _NotImplementedCeFindFirstDatabase2(/*{{{*/
 
 CEOID _NotImplementedCeFindNextDatabase2(/*{{{*/
 		RapiContext *context,
-		HANDLE hEnum)
+		HANDLE hEnum SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -76,11 +76,11 @@ CEOID _NotImplementedCeFindNextDatabase2(/*{{{*/
 
 HANDLE _NotImplementedCeOpenDatabase2(/*{{{*/
 		RapiContext *context,
-		PCEOID poid,
-		LPWSTR lpszName,
-		CEPROPID propid,
-		DWORD dwFlags,
-		HWND hwndNotify)
+		PCEOID poid SYNCE_UNUSED,
+		LPWSTR lpszName SYNCE_UNUSED,
+		CEPROPID propid SYNCE_UNUSED,
+		DWORD dwFlags SYNCE_UNUSED,
+		HWND hwndNotify SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -90,12 +90,12 @@ HANDLE _NotImplementedCeOpenDatabase2(/*{{{*/
 
 CEOID _NotImplementedCeReadRecordProps2(/*{{{*/
 		RapiContext *context,
-		HANDLE hDbase,
-		DWORD dwFlags,
-		LPWORD lpcPropID,
-		CEPROPID *rgPropID,
-		LPBYTE *lplpBuffer,
-		LPDWORD lpcbBuffer)
+		HANDLE hDbase SYNCE_UNUSED,
+		DWORD dwFlags SYNCE_UNUSED,
+		LPWORD lpcPropID SYNCE_UNUSED,
+		CEPROPID *rgPropID SYNCE_UNUSED,
+		LPBYTE *lplpBuffer SYNCE_UNUSED,
+		LPDWORD lpcbBuffer SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -104,7 +104,10 @@ CEOID _NotImplementedCeReadRecordProps2(/*{{{*/
 
 CEOID _NotImplementedCeWriteRecordProps2(
 		RapiContext *context,
-		HANDLE hDbase, CEOID oidRecord, WORD cPropID, CEPROPVAL* rgPropVal)/*{{{*/
+		HANDLE hDbase SYNCE_UNUSED, 
+		CEOID oidRecord SYNCE_UNUSED,
+		WORD cPropID SYNCE_UNUSED,
+		CEPROPVAL* rgPropVal SYNCE_UNUSED)/*{{{*/
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -114,10 +117,10 @@ CEOID _NotImplementedCeWriteRecordProps2(
 
 CEOID _NotImplementedCeSeekDatabase2(/*{{{*/
 		RapiContext *context,
-		HANDLE hDatabase,
-		DWORD dwSeekType,
-		DWORD dwValue,
-		LPDWORD lpdwIndex)
+		HANDLE hDatabase SYNCE_UNUSED,
+		DWORD dwSeekType SYNCE_UNUSED,
+		DWORD dwValue SYNCE_UNUSED,
+		LPDWORD lpdwIndex SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -126,8 +129,8 @@ CEOID _NotImplementedCeSeekDatabase2(/*{{{*/
 
 BOOL _NotImplementedCeDeleteRecord2(/*{{{*/
     RapiContext *context,
-    HANDLE hDatabase,
-    CEOID oidRecord)
+    HANDLE hDatabase SYNCE_UNUSED,
+    CEOID oidRecord SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -136,8 +139,8 @@ BOOL _NotImplementedCeDeleteRecord2(/*{{{*/
 
 BOOL _NotImplementedCeSetDatabaseInfo2(
     RapiContext *context,
-    CEOID oidDbase,
-    CEDBASEINFO* pNewInfo)
+    CEOID oidDbase SYNCE_UNUSED,
+    CEDBASEINFO* pNewInfo SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;

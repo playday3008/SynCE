@@ -125,7 +125,7 @@ IRAPISession_get_device(IRAPISession *session)
  * Standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5
  */
 HRESULT
-IRAPISession_CeRapiFreeBuffer(IRAPISession *session,
+IRAPISession_CeRapiFreeBuffer(IRAPISession *session SYNCE_UNUSED,
                               LPVOID Buffer)
 {
         free(Buffer);
@@ -1826,8 +1826,8 @@ struct _IRAPIDesktop {
 #if USE_GDBUS
 
 static void
-on_devmgr_proxy_signal (GDBusProxy *proxy,
-			gchar *sender_name,
+on_devmgr_proxy_signal (GDBusProxy *proxy SYNCE_UNUSED,
+			gchar *sender_name SYNCE_UNUSED,
 			gchar *signal_name,
 			GVariant *parameters,
 			gpointer user_data)
@@ -2217,8 +2217,8 @@ udev_connect(IRAPIDesktop *self)
 #if USE_GDBUS
 
 static void
-on_dbus_proxy_signal (GDBusProxy *proxy,
-		      gchar *sender_name,
+on_dbus_proxy_signal (GDBusProxy *proxy SYNCE_UNUSED,
+		      gchar *sender_name SYNCE_UNUSED,
 		      gchar *signal_name,
 		      GVariant *parameters,
 		      gpointer user_data)
@@ -2618,7 +2618,7 @@ IRAPIDesktop_EnumDevices(IRAPIDesktop *self, IRAPIEnumDevices** ppIEnum)
  * @return an HRESULT indicating success or an error
  */ 
 HRESULT
-IRAPIDesktop_FindDevice(IRAPIDesktop *self, RAPIDEVICEID *pDeviceID, RAPI_GETDEVICEOPCODE opFlags, IRAPIDevice** ppIDevice)
+IRAPIDesktop_FindDevice(IRAPIDesktop *self, RAPIDEVICEID *pDeviceID, RAPI_GETDEVICEOPCODE opFlags SYNCE_UNUSED, IRAPIDevice** ppIDevice)
 {
   char *guidstr = guid_to_string(pDeviceID);
   if (!guidstr) {

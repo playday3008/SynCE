@@ -10,13 +10,13 @@ BOOL _CeCreateProcess2(/*{{{*/
         RapiContext *context,
         LPCWSTR lpApplicationName,
         LPCWSTR lpCommandLine,
-        void* lpProcessAttributes,
-        void* lpThreadAttributes,
-        BOOL bInheritHandles,
+        void* lpProcessAttributes SYNCE_UNUSED,
+        void* lpThreadAttributes SYNCE_UNUSED,
+        BOOL bInheritHandles SYNCE_UNUSED,
         DWORD dwCreationFlags,
-        LPVOID lpEnvironment,
-        LPWSTR lpCurrentDirectory,
-        void* lpStartupInfo,
+        LPVOID lpEnvironment SYNCE_UNUSED,
+        LPWSTR lpCurrentDirectory SYNCE_UNUSED,
+        void* lpStartupInfo SYNCE_UNUSED,
         LPPROCESS_INFORMATION lpProcessInformation)
 {
     BOOL result = false;
@@ -233,9 +233,9 @@ BOOL _CeGetSystemMemoryDivision2(
 
 BOOL _NotImplementedCeGetSystemMemoryDivision2(
     RapiContext *context,
-    LPDWORD lpdwStoragePages,
-    LPDWORD lpdwRamPages,
-    LPDWORD lpdwPageSize)
+    LPDWORD lpdwStoragePages SYNCE_UNUSED,
+    LPDWORD lpdwRamPages SYNCE_UNUSED,
+    LPDWORD lpdwPageSize SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -468,7 +468,7 @@ DWORD _CeGetDiskFreeSpaceEx2(
 
 BOOL _NotImplementedCeRegCopyFile2(
         RapiContext *context,
-        LPCWSTR filename)
+        LPCWSTR filename SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -477,7 +477,7 @@ BOOL _NotImplementedCeRegCopyFile2(
 
 BOOL _NotImplementedCeRegRestoreFile2(
         RapiContext *context,
-        LPCWSTR filename)
+        LPCWSTR filename SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -494,7 +494,7 @@ BOOL _NotImplementedCeKillAllApps2(
 
 DWORD _NotImplementedCeSetSystemMemoryDivision2(
     RapiContext *context,
-    DWORD dwStoragePages)
+    DWORD dwStoragePages SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -503,8 +503,8 @@ DWORD _NotImplementedCeSetSystemMemoryDivision2(
 
 BOOL _NotImplementedCeOidGetInfo2(/*{{{*/
         RapiContext *context,
-		CEOID oid,
-		CEOIDINFO *poidInfo)
+        CEOID oid SYNCE_UNUSED,
+        CEOIDINFO *poidInfo SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;

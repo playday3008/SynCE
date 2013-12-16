@@ -34,13 +34,13 @@ static HRESULT CeRapiInvokeCommon(
 }
 
 static HRESULT CeRapiInvokeStream( /*{{{*/
-    RapiContext *source_context,
+    RapiContext *source_context SYNCE_UNUSED,
     LPCWSTR pDllPath,
     LPCWSTR pFunctionName,
     DWORD cbInput,
     const BYTE *pInput,
-    DWORD *pcbOutput,
-    BYTE **ppOutput,
+    DWORD *pcbOutput SYNCE_UNUSED,
+    BYTE **ppOutput SYNCE_UNUSED,
     IRAPIStream **ppIRAPIStream,
     DWORD dwReserved)
 {

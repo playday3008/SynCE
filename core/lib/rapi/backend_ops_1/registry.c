@@ -7,11 +7,11 @@ LONG _CeRegCreateKeyEx( /*{{{*/
                 RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
-		DWORD Reserved,
+		DWORD Reserved SYNCE_UNUSED,
 		LPWSTR lpszClass,
-		DWORD ulOptions,
-		REGSAM samDesired,
-		LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+		DWORD ulOptions SYNCE_UNUSED,
+		REGSAM samDesired SYNCE_UNUSED,
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes SYNCE_UNUSED,
 		PHKEY phkResult,
 		LPDWORD lpdwDisposition)
 {
@@ -50,8 +50,8 @@ LONG _CeRegOpenKeyEx(/*{{{*/
                 RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
-		DWORD ulOptions,
-		REGSAM samDesired,
+		DWORD ulOptions SYNCE_UNUSED,
+		REGSAM samDesired SYNCE_UNUSED,
 		PHKEY phkResult)
 {
 	LONG return_value = ERROR_GEN_FAILURE;
@@ -299,7 +299,7 @@ LONG _CeRegSetValueEx( /*{{{*/
                 RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpValueName,
-		DWORD Reserved,
+		DWORD Reserved SYNCE_UNUSED,
 		DWORD dwType,
 		const BYTE *lpData,
 		DWORD cbData)

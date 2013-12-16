@@ -268,7 +268,7 @@ HANDLE _CeOpenDatabase(/*{{{*/
 		LPWSTR lpszName,
 		CEPROPID propid,
 		DWORD dwFlags,
-		HWND hwndNotify)
+		HWND hwndNotify SYNCE_UNUSED)
 {
 	HANDLE handle = INVALID_HANDLE_VALUE;
 

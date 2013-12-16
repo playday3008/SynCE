@@ -9,7 +9,7 @@
 BOOL _CeCreateDirectory(
                 RapiContext *context,
 		LPCWSTR lpPathName,
-		LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes SYNCE_UNUSED)
 {
 	BOOL return_value = 0;
 

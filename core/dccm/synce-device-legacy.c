@@ -454,7 +454,7 @@ synce_device_legacy_client_event_password_cb(GObject *source_object,
 
 #if USE_GDBUS
 gboolean
-synce_device_legacy_request_connection_impl (SynceDbusDevice *interface, GDBusMethodInvocation *ctx, gpointer userdata)
+synce_device_legacy_request_connection_impl (G_GNUC_UNUSED SynceDbusDevice *interface, GDBusMethodInvocation *ctx, gpointer userdata)
 {
   SynceDeviceLegacy *self = SYNCE_DEVICE_LEGACY (userdata);
 #else

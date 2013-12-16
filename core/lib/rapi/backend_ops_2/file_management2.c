@@ -229,7 +229,7 @@ BOOL _CeDeleteFile2(
 BOOL _CeCreateDirectory2(
         RapiContext *context,
         LPCWSTR lpPathName,
-        LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+        LPSECURITY_ATTRIBUTES lpSecurityAttributes SYNCE_UNUSED)
 {
     BOOL return_value = 0;
 
@@ -345,8 +345,8 @@ BOOL _CeMoveFile2(
 
 BOOL _NotImplementedCeSetFileAttributes2(
 		RapiContext *context,
-		LPCWSTR lpFileName,
-		DWORD dwFileAttributes)
+		LPCWSTR lpFileName SYNCE_UNUSED,
+		DWORD dwFileAttributes SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -355,8 +355,8 @@ BOOL _NotImplementedCeSetFileAttributes2(
 
 BOOL _NotImplementedCeSHCreateShortcut2(
   RapiContext *context,
-  LPCWSTR lpszShortcut,
-  LPCWSTR lpszTarget)
+  LPCWSTR lpszShortcut SYNCE_UNUSED,
+  LPCWSTR lpszTarget SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;

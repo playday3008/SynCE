@@ -9,13 +9,13 @@ BOOL _CeCreateProcess(/*{{{*/
     RapiContext *context,
     LPCWSTR lpApplicationName,
     LPCWSTR lpCommandLine,
-    void* lpProcessAttributes,
-    void* lpThreadAttributes,
-    BOOL bInheritHandles,
+    void* lpProcessAttributes SYNCE_UNUSED,
+    void* lpThreadAttributes SYNCE_UNUSED,
+    BOOL bInheritHandles SYNCE_UNUSED,
     DWORD dwCreationFlags,
-    LPVOID lpEnvironment,
-    LPWSTR lpCurrentDirectory,
-    void* lpStartupInfo,
+    LPVOID lpEnvironment SYNCE_UNUSED,
+    LPWSTR lpCurrentDirectory SYNCE_UNUSED,
+    void* lpStartupInfo SYNCE_UNUSED,
     LPPROCESS_INFORMATION lpProcessInformation)
 {
 	BOOL result = false;
@@ -551,10 +551,10 @@ exit:
 
 DWORD _NotImplementedCeGetDiskFreeSpaceEx(
     RapiContext *context,
-    LPCTSTR _lpDirectoryName, 
-    PULARGE_INTEGER lpFreeBytesAvailable, 
-    PULARGE_INTEGER lpTotalNumberOfBytes, 
-    PULARGE_INTEGER lpTotalNumberOfFreeBytes)
+    LPCTSTR _lpDirectoryName SYNCE_UNUSED,
+    PULARGE_INTEGER lpFreeBytesAvailable SYNCE_UNUSED,
+    PULARGE_INTEGER lpTotalNumberOfBytes SYNCE_UNUSED,
+    PULARGE_INTEGER lpTotalNumberOfFreeBytes SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -564,7 +564,7 @@ DWORD _NotImplementedCeGetDiskFreeSpaceEx(
 
 HRESULT _NotImplementedCeSyncStart(
     RapiContext *context,
-    LPCWSTR params)
+    LPCWSTR params SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;

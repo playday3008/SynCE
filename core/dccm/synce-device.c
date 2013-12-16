@@ -106,7 +106,7 @@ synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_da
 
 #if USE_GDBUS
 static gboolean
-synce_device_provide_password_impl (SynceDbusDevice *interface,
+synce_device_provide_password_impl (G_GNUC_UNUSED SynceDbusDevice *interface,
 				    GDBusMethodInvocation *ctx,
 				    const gchar *password,
 				    gpointer userdata)
@@ -223,7 +223,7 @@ get_password_flag_text(SynceDevicePasswordFlags flag)
 #ifdef HAVE_GUDEV
 
 static void
-gudev_uevent_callback(GUdevClient *client,
+gudev_uevent_callback(G_GNUC_UNUSED GUdevClient *client,
 		      gchar *action,
 		      GUdevDevice *device,
 		      gpointer user_data)

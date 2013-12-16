@@ -41,7 +41,7 @@ static GOptionEntry options[] =
 SynceDeviceManager *device_manager = NULL;
 
 static void
-bus_acquired_handler(GDBusConnection *connection, const gchar *name, gpointer user_data)
+bus_acquired_handler(G_GNUC_UNUSED GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, gpointer user_data)
 {
   GMainLoop *mainloop = (GMainLoop*)user_data;
   GError *error = NULL;
@@ -60,14 +60,14 @@ bus_acquired_handler(GDBusConnection *connection, const gchar *name, gpointer us
 }
 
 static void
-name_acquired_handler(GDBusConnection *connection, const gchar *name, gpointer user_data)
+name_acquired_handler(G_GNUC_UNUSED GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, gpointer user_data)
 {
   GMainLoop *mainloop = (GMainLoop*)user_data;
   g_debug("%s: bus name acquired", G_STRFUNC);
 }
 
 static void
-name_lost_handler(GDBusConnection *connection, const gchar *name, gpointer user_data)
+name_lost_handler(GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, gpointer user_data)
 {
   GMainLoop *mainloop = (GMainLoop*)user_data;
 

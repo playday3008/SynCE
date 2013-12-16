@@ -9,11 +9,11 @@ LONG _CeRegCreateKeyEx2(
 		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
-		DWORD Reserved,
+		DWORD Reserved SYNCE_UNUSED,
 		LPWSTR lpszClass,
-		DWORD ulOptions,
-		REGSAM samDesired,
-		LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+		DWORD ulOptions SYNCE_UNUSED,
+		REGSAM samDesired SYNCE_UNUSED,
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes SYNCE_UNUSED,
 		PHKEY phkResult,
 		LPDWORD lpdwDisposition)
 {
@@ -51,8 +51,8 @@ LONG _CeRegOpenKeyEx2(
 		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpszSubKey,
-		DWORD ulOptions,
-		REGSAM samDesired,
+		DWORD ulOptions SYNCE_UNUSED,
+		REGSAM samDesired SYNCE_UNUSED,
 		PHKEY phkResult)
 {
 	LONG return_value = ERROR_GEN_FAILURE;
@@ -81,7 +81,7 @@ LONG _CeRegQueryValueEx2(
 		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpValueName,
-		LPDWORD lpReserved,
+		LPDWORD lpReserved SYNCE_UNUSED,
 		LPDWORD lpType,
 		LPBYTE lpData,
 		LPDWORD lpcbData)
@@ -205,15 +205,15 @@ LONG _CeRegQueryInfoKey2(
 		HKEY hKey,
 		LPWSTR lpClass,
 		LPDWORD lpcbClass,
-		LPDWORD lpReserved,
+		LPDWORD lpReserved SYNCE_UNUSED,
 		LPDWORD lpcSubKeys,
 		LPDWORD lpcbMaxSubKeyLen,
 		LPDWORD lpcbMaxClassLen,
 		LPDWORD lpcValues,
 		LPDWORD lpcbMaxValueNameLen,
 		LPDWORD lpcbMaxValueLen,
-		LPDWORD lpcbSecurityDescriptor,
-		PFILETIME lpftLastWriteTime)
+		LPDWORD lpcbSecurityDescriptor SYNCE_UNUSED,
+		PFILETIME lpftLastWriteTime SYNCE_UNUSED)
 {
 	LONG return_value = ERROR_GEN_FAILURE;
 
@@ -274,7 +274,7 @@ LONG _CeRegEnumValue2(
 		DWORD dwIndex,
 		LPWSTR lpszValueName,
 		LPDWORD lpcbValueName,
-		LPDWORD lpReserved,
+		LPDWORD lpReserved SYNCE_UNUSED,
 		LPDWORD lpType,
 		LPBYTE lpData,
 		LPDWORD lpcbData)
@@ -349,10 +349,10 @@ LONG _CeRegEnumKeyEx2(
 		DWORD dwIndex,
 		LPWSTR lpName,
 		LPDWORD lpcbName,
-		LPDWORD lpReserved,
+		LPDWORD lpReserved SYNCE_UNUSED,
 		LPWSTR lpClass,
 		LPDWORD lpcbClass,
-		PFILETIME lpftLastWriteTime)
+		PFILETIME lpftLastWriteTime SYNCE_UNUSED)
 {
 	LONG return_value = ERROR_GEN_FAILURE;
 
@@ -394,7 +394,7 @@ LONG _CeRegSetValueEx2(
 		RapiContext *context,
 		HKEY hKey,
 		LPCWSTR lpValueName,
-		DWORD Reserved,
+		DWORD Reserved SYNCE_UNUSED,
 		DWORD dwType,
 		const BYTE *lpData,
 		DWORD cbData)

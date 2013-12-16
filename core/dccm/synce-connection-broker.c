@@ -194,9 +194,9 @@ synce_connection_broker_class_init (SynceConnectionBrokerClass *conn_broker_clas
 }
 
 static gboolean
-server_socket_readable_cb(GSocketService *source,
+server_socket_readable_cb(G_GNUC_UNUSED GSocketService *source,
 			  GSocketConnection *client_connection,
-			  GObject *source_object,
+			  G_GNUC_UNUSED GObject *source_object,
 			  gpointer user_data)
 {
   SynceConnectionBroker *self = user_data;

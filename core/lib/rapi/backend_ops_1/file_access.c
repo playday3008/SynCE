@@ -30,7 +30,7 @@ HANDLE _CeCreateFile(
 		LPCWSTR lpFileName,
 		DWORD dwDesiredAccess,
 		DWORD dwShareMode,
-		LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+		LPSECURITY_ATTRIBUTES lpSecurityAttributes SYNCE_UNUSED,
 		DWORD dwCreationDisposition,
 		DWORD dwFlagsAndAttributes,
 		HANDLE hTemplateFile)
@@ -62,7 +62,7 @@ BOOL _CeReadFile(
 		LPVOID lpBuffer,
 		DWORD nNumberOfBytesToRead,
 		LPDWORD lpNumberOfBytesRead,
-		LPOVERLAPPED lpOverlapped)
+		LPOVERLAPPED lpOverlapped SYNCE_UNUSED)
 {
 	BOOL return_value = 0;
 	uint32_t bytes_read = 0;
@@ -107,7 +107,7 @@ BOOL _CeWriteFile(
 		LPCVOID lpBuffer,
 		DWORD nNumberOfBytesToWrite,
 		LPDWORD lpNumberOfBytesWritten,
-		LPOVERLAPPED lpOverlapped)
+		LPOVERLAPPED lpOverlapped SYNCE_UNUSED)
 {
 	BOOL return_value = 0;
 	uint32_t bytes_written = 0;
@@ -186,10 +186,10 @@ exit:
 
 BOOL _NotImplementedCeGetFileTime(
                 RapiContext *context,
-                HANDLE hFile,
-                LPFILETIME lpCreationTime,
-                LPFILETIME lpLastAccessTime,
-                LPFILETIME lpLastWriteTime)
+                HANDLE hFile SYNCE_UNUSED,
+                LPFILETIME lpCreationTime SYNCE_UNUSED,
+                LPFILETIME lpLastAccessTime SYNCE_UNUSED,
+                LPFILETIME lpLastWriteTime SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
@@ -199,10 +199,10 @@ BOOL _NotImplementedCeGetFileTime(
 
 BOOL _NotImplementedCeSetFileTime(
                 RapiContext *context,
-                HANDLE hFile,
-                LPFILETIME lpCreationTime,
-                LPFILETIME lpLastAccessTime,
-                LPFILETIME lpLastWriteTime)
+                HANDLE hFile SYNCE_UNUSED,
+                LPFILETIME lpCreationTime SYNCE_UNUSED,
+                LPFILETIME lpLastAccessTime SYNCE_UNUSED,
+                LPFILETIME lpLastWriteTime SYNCE_UNUSED)
 {
   context->rapi_error = E_NOTIMPL;
   context->last_error = ERROR_SUCCESS;
