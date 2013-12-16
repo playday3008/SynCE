@@ -102,7 +102,9 @@ main(gint argc,
 #endif
   guint req_name_result;
 
+#if !GLIB_CHECK_VERSION (2, 36, 0)
   g_type_init ();
+#endif
 
   GOptionContext *option_context = g_option_context_new (" - keep connection to Windows Mobile device");
   g_option_context_add_main_entries (option_context, options, NULL);

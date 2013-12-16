@@ -266,7 +266,9 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
 #endif
   }
 
+#if !GLIB_CHECK_VERSION (2, 36, 0)
   g_type_init();
+#endif
 
   dbus_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
 					      G_DBUS_PROXY_FLAGS_NONE,
@@ -569,7 +571,9 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
 #endif
   }
 
+#if !GLIB_CHECK_VERSION (2, 36, 0)
   g_type_init();
+#endif
 
   bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
   if (bus == NULL) {

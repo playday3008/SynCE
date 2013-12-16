@@ -2298,7 +2298,9 @@ dbus_name_owner_changed_cb(DBusGProxy *proxy,
 static HRESULT
 IRAPIDesktop_Init()
 {
+#if !GLIB_CHECK_VERSION (2, 36, 0)
         g_type_init();
+#endif
 
         IRAPIDesktop *self = NULL;
 
