@@ -441,7 +441,7 @@ synce_device_manager_get_connected_devices (SynceDbusDeviceManager *interface,
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
   g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
 
-  gchar **device_list = g_malloc0(g_slist_length(priv->devices) + 1);
+  gchar **device_list = g_malloc0((g_slist_length(priv->devices) + 1) * sizeof(gchar*));
   guint n = 0;
   GSList *device_entry_iter = priv->devices;
   while (device_entry_iter != NULL) {
