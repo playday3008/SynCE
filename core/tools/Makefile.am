@@ -1,6 +1,5 @@
-AM_CFLAGS = -I$(top_srcdir)/lib/utils -I$(top_builddir)/lib/utils
+AM_CFLAGS = -I$(top_srcdir)/lib/utils -I$(top_builddir)/lib/utils -I$(top_srcdir)/lib/rapi -I$(top_srcdir)/lib/rapi/support
 
-INCLUDES = -I$(top_srcdir)/lib/rapi -I$(top_srcdir)/lib/rapi/support
 LDADD = $(top_builddir)/lib/libsynce.la
 
 noinst_PROGRAMS = oidinfo

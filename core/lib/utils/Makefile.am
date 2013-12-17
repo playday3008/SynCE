@@ -1,4 +1,3 @@
-INCLUDES = -I..
 
 ## create this library
 noinst_LTLIBRARIES = libutils.la

@@ -1,7 +1,5 @@
 @SET_MAKE@
 
-INCLUDES = -I$(top_srcdir)/lib/rapi/support -I$(top_srcdir)/lib/utils -I$(top_builddir)/lib/utils
-
 ## create this library
 noinst_LTLIBRARIES = librapi.la
 
@@ -11,7 +9,10 @@ librapi_la_SOURCES = backend_ops_1.c backend_ops_2.c \
 	misc.c irapistream.h irapistream.c \
 	rapi2_api.c
 librapi_la_CFLAGS = -I$(top_srcdir)/lib/utils \
-	@GLIB_CFLAGS@
+			-I$(top_srcdir)/lib/rapi/support \
+			-I$(top_srcdir)/lib/utils \
+			-I$(top_builddir)/lib/utils \
+			@GLIB_CFLAGS@
 librapi_la_LIBADD = $(top_builddir)/lib/rapi/support/libsupport.la \
 	$(top_builddir)/lib/rapi/backend_ops_1/librapiops1.la \
 	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la
