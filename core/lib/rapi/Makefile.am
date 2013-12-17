@@ -16,8 +16,6 @@ librapi_la_CFLAGS = -I$(top_srcdir)/lib/utils \
 librapi_la_LIBADD = $(top_builddir)/lib/rapi/support/libsupport.la \
 	$(top_builddir)/lib/rapi/backend_ops_1/librapiops1.la \
 	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la
-#	$(top_builddir)/lib/utils/libutils.la \
-#	@DBUS_LIBS@
 
 if !USE_GDBUS
 librapi_la_CFLAGS += @DBUS_CFLAGS@

@@ -10,7 +10,6 @@ libsupport_la_CFLAGS = -I$(top_srcdir)/lib/utils \
 			-I$(top_builddir)/lib/utils \
 			-I$(top_srcdir)/lib/rapi \
 			@GLIB_CFLAGS@
-#libsupport_la_LIBADD  = @DBUS_LIBS@ $(top_builddir)/lib/utils/libutils.la
 
 if !USE_GDBUS
 libsupport_la_CFLAGS += @DBUS_CFLAGS@

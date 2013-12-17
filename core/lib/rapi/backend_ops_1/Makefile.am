@@ -10,6 +10,5 @@ librapiops1_la_CFLAGS = -I$(top_srcdir)/lib/utils \
 			-I$(top_builddir)/lib/utils \
 			-I$(top_srcdir)/lib/rapi \
 			-I$(top_srcdir)/lib/rapi/support
-#librapiops1_la_LIBADD = $(top_builddir)/lib/utils/libutils.la
 
 noinst_HEADERS = backend_ops_1.h
