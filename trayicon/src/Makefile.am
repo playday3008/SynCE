@@ -1,7 +1,7 @@
 
 bin_PROGRAMS = synce-trayicon
 
-INCLUDES  = \
+AM_CPPFLAGS  = \
 	-DDATADIR=\"$(datadir)\"                        \
 	-DPREFIX=\""$(prefix)"\"                        \
 	-DSYSCONFDIR=\""$(sysconfdir)"\"                \
@@ -62,7 +62,8 @@ synce_trayicon_CPPFLAGS = \
 	$(LIBORANGE_CFLAGS) \
 	$(NOTIFY_CFLAGS) \
 	$(XML_CFLAGS) \
-	$(APP_INDICATOR_CFLAGS)
+	$(APP_INDICATOR_CFLAGS) \
+	$(AM_CPPFLAGS)
 
 synce_trayicon_LDADD = \
 	$(GLIB2_LIBS) \

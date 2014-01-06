@@ -1,5 +1,5 @@
 
-INCLUDES  = \
+AM_CPPFLAGS  = \
 	-DDATADIR=\"$(datadir)\"                        \
 	-DPREFIX=\""$(prefix)"\"                        \
 	-DSYSCONFDIR=\""$(sysconfdir)"\"                \
@@ -15,7 +15,8 @@ test_mod_la_SOURCES = test-mod.c
 test_mod_la_CPPFLAGS = \
 	$(GLIB2_CFLAGS) \
 	$(GTK3_CFLAGS) \
-	$(LIBSYNCE_CFLAGS)
+	$(LIBSYNCE_CFLAGS) \
+	$(AM_CPPFLAGS)
 
 test_mod_la_LDFLAGS = -module -avoid-version
 
