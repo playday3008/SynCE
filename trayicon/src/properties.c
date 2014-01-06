@@ -47,10 +47,10 @@ run_prefs_dialog(GSettings *settings)
   }
 
   prefs_window = GTK_WIDGET(gtk_builder_get_object(builder, prefs_window_name));
-  prefs_show_disconnected = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_show_disconnected"));
-  close_button = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_closebutton"));
-
 #if ENABLE_VDCCM_SUPPORT
+  prefs_show_disconnected = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_show_disconnected_vdccm"));
+  close_button = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_closebutton_vdccm"));
+
   prefs_enable_vdccm = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_enable_vdccm"));
   prefs_start_stop_vdccm = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_start_stop_vdccm"));
 
@@ -64,6 +64,9 @@ run_prefs_dialog(GSettings *settings)
 
   gtk_widget_set_sensitive(prefs_start_stop_vdccm, enable_vdccm);
   g_settings_bind(settings, "enable-vdccm", prefs_start_stop_vdccm, "sensitive", G_SETTINGS_BIND_GET|G_SETTINGS_BIND_NO_SENSITIVITY);
+#else
+  prefs_show_disconnected = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_show_disconnected"));
+  close_button = GTK_WIDGET(gtk_builder_get_object(builder, "prefs_closebutton"));
 #endif
 
   show_disconnected = g_settings_get_boolean(settings, "show-disconnected");
