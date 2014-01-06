@@ -316,22 +316,6 @@ partners_setup_view_store_synceng(WmDeviceInfo *self);
 
 
 static void
-setup_sync_item_store(gpointer key, gpointer value, gpointer user_data)
-{
-  GtkListStore *store = GTK_LIST_STORE(user_data);
-  GtkTreeIter iter;
-
-  gtk_list_store_append (store, &iter);  /* Acquire an iterator */
-
-  gtk_list_store_set (store, &iter,
-		      SYNCITEM_INDEX_COLUMN, GPOINTER_TO_UINT(key),
-		      SYNCITEM_SELECTED_COLUMN, FALSE,
-		      SYNCITEM_NAME_COLUMN, (gchar *)value,
-		      -1);
-}
-
-
-static void
 partners_create_sync_item_selected_cb (GtkCellRendererToggle *cell_renderer,
 				       gchar                 *path,
 				       gpointer               user_data)
@@ -372,26 +356,32 @@ partners_create_sync_item_selected_cb (GtkCellRendererToggle *cell_renderer,
     }
 }
 
-static GHashTable *
-sync_items_gvariant_to_hash(GVariant *sync_items_var)
+#if !USE_GDBUS
+static GVariant *
+sync_items_hash_to_gvariant(GHashTable *sync_items_hash)
 {
-  GHashTable *sync_items_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-  GVariantIter *iter;
-  guint key;
-  gchar *value = NULL;
+  GVariant *sync_items = NULL;
+  GVariantBuilder *listbuilder = NULL;
+  GHashTableIter iter;
+  gpointer key = NULL, value = NULL;
 
-  g_variant_get(sync_items_var, "a{us}", &iter);
-  g_debug("%s: number of sync item types = %zu", G_STRFUNC, g_variant_iter_n_children(iter));
-  while (g_variant_iter_next(iter, "{us}", &key, &value))
+  listbuilder = g_variant_builder_new(G_VARIANT_TYPE("a{us}"));
+
+  g_debug("%s: number of sync item types = %u", G_STRFUNC, g_hash_table_size(sync_items_hash));
+  g_hash_table_iter_init(&iter, sync_items_hash);
+  while (g_hash_table_iter_next(&iter, &key, &value))
   {
-    g_debug("%s: sync item %u: %s", G_STRFUNC, key, value);
-    g_hash_table_insert(sync_items_hash, GUINT_TO_POINTER(key), value);
+    g_debug("%s: sync item %u: %s", G_STRFUNC, GPOINTER_TO_UINT(key), (gchar*)value);
+
+    g_variant_builder_add (listbuilder, "{us}", GPOINTER_TO_UINT(key), (gchar*)value);
+
   }
-  g_variant_iter_free(iter);
+  sync_items = g_variant_builder_end(listbuilder);
+  g_variant_builder_unref(listbuilder);
 
-  return sync_items_hash;
+  return g_variant_ref_sink(sync_items);
 }
-
+#endif
 
 static void
 partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
@@ -409,15 +399,19 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
 
 #if USE_GDBUS
   SynceDbusOrgSynceSyncEngine *sync_engine_proxy = NULL;
-  GVariant *ret = NULL;
   GVariantBuilder *varbuilder = NULL;
   GVariant *val = NULL;
 #else
   DBusGConnection *dbus_connection = NULL;
   DBusGProxy *sync_engine_proxy = NULL;
+  GHashTable *sync_items_tmp = NULL;
 #endif
   GArray *sync_items_required = NULL;
-  GHashTable *sync_items = NULL;
+  GVariant *sync_items = NULL;
+  GVariantIter item_iter;
+  guint item_key;
+  gchar *item_name = NULL;
+
   gint response;
   guint32 item;
   gboolean active, result;
@@ -519,11 +513,11 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
 #if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_item_types_sync (
     sync_engine_proxy,
-    &ret,
+    &sync_items,
     NULL,
     &error);
 #else
-  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items, &error);
+  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items_tmp, &error);
 #endif
 
   if (!result) {
@@ -543,9 +537,9 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
     goto exit;
   }
 
-#if USE_GDBUS
-  sync_items = sync_items_gvariant_to_hash(ret);
-  g_variant_unref (ret);
+#if !USE_GDBUS
+  sync_items = sync_items_hash_to_gvariant(sync_items_tmp);
+  g_hash_table_destroy(sync_items);
 #endif
 
   store = gtk_list_store_new (SYNCITEM_N_COLUMNS,
@@ -553,8 +547,21 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
 			      G_TYPE_BOOLEAN,     /* selected */
 			      G_TYPE_STRING); /* program name */
 
-  g_hash_table_foreach(sync_items, setup_sync_item_store, store);
-  g_hash_table_destroy(sync_items);
+  g_variant_iter_init (&item_iter, sync_items);
+  while (g_variant_iter_next(&item_iter, "{us}", &item_key, &item_name))
+  {
+    gtk_list_store_append (store, &iter);  /* Acquire an iterator */
+
+    gtk_list_store_set (store, &iter,
+                        SYNCITEM_INDEX_COLUMN, item_key,
+                        SYNCITEM_SELECTED_COLUMN, FALSE,
+                        SYNCITEM_NAME_COLUMN, item_name,
+                        -1);
+
+    g_free(item_name);
+  }
+
+  g_variant_unref (sync_items);
 
   gtk_tree_view_set_model (GTK_TREE_VIEW(sync_items_listview), GTK_TREE_MODEL(store));
   g_object_unref (G_OBJECT (store));
@@ -665,96 +672,128 @@ exit:
   g_free(name);
 }
 
-
-#if GLIB_MAJOR_VERSION < 3 && GLIB_MINOR_VERSION < 14
-static void
-get_sync_item_keys(gpointer key,
-		   gpointer value,
-		   gpointer user_data)
+#if !USE_GDBUS
+static GVariant *
+partnerships_gvalue_to_gvariant(GPtrArray *partnership_list)
 {
-  *(GList **)user_data = g_list_append(*(GList **)user_data, key);
+  GValueArray *partnership = NULL;
+  guint partnership_id;
+  const gchar *partnership_guid = NULL;
+  const gchar *partnership_name = NULL;
+  const gchar *hostname = NULL;
+  const gchar *device_name = NULL;
+  guint partnership_type;
+  GArray *sync_items_active = NULL;
+
+  GVariantBuilder *pshiplistbuilder = NULL;
+  GVariantBuilder *pshipbuilder = NULL;
+  GVariantBuilder *syncitembuilder = NULL;
+  GVariant *pshiplist = NULL;
+  GVariant *pship = NULL;
+  GVariant *syncitems = NULL;
+
+  pshiplistbuilder = g_variant_builder_new(G_VARIANT_TYPE("a(ussssuau)"));
+
+  g_debug("%s: number of partnerships = %u", G_STRFUNC, partnership_list->len);
+  guint index = 0;
+  while(index < partnership_list->len)
+    {
+      partnership = g_ptr_array_index(partnership_list, index);
+
+      partnership_id = g_value_get_uint(g_value_array_get_nth (partnership, 0));
+      partnership_guid = g_value_get_string(g_value_array_get_nth (partnership, 1));
+      partnership_name = g_value_get_string(g_value_array_get_nth (partnership, 2));
+      hostname = g_value_get_string(g_value_array_get_nth (partnership, 3));
+      device_name = g_value_get_string(g_value_array_get_nth (partnership, 4));
+      partnership_type = g_value_get_uint(g_value_array_get_nth (partnership, 5));
+      sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 6));
+
+      g_debug("%s: partnership id %u, GUID %s, name %s, hostname %s, devicename %s, storetype %d",
+              G_STRFUNC, partnership_id, partnership_guid, partnership_name, hostname, device_name, partnership_type);
+
+      pshipbuilder = g_variant_builder_new(G_VARIANT_TYPE("(ussssuau)"));
+
+      g_variant_builder_add(pshipbuilder, "u", partnership_id);
+      g_variant_builder_add(pshipbuilder, "s", partnership_guid);
+      g_variant_builder_add(pshipbuilder, "s", partnership_name);
+      g_variant_builder_add(pshipbuilder, "s", hostname);
+      g_variant_builder_add(pshipbuilder, "s", device_name);
+      g_variant_builder_add(pshipbuilder, "u", partnership_type);
+
+      syncitembuilder = g_variant_builder_new(G_VARIANT_TYPE("au"));
+      guint active_item;
+      guint i;
+      g_debug("%s: number of sync items in partnership: %u", G_STRFUNC, sync_items_active->len);
+      for (i = 0; i < sync_items_active->len; i++) {
+        active_item = g_array_index(sync_items_active, guint, i);
+        g_debug("%s: sync item %u", G_STRFUNC, active_item);
+        g_variant_builder_add(syncitembuilder, "u", active_item);
+      }
+
+      syncitems = g_variant_builder_end(syncitembuilder);
+      g_variant_builder_unref(syncitembuilder);
+
+      g_variant_builder_add_value(pshipbuilder, syncitems);
+
+      pship = g_variant_builder_end(pshipbuilder);
+      g_variant_builder_unref(pshipbuilder);
+
+      g_variant_builder_add_value(pshiplistbuilder, pship);
+
+      index++;
+    }
+
+  pshiplist = g_variant_builder_end(pshiplistbuilder);
+  g_variant_builder_unref(pshiplistbuilder);
+
+  return g_variant_ref_sink(pshiplist);
 }
 #endif
 
-
-static GPtrArray *
-partnerships_gvariant_to_gvalue(GVariant *partnerships)
+static GList *
+get_sync_item_keys(GVariant *sync_items)
 {
-  GPtrArray *partnership_list = NULL;
-  GValueArray *partnership = NULL;
-  GValue gval = G_VALUE_INIT;
-  GVariantIter *viter1;
-  GVariantIter *viter2;
-  guint id;
-  gchar *guid = NULL;
-  gchar *name = NULL;
-  gchar *hostname = NULL;
-  gchar *devicename = NULL;
-  guint storetype;
-  guint devsyncitem;
-  GArray *devsyncitems = NULL;
+  GList *key_list = NULL;
+  GVariantIter iter;
+  GVariant *entry = NULL;
+  g_variant_iter_init (&iter, sync_items);
 
-  partnership_list = g_ptr_array_new();
-
-  g_variant_get(partnerships, "a(ussssuau)", &viter1);
-  g_debug("%s: number of partnerships = %zu", G_STRFUNC, g_variant_iter_n_children(viter1));
-  while (g_variant_iter_next(viter1, "(ussssuau)", &id, &guid, &name, &hostname, &devicename, &storetype, &viter2))
+  while ((entry = g_variant_iter_next_value (&iter)))
   {
-    g_debug("%s: partnership id %u, GUID %s, name %s, hostname %s, devicename %s, storetype %d",
-            G_STRFUNC, id, guid, name, hostname, devicename, storetype);
+    GVariant *entry_key;
 
-    devsyncitems = g_array_new(FALSE, FALSE, sizeof(guint));
+    entry_key = g_variant_get_child_value (entry, 0);
+    key_list = g_list_append(key_list, GUINT_TO_POINTER(g_variant_get_uint32(entry_key)));
+    g_variant_unref (entry_key);
 
-    g_debug("%s: number of sync items in partnership: %zu", G_STRFUNC, g_variant_iter_n_children(viter2));
-    while (g_variant_iter_next(viter2, "u", &devsyncitem))
-    {
-      g_debug("%s: sync item %u", G_STRFUNC, devsyncitem);
-      g_array_append_val(devsyncitems, devsyncitem);
-    }
-    g_variant_iter_free(viter2);
-
-    partnership = g_value_array_new(0);
-
-    g_value_init(&gval, G_TYPE_UINT);
-    g_value_set_uint(&gval, id);
-    partnership = g_value_array_append(partnership, &gval);
-    g_value_unset(&gval);
-
-    g_value_init(&gval, G_TYPE_STRING);
-    g_value_take_string(&gval, guid);
-    partnership = g_value_array_append(partnership, &gval);
-    g_value_unset(&gval);
-
-    g_value_init(&gval, G_TYPE_STRING);
-    g_value_take_string(&gval, name);
-    partnership = g_value_array_append(partnership, &gval);
-    g_value_unset(&gval);
-
-    g_value_init(&gval, G_TYPE_STRING);
-    g_value_take_string(&gval, hostname);
-    partnership = g_value_array_append(partnership, &gval);
-    g_value_unset(&gval);
-
-    g_value_init(&gval, G_TYPE_STRING);
-    g_value_take_string(&gval, devicename);
-    partnership = g_value_array_append(partnership, &gval);
-    g_value_unset(&gval);
-
-    g_value_init(&gval, G_TYPE_UINT);
-    g_value_set_uint(&gval, storetype);
-    partnership = g_value_array_append(partnership, &gval);
-    g_value_unset(&gval);
-
-    g_value_init(&gval, G_TYPE_ARRAY);
-    g_value_take_boxed(&gval, devsyncitems);
-    partnership = g_value_array_append(partnership, &gval);
-    g_value_unset(&gval);
-
-    g_ptr_array_add(partnership_list, partnership);
+    g_variant_unref (entry);
   }
-  g_variant_iter_free(viter1);
+  return key_list;
+}
 
-  return partnership_list;
+static char *
+get_sync_item_name(GVariant *sync_items, guint key)
+{
+  GVariant *entry = NULL;
+  GVariantIter item_iter;
+  char *name = NULL;
+
+  g_variant_iter_init (&item_iter, sync_items);
+  while ((entry = g_variant_iter_next_value (&item_iter)))
+  {
+    guint entry_key;
+
+    g_variant_get_child(entry, 0, "u", &entry_key);
+    if (key == entry_key) {
+      g_variant_get_child(entry, 1, "s", &name);
+      g_variant_unref (entry);
+      break;
+    }
+
+    g_variant_unref (entry);
+  }
+   
+  return name;
 }
 
 static gboolean
@@ -769,23 +808,27 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
   GError *error = NULL;
 #if USE_GDBUS
   SynceDbusOrgSynceSyncEngine *sync_engine_proxy = NULL;
-  GVariant *ret = NULL;
 #else
   DBusGConnection *dbus_connection = NULL;
   DBusGProxy *sync_engine_proxy = NULL;
 #endif
   gboolean result = FALSE;
 
-  GPtrArray* partnership_list = NULL;
-  GValueArray *partnership = NULL;
-  GHashTable *sync_items = NULL;
+  GVariant* partnership_list = NULL;
+  GVariant *partnership = NULL;
+  GVariant *sync_items = NULL;
+  GVariantIter partnershipiter;
+#if !USE_GDBUS
+  GPtrArray* partnership_list_tmp = NULL;
+  GHashTable *sync_items_tmp = NULL;
+#endif
   gboolean show_extra_warning;
   GArray *orphaned_items = NULL;
-  GArray *sync_items_active = NULL;
+  GVariant *sync_items_active = NULL;
+  GVariantIter activeitemsiter;
   GHashTable *pship_connections = NULL;
   GList *item_keys = NULL, *tmp_list = NULL;
   guint *sync_item_key = NULL;
-  guint index;
 
 #if USE_GDBUS
   sync_engine_proxy = synce_dbus_org_synce_sync_engine_proxy_new_for_bus_sync(
@@ -848,11 +891,11 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
 #if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_partnerships_sync (
     sync_engine_proxy,
-    &ret,
+    &partnership_list,
     NULL,
     &error);
 #else
-  result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list, &error);
+  result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list_tmp, &error);
 #endif
 
   if (!result) {
@@ -872,19 +915,28 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
     goto exit;
   }
 
-#if USE_GDBUS
-  partnership_list = partnerships_gvariant_to_gvalue(ret);
-  g_variant_unref (ret);
+#if! USE_GDBUS
+  partnership_list = partnerships_gvalue_to_gvariant(partnership_list_tmp);
+
+  guint index = 0;
+  GValueArray *partnership_tmp = NULL;
+  while(index < partnership_list_tmp->len) {
+    partnership_tmp = g_ptr_array_index(partnership_list_tmp, index);
+    g_value_array_free(partnership_tmp);
+
+    index++;
+  }
+  g_ptr_array_free(partnership_list_tmp, TRUE);
 #endif
 
 #if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_item_types_sync (
     sync_engine_proxy,
-    &ret,
+    &sync_items,
     NULL,
     &error);
 #else
-  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items, &error);
+  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items_tmp, &error);
 #endif
 
   if (!result) {
@@ -904,18 +956,12 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
     goto exit;
   }
 
-#if USE_GDBUS
-  sync_items = sync_items_gvariant_to_hash(ret);
-  g_variant_unref (ret);
+#if !USE_GDBUS
+  sync_items = sync_items_hash_to_gvariant(sync_items_tmp);
+  g_hash_table_destroy(sync_items_tmp);
 #endif
 
-#if GLIB_MAJOR_VERSION < 3 && GLIB_MINOR_VERSION < 14
-  g_hash_table_foreach(sync_items,
-		       get_sync_item_keys,
-		       &item_keys);
-#else
-  item_keys = g_hash_table_get_keys(sync_items);
-#endif
+  item_keys = get_sync_item_keys(sync_items);
 
   pship_connections = g_hash_table_new_full(g_int_hash, g_int_equal, g_free, NULL);
 
@@ -932,19 +978,17 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
 
   g_list_free(item_keys);
 
-  index = 0;
-  while(index < partnership_list->len)
+  g_variant_iter_init(&partnershipiter, partnership_list);
+  while((partnership = g_variant_iter_next_value(&partnershipiter)))
     {
-      partnership = g_ptr_array_index(partnership_list, index);
-
       /* an array of sync item ids - au - array of uint32 */
-      sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 6));
+      sync_items_active = g_variant_get_child_value(partnership, 6);
 
-      guint i;
       guint active_item;
       guint current_count;
-      for (i = 0; i < sync_items_active->len; i++) {
-	active_item = g_array_index(sync_items_active, guint, i);
+
+      g_variant_iter_init(&activeitemsiter, sync_items_active);
+      while (g_variant_iter_next(&activeitemsiter, "u", &active_item)) {
 	current_count = GPOINTER_TO_UINT(g_hash_table_lookup(pship_connections, &active_item));
 	current_count++;
 
@@ -954,38 +998,44 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
 	g_hash_table_insert(pship_connections, sync_item_key, GUINT_TO_POINTER(current_count));
       }
 
-      index++;
+      g_variant_unref(sync_items_active);
+      g_variant_unref(partnership);
     }
 
   show_extra_warning = FALSE;
   orphaned_items = g_array_new(FALSE, TRUE, sizeof(guint));
-  index = 0;
-  while(index < partnership_list->len)
-    {
-      partnership = g_ptr_array_index(partnership_list, index);
 
-      guint partnership_id = g_value_get_uint(g_value_array_get_nth (partnership, 0));
-      const gchar *partnership_guid = g_value_get_string(g_value_array_get_nth (partnership, 1));
+  g_variant_iter_init(&partnershipiter, partnership_list);
+  while((partnership = g_variant_iter_next_value(&partnershipiter)))
+    {
+      guint partnership_id;
+      gchar *partnership_guid;
+
+      g_variant_get_child(partnership, 0, "u", &partnership_id);
+      g_variant_get_child(partnership, 1, "s", &partnership_guid);
 
       if ((partnership_id == id) && (strcmp(partnership_guid, guid) == 0)) {
-	sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 6));
+        sync_items_active = g_variant_get_child_value(partnership, 6);
 
-	guint i;
 	guint active_item;
 	guint current_count;
-	for (i = 0; i < sync_items_active->len; i++) {
-	  active_item = g_array_index(sync_items_active, guint, i);
-	  current_count = GPOINTER_TO_UINT(g_hash_table_lookup(pship_connections, &active_item));
+        g_variant_iter_init(&activeitemsiter, sync_items_active);
+        while (g_variant_iter_next(&activeitemsiter, "u", &active_item)) {
+          current_count = GPOINTER_TO_UINT(g_hash_table_lookup(pship_connections, &active_item));
 
 	  if (current_count == 1) {
 	    show_extra_warning = TRUE;
 	    g_array_append_val(orphaned_items, active_item);
 	  }
-	}
+        }
 
+        g_variant_unref(sync_items_active);
+        g_free(partnership_guid);
+        g_variant_unref(partnership);
 	break;
       }
-      index++;
+      g_free(partnership_guid);
+      g_variant_unref(partnership);
     }
 
   g_hash_table_destroy(pship_connections);
@@ -995,14 +1045,17 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
     guint i;
     guint item;
     gint reply;
+    gchar *item_name = NULL;
 
     for (i = 0; i < orphaned_items->len; i++) {
       item = g_array_index(orphaned_items, guint, i);
+      item_name = get_sync_item_name(sync_items, item);
      
       if (!orphaned_str)
-	orphaned_str = g_string_new(g_hash_table_lookup(sync_items, GUINT_TO_POINTER(item)));
+	orphaned_str = g_string_new(item_name);
       else
-	g_string_append_printf(orphaned_str, ", %s", (gchar *)g_hash_table_lookup(sync_items, GUINT_TO_POINTER(item)));
+	g_string_append_printf(orphaned_str, ", %s", item_name);
+      g_free(item_name);
     }
 
     g_array_free(orphaned_items, TRUE);
@@ -1030,18 +1083,11 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
 
 exit:
 
-  if (partnership_list) {
-    index = 0;
-    while(index < partnership_list->len) {
-      partnership = g_ptr_array_index(partnership_list, index);
-      g_value_array_free(partnership);
+  if (partnership_list)
+    g_variant_unref (partnership_list);
 
-      index++;
-    }
-    g_ptr_array_free(partnership_list, TRUE);
-  }
-
-  if (sync_items) g_hash_table_destroy(sync_items);
+  if (sync_items)
+    g_variant_unref (sync_items);
 
   if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
 #if !USE_GDBUS
@@ -1306,19 +1352,20 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   GtkTreeIter iter, sub_iter;
   guint32 index;
   gboolean result;
-  GPtrArray* partnership_list;
+  GVariant* partnership_list;
+  GVariantIter partnershipiter;
   GError *error = NULL;
   GtkTreeStore *store = NULL;
 #if USE_GDBUS
   SynceDbusOrgSynceSyncEngine *sync_engine_proxy = NULL;
-  GVariant *ret = NULL;
 #else
+  GValueArray *partnership_list_tmp = NULL;
+  GHashTable *sync_items_tmp = NULL;
   DBusGConnection *dbus_connection = NULL;
   DBusGProxy *sync_engine_proxy = NULL;
 #endif
-  GValueArray *partnership = NULL;
-  GArray *sync_items_active = NULL;
-  GHashTable *sync_items = NULL;
+  GVariant *partnership = NULL;
+  GVariant *sync_items = NULL;
   GList *item_keys = NULL;
 
   guint connection_status;
@@ -1391,11 +1438,11 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 #if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_item_types_sync (
     sync_engine_proxy,
-    &ret,
+    &sync_items,
     NULL,
     &error);
 #else
-  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items, &error);
+  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items_tmp, &error);
 #endif
   if (!result) {
     g_critical("%s: Error fetching sync item list: %s", G_STRFUNC, error->message);
@@ -1414,19 +1461,19 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
     goto exit;
   }
 
-#if USE_GDBUS
-  sync_items = sync_items_gvariant_to_hash(ret);
-  g_variant_unref(ret);
+#if !USE_GDBUS
+  sync_items = sync_items_hash_to_gvariant(sync_items_tmp);
+  g_hash_table_destroy(sync_items_tmp);
 #endif
 
 #if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_partnerships_sync (
     sync_engine_proxy,
-    &ret,
+    &partnership_list,
     NULL,
     &error);
 #else
-  result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list, &error);
+  result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list_tmp, &error);
 #endif
   if (!result) {
     g_critical("%s: Error getting partnership list from sync-engine: %s", G_STRFUNC, error->message);
@@ -1445,9 +1492,18 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
     goto exit;
   }
 
-#if USE_GDBUS
-  partnership_list = partnerships_gvariant_to_gvalue(ret);
-  g_variant_unref(ret);
+#if! USE_GDBUS
+  partnership_list = partnerships_gvalue_to_gvariant(partnership_list_tmp);
+
+  guint index = 0;
+  GValueArray *partnership_tmp = NULL;
+  while(index < partnership_list_tmp->len) {
+    partnership_tmp = g_ptr_array_index(partnership_list_tmp, index);
+    g_value_array_free(partnership_tmp);
+
+    index++;
+  }
+  g_ptr_array_free(partnership_list_tmp, TRUE);
 #endif
 
   store = gtk_tree_store_new (SYNCENG_N_COLUMNS,
@@ -1462,21 +1518,32 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			      );
 
   index = 0;
-  while(index < partnership_list->len)
+  g_variant_iter_init(&partnershipiter, partnership_list);
+  while((partnership = g_variant_iter_next_value(&partnershipiter)))
     {
       gtk_tree_store_append (store, &iter, NULL);  /* Acquire an iterator */
 
-      partnership = g_ptr_array_index(partnership_list, index);
+      g_debug("%s: partnership variant type: %s", G_STRFUNC, g_variant_get_type_string(partnership));
 
-      guint partnership_id = g_value_get_uint(g_value_array_get_nth (partnership, 0));
-      const gchar *partnership_guid = g_value_get_string(g_value_array_get_nth (partnership, 1));
-      const gchar *partnership_name = g_value_get_string(g_value_array_get_nth (partnership, 2));
-      const gchar *hostname = g_value_get_string(g_value_array_get_nth (partnership, 3));
-      const gchar *device_name = g_value_get_string(g_value_array_get_nth (partnership, 4));
-      guint partnership_type = g_value_get_uint(g_value_array_get_nth (partnership, 5));
+      guint partnership_id;
+      gchar *partnership_guid = NULL;
+      gchar *partnership_name = NULL;
+      gchar *hostname = NULL;
+      gchar *device_name = NULL;
+      guint partnership_type;
+      GVariant *sync_items_active = NULL;
+      GVariantIter active_items_iter;
+      guint sync_item;
+      guint active_item;
 
-      /* an array of sync item ids - au - array of uint32 */
-      sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 6));
+      g_variant_get_child(partnership, 0, "u", &partnership_id);
+      g_variant_get_child(partnership, 1, "s", &partnership_guid);
+      g_variant_get_child(partnership, 2, "s", &partnership_name);
+      g_variant_get_child(partnership, 3, "s", &hostname);
+      g_variant_get_child(partnership, 4, "s", &device_name);
+      g_variant_get_child(partnership, 5, "u", &partnership_type);
+
+      sync_items_active = g_variant_get_child_value(partnership, 6);
 
       const gchar *pship_type_str = NULL;
       if (partnership_type == PSHMGR_STORETYPE_EXCH)
@@ -1491,9 +1558,14 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
       g_debug("%s: partnership %d host name: %s", G_STRFUNC, index, hostname);
       g_debug("%s: partnership %d device name: %s", G_STRFUNC, index, device_name);
 
-      guint i;
-      for (i = 0; i < sync_items_active->len; i++) {
-        g_debug("%s: partnership %d   sync_items %d: %d", G_STRFUNC, index, i, g_array_index(sync_items_active, guint, i));
+      /* an array of sync item ids - au - array of uint32 */
+      guint i = 0;
+      g_variant_iter_init(&active_items_iter, sync_items_active);
+      g_debug("%s: number of sync items in partnership: %zu", G_STRFUNC, g_variant_iter_n_children(&active_items_iter));
+      while (g_variant_iter_next(&active_items_iter, "u", &active_item))
+      {
+        g_debug("%s: partnership %d   sync_items %d: %d", G_STRFUNC, index, i, active_item);
+        i++;
       }
 
       gtk_tree_store_set (store, &iter,
@@ -1507,14 +1579,12 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 			  SYNCENG_DEVICENAME_COLUMN, device_name,
 			  -1);
 
-#if GLIB_MAJOR_VERSION < 3 && GLIB_MINOR_VERSION < 14
-      g_hash_table_foreach(sync_items,
-			   get_sync_item_keys,
-			   &item_keys);
-#else
-      item_keys = g_hash_table_get_keys(sync_items);
-#endif
+      g_free(partnership_guid);
+      g_free(partnership_name);
+      g_free(hostname);
+      g_free(device_name);
 
+      item_keys = get_sync_item_keys(sync_items);
       item_keys = g_list_sort(item_keys, sync_item_sort);
       GList *tmp_list = item_keys;
 
@@ -1524,47 +1594,45 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
 	gtk_tree_store_append (store, &sub_iter, &iter);
 
 	active = FALSE;
-	guint active_index;
-	for (active_index = 0; active_index < sync_items_active->len; active_index++) {
-	  if (g_array_index(sync_items_active, guint, active_index) == GPOINTER_TO_UINT(tmp_list->data)) {
+
+        sync_item = GPOINTER_TO_UINT(tmp_list->data);
+        g_variant_iter_init(&active_items_iter, sync_items_active);
+        while (g_variant_iter_next(&active_items_iter, "u", &active_item)) {
+	  if (active_item == sync_item) {
 	    active = TRUE;
 	    break;
 	  }
-	}
+        }
+
+        char *item_name = get_sync_item_name(sync_items, sync_item);
 
 	gtk_tree_store_set (store, &sub_iter,
 			    SYNCENG_ACTIVEITEM_COLUMN, active,
 			    SYNCENG_INDEX_COLUMN, 0,
 			    SYNCENG_ID_COLUMN, 0,
 			    SYNCENG_GUID_COLUMN, NULL,
-			    SYNCENG_NAME_COLUMN, g_hash_table_lookup(sync_items, tmp_list->data),
+			    SYNCENG_NAME_COLUMN, item_name,
 			    SYNCENG_TYPE_COLUMN, NULL,
 			    SYNCENG_HOSTNAME_COLUMN, NULL,
 			    SYNCENG_DEVICENAME_COLUMN, NULL,
 			    -1);
 
+        g_free(item_name);
 	tmp_list = g_list_next(tmp_list);
       }
 
       g_list_free(item_keys);
-
       index++;
     }
 
   gtk_tree_view_set_model (GTK_TREE_VIEW(partners_list_view), GTK_TREE_MODEL (store));
 
-  index = 0;
-  while(index < partnership_list->len) {
-    partnership = g_ptr_array_index(partnership_list, index);
-    g_value_array_free(partnership);
-
-    index++;
-  }
-  g_ptr_array_free(partnership_list, TRUE);
+  if (partnership_list)
+    g_variant_unref (partnership_list);
 
 exit:
   if (store) g_object_unref (G_OBJECT (store));
-  if (sync_items) g_hash_table_destroy(sync_items);
+  if (sync_items) g_variant_unref (sync_items);
 
   if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
 #if !USE_GDBUS
