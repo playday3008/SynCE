@@ -843,29 +843,142 @@ device_removed_cb(GObject *obj, gchar *name, gpointer user_data)
 
 /* menu callbacks */
 
+struct _mount_data {
+  SynceTrayIcon *self;
+  gchar *dev_name;
+  GdkScreen *screen;
+  guint32 time;
+};
+
+static void
+device_mount_cb(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+  GVolume *dev_vol = G_VOLUME(source_object);
+  GError *error = NULL;
+  struct _mount_data *data = user_data;
+  gchar *uri = g_strdup_printf("synce://%s/", data->dev_name);
+
+  if (!(g_volume_mount_finish(dev_vol, res, &error))) {
+    g_warning("%s: failed to mount device %s: %s", G_STRFUNC, data->dev_name, error->message);
+    g_error_free(error);
+    goto exit;
+  }
+
+  g_debug("%s: successfully mounted %s", G_STRFUNC, uri);
+
+  if (!gtk_show_uri(data->screen, uri, data->time, &error)) {
+    g_warning("%s: failed to explore '%s': %s", G_STRFUNC, uri, error->message);
+    g_error_free(error);
+  }
+
+exit:
+  g_object_unref(data->self);
+  g_free(data->dev_name);
+  g_object_unref(data->screen);
+  g_free(data);
+  g_free(uri);
+}
+
 static void
 menu_explore (GtkWidget *menu_item, SynceTrayIcon *self)
 {
   const gchar *name = NULL;
-  gchar *arg_str = NULL;
+  gchar *uri = NULL;
   GError *error = NULL;
+  gboolean mounted = FALSE;
+  gboolean vol_found = FALSE;
 
   GtkWidget *device_menu = gtk_widget_get_parent(menu_item);
   name = gtk_menu_get_title(GTK_MENU(device_menu));
+  uri = g_strdup_printf("synce://%s/", name);
 
-  arg_str = g_strdup_printf("synce://%s/", name);
-  
-  char *argv[4] = {
-          "nautilus", "-n", arg_str, NULL
-  };
-  
-  if (!g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
-          g_warning("%s: failed to explore '%s': %s", G_STRFUNC, arg_str, error->message);
-          g_error_free(error);
-          return;
+  GVolumeMonitor *volmon = g_volume_monitor_get();
+
+  /* see if the device is already mounted in gvfs */
+
+  g_debug("%s: searching for a mount for %s", G_STRFUNC, uri);
+  GList *mounts = g_volume_monitor_get_mounts(volmon);
+  GList *mount_iter = mounts;
+  while (mount_iter) {
+    GMount *dev_mount = G_MOUNT(mount_iter->data);
+    GFile *mount_root = g_mount_get_root(dev_mount);
+    gchar *mount_uri = g_file_get_uri(mount_root);
+
+    g_debug("%s: found mount for %s", G_STRFUNC, mount_uri);
+    if (g_strcmp0(uri, mount_uri) == 0)
+      mounted = TRUE;
+
+    g_free(mount_uri);
+    g_object_unref(mount_root);
+    if (mounted)
+      break;
+    mount_iter = g_list_next(mount_iter);
+  }
+  g_list_free_full(mounts, g_object_unref);
+
+  /* if already mounted, just show it */
+  if (mounted) {
+    if (!gtk_show_uri(gtk_widget_get_screen(menu_item), uri, gtk_get_current_event_time (), &error)) {
+      g_warning("%s: failed to explore '%s': %s", G_STRFUNC, uri, error->message);
+      g_error_free(error);
+    }
+
+    goto exit;
   }
 
-  g_free(arg_str);
+  /* if not mounted, look for a volume 
+   * this requires a version of synce-gvfs with a 
+   * volume monitor
+   */
+
+  g_debug("%s: searching for a volume for %s", G_STRFUNC, uri);
+  GVolume *dev_vol = NULL;
+  GList *volumes = g_volume_monitor_get_volumes(volmon);
+  GList *volume_iter = volumes;
+  while (volume_iter) {
+    dev_vol = G_VOLUME(volume_iter->data);
+    GFile *vol_root = g_volume_get_activation_root(dev_vol);
+    gchar *mount_uri = g_file_get_uri(vol_root);
+
+    g_debug("%s: found volume for %s", G_STRFUNC, mount_uri);
+    if (g_strcmp0(uri, mount_uri) == 0) {
+      vol_found = TRUE;
+      g_object_ref(dev_vol);
+    }
+
+    g_free(mount_uri);
+    g_object_unref(vol_root);
+    if (vol_found)
+      break;
+
+    volume_iter = g_list_next(volume_iter);
+  }
+  g_list_free_full(volumes, g_object_unref);
+
+  if (!vol_found) {
+    g_warning("%s: could not find gvfs volume for device %s", G_STRFUNC, name);
+    goto exit;
+  }
+
+  /* mount the volume, show the uri in the callback */
+
+  GFile *vol_root = g_volume_get_activation_root(dev_vol);
+  gchar *mount_uri = g_file_get_uri(vol_root);
+  g_debug("%s: asking for mount of %s", G_STRFUNC, mount_uri);
+  g_free(mount_uri);
+  g_object_unref(vol_root);
+
+  struct _mount_data *data = g_new0(struct _mount_data, 1);
+  data->self = g_object_ref(self);
+  data->dev_name = g_strdup(name);
+  data->screen = g_object_ref(gtk_widget_get_screen(menu_item));
+  data->time = gtk_get_current_event_time ();
+  g_volume_mount(dev_vol, G_MOUNT_MOUNT_NONE, NULL, NULL, device_mount_cb, data);
+  g_object_unref(dev_vol);
+
+exit:
+  g_object_unref(volmon);
+  g_free(uri);
 }
 
 static void
