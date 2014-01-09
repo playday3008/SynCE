@@ -736,6 +736,15 @@ synce_app_man_install(IRAPISession *session, const gchar *filepath, SynceAppManB
   memset(&system, 0, sizeof(system));
   IRAPISession_CeGetSystemInfo(session, &system);
 
+#if GLIB_CHECK_VERSION(2,30,0)
+  tmpdir = g_dir_make_tmp("sti_XXXXXX", error);
+  if (!tmpdir) {
+    g_prefix_error(error, _("Failed to create temp directory '%s': "), tmpdir);
+    result = FALSE;
+    goto exit;
+  }
+  g_chmod(tmpdir, 0700);
+#else
   tmpdir = tempnam(g_get_tmp_dir(), "sti");
   if (g_mkdir(tmpdir, 0700) != 0) {
     g_set_error(error,
@@ -747,6 +756,7 @@ synce_app_man_install(IRAPISession *session, const gchar *filepath, SynceAppManB
     result = FALSE;
     goto exit;
   }
+#endif
 
   cab_list = extract_with_orange(filepath, tmpdir, system.dwProcessorType);
   if (!cab_list) {
