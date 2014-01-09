@@ -423,7 +423,9 @@ password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_dat
   gchar *notify_string = NULL;
 
   g_debug("%s: removing password from keyring", G_STRFUNC);
-  keyring_ret = keyring_delete_key(pdaname);
+  
+  if ((keyring_ret = keyring_delete_key(pdaname)))
+    g_warning("%s: failed to remove incorrect password from keyring: %d: %s", G_STRFUNC, keyring_ret, gnome_keyring_result_to_message(keyring_ret));
 
   notify_string = g_strdup_printf("Password for device \"%s\" was rejected", pdaname);
   event_notification(self, "Incorrect password", notify_string);
