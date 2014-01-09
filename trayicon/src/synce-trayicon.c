@@ -277,7 +277,7 @@ trayicon_supply_password(SynceTrayIcon *self)
         GList *locked_devices = NULL;
         GList *tmplist = NULL;
         GtkBuilder *builder;
-        GtkWidget *password_dialog, *password_dialog_entry, *password_dialog_cancel;
+        GtkWidget *password_dialog, *password_dialog_entry;
         GtkWidget *password_dialog_ok, *password_dialog_pdaname, *password_dialog_save_pw;
         gchar *password = NULL;
         gint response;
@@ -317,7 +317,6 @@ trayicon_supply_password(SynceTrayIcon *self)
         password_dialog_pdaname = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_pdaname"));
         password_dialog_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_entry"));
         password_dialog_ok = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_ok"));
-        password_dialog_cancel = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_cancel"));
         password_dialog_save_pw = GTK_WIDGET(gtk_builder_get_object(builder, "password_dialog_save_password"));
 
         g_object_unref(builder);
