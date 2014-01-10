@@ -33,10 +33,10 @@ import errors
 
 class PartnershipManager:
 
-	def __init__(self, engine):
+	def __init__(self, device):
 	    
 		self.logger = logging.getLogger("engine.pshipmgr.PartnershipManager")
-		self.engine = engine
+		self.device = device
 
 		self.current = None
 		self.DevicePartnerships = [ None, None, None ]
@@ -57,7 +57,7 @@ class PartnershipManager:
 		reg_entries = {}
 		dangling_entries = []
 
-		hklm = self.engine.rapi_session.HKEY_LOCAL_MACHINE
+		hklm = self.device.rapi_session.HKEY_LOCAL_MACHINE
 
 		# Inspect registry entries
 		
@@ -93,9 +93,9 @@ class PartnershipManager:
 		
 		self.logger.debug("ReadDevicePartnerships: querying synchronization source information from device")
 		
-		for ctic in self.engine.rapi_session.GetConfig("Sync", "Sources").children.values():
+		for ctic in self.device.rapi_session.GetConfig("Sync", "Sources").children.values():
 			
-			sub_ctic = self.engine.rapi_session.GetConfig("Sync.Sources", ctic.type, recursive=True)
+			sub_ctic = self.device.rapi_session.GetConfig("Sync.Sources", ctic.type, recursive=True)
 
 			guid        = sub_ctic.type
 			storetype   = int(sub_ctic["StoreType"])
@@ -116,7 +116,7 @@ class PartnershipManager:
 
                				self.logger.debug("ReadDevicePartnerships: source matches partnerhip from registry.  Initializing partnership")
 					
-					pship = Partnership(self.engine.config, pos, id, guid, hostname, description, storetype, self.engine.deviceName,self.engine.rapi_session)
+					pship = Partnership(self.device.config, pos, id, guid, hostname, description, storetype, self.device.deviceName,self.device.rapi_session)
 
 					self.DevicePartnerships[pos-1] = pship
 
@@ -172,7 +172,7 @@ class PartnershipManager:
 
                				self.logger.debug("ReadDevicePartnerships: source matches partnerhip from registry.")
 
-				self.DevicePartnerships[pos-1] = Partnership(self.engine.config, pos, id, guid, hostname, description, storetype, self.engine.deviceName,self.engine.rapi_session)
+				self.DevicePartnerships[pos-1] = Partnership(self.device.config, pos, id, guid, hostname, description, storetype, self.device.deviceName,self.device.rapi_session)
 
 			else:
 				
@@ -190,7 +190,7 @@ class PartnershipManager:
 		
 		for entry in dangling_entries:
 			self.logger.info("ReadDevicePartnerships: Deleting dangling sync source: %s", entry)
-			self.engine.rapi_session.RemoveConfig("Sync.Sources", entry[0])
+			self.device.rapi_session.RemoveConfig("Sync.Sources", entry[0])
 
 
 	######################################
@@ -238,7 +238,7 @@ class PartnershipManager:
 		
 		self.logger.info("GetHostBindings: reading existing host bindings")
 		
-		psdir = os.path.join(self.engine.config.config_user_dir,"partnerships")
+		psdir = os.path.join(self.device.config.config_user_dir,"partnerships")
 		bindings = []
 		
 		# get all items in the dir.
@@ -287,7 +287,7 @@ class PartnershipManager:
 		# we need to load the config entries for a partnership from its
 		# bindings
 		
-		psdir = os.path.join(self.engine.config.config_user_dir,"partnerships")
+		psdir = os.path.join(self.device.config.config_user_dir,"partnerships")
 		pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
 		
 		s = ""
@@ -323,7 +323,7 @@ class PartnershipManager:
 		# we need to load the config entries for a partnership from its
 		# bindings
 		
-		psdir = os.path.join(self.engine.config.config_user_dir,"partnerships")
+		psdir = os.path.join(self.device.config.config_user_dir,"partnerships")
 		pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
 
 		if os.path.isdir(pspath):
@@ -384,7 +384,7 @@ class PartnershipManager:
 		
 		self._ReadDevicePartnerships()
 				
-		partners = self.engine.rapi_session.HKEY_LOCAL_MACHINE.create_sub_key(r"Software\Microsoft\Windows CE Services\Partners")
+		partners = self.device.rapi_session.HKEY_LOCAL_MACHINE.create_sub_key(r"Software\Microsoft\Windows CE Services\Partners")
 		
 		# Iterate through our partnerships and try and find a binding
 		
@@ -432,13 +432,13 @@ class PartnershipManager:
 		slot = self.DevicePartnerships[0:2].index(None) + 1
 
 		self.logger.debug("CreateNewPartnership: attempting to create new partnership in slot %d", slot)
-		pship = Partnership(self.engine.config, 
+		pship = Partnership(self.device.config, 
 		                    slot, 
 				    util.generate_id(), util.generate_guid(), 
 				    socket.gethostname(), name,
 				    PSHMGR_STORETYPE_AS,
-				    self.engine.deviceName,
-				    self.engine.rapi_session)
+				    self.device.deviceName,
+				    self.device.rapi_session)
 
 		for item in sync_items:
 			self.logger.debug("CreateNewPartnership: adding synchronization item %s", item)
@@ -486,12 +486,12 @@ class PartnershipManager:
 
 		self.logger.debug("CreateNewPartnership: setting synchronization data source \n%s", source)
 
-		self.engine.rapi_session.SetConfig("Sync.Sources", source)
+		self.device.rapi_session.SetConfig("Sync.Sources", source)
 
 		# Update the registry
 
 		self.logger.debug("add: updating device registry")
-		hklm = self.engine.rapi_session.HKEY_LOCAL_MACHINE
+		hklm = self.device.rapi_session.HKEY_LOCAL_MACHINE
 
 		partners_key = hklm.create_sub_key(r"Software\Microsoft\Windows CE Services\Partners")
 		partners_key.set_value("PCur", pship.slot)
@@ -544,7 +544,7 @@ class PartnershipManager:
 			if pship != None:
 				if pship.info.guid==guid and pship.info.id == id:
 
-					hklm = self.engine.rapi_session.HKEY_LOCAL_MACHINE
+					hklm = self.device.rapi_session.HKEY_LOCAL_MACHINE
 
 					if self.current == pship:
 						self.logger.info("DeletePartnership: setting current partnership to 0")
@@ -557,7 +557,7 @@ class PartnershipManager:
 						hklm.delete_sub_key(r"Software\Microsoft\Windows CE Services\Partners\P%d" % pship.slot)
 
 					self.logger.debug("DeletePartnership: removing partnership %s from device", pship)
-					self.engine.rapi_session.RemoveConfig("Sync.Sources", pship.info.guid)
+					self.device.rapi_session.RemoveConfig("Sync.Sources", pship.info.guid)
 
 					self.logger.debug("DeletePartnership: cleaning up partnership")
 					pship.DeleteBinding()

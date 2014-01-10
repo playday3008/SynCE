@@ -22,9 +22,9 @@ import logging
 
 class PrefillThread(threading.Thread):
 	
-	def __init__(self,theEngine,theTypes):
+	def __init__(self,device,theTypes):
 		threading.Thread.__init__(self)
-		self.engine = theEngine
+		self.device = device
 		self.logger = logging.getLogger("engine.prefill.PrefillThread")
 		self.types  = theTypes
 
@@ -35,14 +35,14 @@ class PrefillThread(threading.Thread):
 	def run(self):
 		
 		self.logger.info("prefill thread entered")
-		ps = self.engine.PshipManager.GetCurrentPartnership()
+		ps = self.device.PshipManager.GetCurrentPartnership()
 		for a in self.types:
 			if SYNC_ITEM_CLASS_TO_ID.has_key(a):
 				tid = SYNC_ITEM_CLASS_TO_ID[a]
 				if ps.deviceitemdbs.has_key(tid):
 					self.logger.info("prefill: prefilling for item type %d" % tid)
-					ps.deviceitemdbs[tid].PrefillRemoteChangeDB(self.engine.config)
+					ps.deviceitemdbs[tid].PrefillRemoteChangeDB(self.device.config)
 
 		self.logger.info("prefill: prefill complete")
-		self.engine.syncing.unlock()
-		self.engine.PrefillComplete()
+		self.device.syncing.unlock()
+		self.device.PrefillComplete()

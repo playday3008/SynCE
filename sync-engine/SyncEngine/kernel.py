@@ -46,6 +46,7 @@ import errors
 from mutex import mutex
 from constants import *
 from SyncEngine import *
+from device import Device
 from airsync import AirsyncThread
 from synchandler import SyncHandler
 from config import Config
@@ -56,7 +57,7 @@ from config import Config
 # SyncEngine
 #
 # This object provides the API to sync-engine. It is accessible via d-bus
-# but it should be noted that it will disappear when the device is
+# but it should be noted that the dbus interface will disappear when the device is
 # disconnected.
 #
 
@@ -75,34 +76,30 @@ class SyncEngine(dbus.service.Object):
 		self.logger = logging.getLogger("engine.kernel")
 		self.config = configObj
 
-		self.PshipManager = pshipmgr.PartnershipManager(self)
-	
-		self.isConnected = False
-	
 		self.isOdccmRunning = False
-		
-		self.synchandler = None
-
-		self.syncing = mutex()
-
-		self.rapi_session = None	
-		self.rra = None
-		self.RRASession = rrasyncmanager.RRASyncManager(self)
-		
-		self.dtptsession = None
-		self.airsync = None
-		self.sync_begin_handler_id = None
-		self.autosync_triggered = False
-
+		self.isUdevRunning = False
 
 		self.dbus_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_DBUS_BUSNAME, DBUS_DBUS_OBJPATH), DBUS_DBUS_IFACE)
 		self.dbus_manager.connect_to_signal("NameOwnerChanged", self._CBDCCMStatusChanged)
-	
-		self.device = None
-		self.deviceName = ""
-		self.devicePath = ""
-		self.iface_addr = ""
-		self.partnerships = None
+
+		self.devices = []
+		self.active_device = None
+
+		self.connected_handler_id = None
+		self.disconnected_handler_id = None
+		self.prefill_complete_handler_id = None
+		self.synchronized_handler_id = None
+		self.partnerships_changed_handler_id = None
+
+		self.status_sync_start_handler_id = None
+		self.status_sync_end_handler_id = None
+		self.status_sync_start_partner_handler_id = None
+		self.status_sync_end_partner_handler_id = None
+		self.status_sync_start_datatype_handler_id = None
+		self.status_sync_end_datatype_handler_id = None
+		self.status_set_progress_value_handler_id = None
+		self.status_set_max_progress_value_handler_id = None
+		self.status_set_status_string_handler_id = None
 
 		self._ODCCMConnect()
 		self._UdevConnect()
@@ -127,9 +124,9 @@ class SyncEngine(dbus.service.Object):
 			self.isOdccmRunning = True
 
 			obj_paths = self.device_manager.GetConnectedDevices()
-			if len(obj_paths) > 0:
-				self.logger.info("_ODCCMConnect: connected device found")
-				self._CBDeviceConnected(obj_paths[0])
+			for obj_path in obj_paths:
+				self.logger.info("__init__: connected device found: %s" % obj_path)
+				self._CBDeviceConnected(obj_path)
 		except:
 			self.isOdccmRunning = False
 
@@ -146,14 +143,14 @@ class SyncEngine(dbus.service.Object):
 
 		try:
 			self.udev_manager = dbus.Interface(dbus.SystemBus().get_object(DBUS_UDEV_BUSNAME, DBUS_UDEV_MANAGER_OBJPATH), DBUS_UDEV_MANAGER_IFACE)
-			self.udev_manager.connect_to_signal("DeviceConnected", self._CBUdevDeviceConnected)
-			self.udev_manager.connect_to_signal("DeviceDisconnected", self._CBUdevDeviceDisconnected)
+			self.udev_manager.connect_to_signal("DeviceConnected", self._CBDeviceConnected)
+			self.udev_manager.connect_to_signal("DeviceDisconnected", self._CBDeviceDisconnected)
 			self.isUdevRunning = True
 
 			obj_paths = self.udev_manager.GetConnectedDevices()
-			if len(obj_paths) > 0:
-				self.logger.info("_UdevConnect: connected device found")
-				self._CBUdevDeviceConnected(obj_paths[0])
+			for obj_path in obj_paths:
+				self.logger.info("_UdevConnect: connected device found: %s", obj_path)
+				self._CBDeviceConnected(obj_path)
 		except Exception, e:
 			self.logger.info("_UdevConnect: failed to connect to dccm: %s", e)
 			self.isUdevRunning = False
@@ -185,13 +182,9 @@ class SyncEngine(dbus.service.Object):
 				self.isOdccmRunning = False
 				self.logger.info("_CBDCCMStatusChanged: odccm went offline")
 
+				# must remove all odccm devices here
 
 			if self.isOdccmRunning:
-				
-				self.device = None
-				self.deviceName = ""
-				self.devicePath = ""
-				self.iface_addr = ""
 
 				self._ODCCMConnect()
 
@@ -212,13 +205,53 @@ class SyncEngine(dbus.service.Object):
 
 
 			if self.isUdevRunning:
-				
-				self.device = None
-				self.deviceName = ""
-				self.devicePath = ""
-				self.iface_addr = ""
 
 				self._UdevConnect()
+
+	#
+	# DeviceConnectSignals
+	#
+	# INTERNAL
+	#
+	# connect to the signals on a device object
+	#
+
+	def DeviceConnectSignals(self, device):
+                self.prefill_complete_handler_id = device.connect("prefill-complete", self.PrefillCompleteCB)
+                self.synchronized_handler_id = device.connect("synchronized", self.SynchronizedCB)
+                self.partnerships_changed_handler_id = device.connect("partnerships-changed", self.PartnershipsChangedCB)
+                self.status_sync_start_handler_id = device.connect("status-sync-start", self.StatusSyncStartCB)
+                self.status_sync_end_handler_id = device.connect("status-sync-end", self.StatusSyncEndCB)
+                self.status_sync_start_partner_handler_id = device.connect("status-sync-start-partner", self.StatusSyncStartPartnerCB)
+                self.status_sync_end_partner_handler_id = device.connect("status-sync-end-partner", self.StatusSyncEndPartnerCB)
+                self.status_sync_start_datatype_handler_id = device.connect("status-sync-start-datatype", self.StatusSyncStartDatatypeCB)
+                self.status_sync_end_datatype_handler_id = device.connect("status-sync-end-datatype", self.StatusSyncEndDatatypeCB)
+                self.status_set_progress_value_handler_id = device.connect("status-set-progress-value", self.StatusSetProgressValueCB)
+                self.status_set_max_progress_value_handler_id = device.connect("status-set-max-progress-value", self.StatusSetMaxProgressValueCB)
+                self.status_set_status_string_handler_id = device.connect("status-set-status-string", self.StatusSetStatusStringCB)
+
+	#
+	# DeviceConnectSignals
+	#
+	# INTERNAL
+	#
+	# connect to the signals on a device object
+	#
+
+	def DeviceDisconnectSignals(self, device):
+                device.disconnect(self.prefill_complete_handler_id)
+                device.disconnect(self.synchronized_handler_id)
+                device.disconnect(self.partnerships_changed_handler_id)
+                device.disconnect(self.status_sync_start_handler_id)
+                device.disconnect(self.status_sync_end_handler_id)
+                device.disconnect(self.status_sync_start_partner_handler_id)
+                device.disconnect(self.status_sync_end_partner_handler_id)
+                device.disconnect(self.status_sync_start_datatype_handler_id)
+                device.disconnect(self.status_sync_end_datatype_handler_id)
+                device.disconnect(self.status_set_progress_value_handler_id)
+                device.disconnect(self.status_set_max_progress_value_handler_id)
+                device.disconnect(self.status_set_status_string_handler_id)
+
 
 	#
 	# _CBDeviceConnected
@@ -229,29 +262,21 @@ class SyncEngine(dbus.service.Object):
 	#
 
 	def _CBDeviceConnected(self, obj_path):
-	 
+	
 		self.logger.info("_CBDeviceConnected: device connected at path %s", obj_path)
 
-		if self.isConnected == False:
-		
-			# update config from file
-	
-			self.config.UpdateConfig()
+		# update config from file
+		self.config.UpdateConfig()
 
-			deviceObject = dbus.SystemBus().get_object("org.synce.odccm",obj_path)
-			self.device = dbus.Interface(deviceObject,"org.synce.odccm.Device")
-       			self.device.connect_to_signal("PasswordFlagsChanged", self._CBDeviceAuthStateChanged)
-			self.deviceName = self.device.GetName()
-			self.logger.info(" device %s connected" % self.deviceName)
-			self.devicePath = obj_path
-			self.iface_addr = "0.0.0.0"
-       			if self._ProcessAuth():
-				self.OnConnect()
-		else:
-			if obj_path == self.devicePath:
-				self.logger.info("_CBDeviceConnected: device already connected")
-			else:
-				self.logger.info("_CBDeviceConnected: other device already connected - ignoring new device")
+		new_device = Device(self.config, obj_path)
+		self.devices.append(new_device)
+		if len(self.devices) == 1:
+			self.active_device = new_device
+                        self.DeviceConnectSignals(self.active_device)
+
+		if new_device._ProcessAuth():
+			new_device.OnConnect()
+
 
 	#
 	# _CBDeviceDisconnected
@@ -264,110 +289,29 @@ class SyncEngine(dbus.service.Object):
 	def _CBDeviceDisconnected(self, obj_path):
 
 		self.logger.info("_CBDeviceDisconnected: device disconnected from path %s", obj_path)
-		if self.devicePath == obj_path:
-			self.device=None
-			self.deviceName = ""
-			self.OnDisconnect()
-			self.devicePath = ""
-			self.iface_addr = ""
-		else:
-			self.logger.info("_CBDeviceDisconnected: ignoring non-live device detach")
+		for device in self.devices:
+			if device.devicePath == obj_path:
+				device.OnDisconnect()
+				self.devices.remove(device)
 
-	#
-	# _CBUdevDeviceConnected
-	#
-	# INTERNAL
-	#
-	# Callback triggered when a device is connected.
-	#
+				if device == self.active_device:
+                                        self.DeviceDisconnectSignals(self.active_device)
 
-	def _CBUdevDeviceConnected(self, obj_path):
-	 
-		self.logger.info("_CBUdevDeviceConnected: device connected at path %s", obj_path)
+					if len(self.devices) > 0:
+						self.active_device = self.devices[0]
+                                                self.DeviceConnectSignals(self.active_device)
 
-		if self.isConnected == False:
-		
-			# update config from file
-	
-			self.config.UpdateConfig()
+					else:
+						self.active_device = None
+						# now, if the config tells us to run once, we need to 
+						# trigger an exit here.
+						if self.config.runonce == True:
+							self.logger.debug("_CBDeviceDisconnecte: RunOnce specified on command line, requesting sync-engine shutdown")
+							gobject.idle_add(self.mainloop.quit)
 
-			deviceObject = dbus.SystemBus().get_object(DBUS_UDEV_BUSNAME,obj_path)
-			self.device = dbus.Interface(deviceObject,DBUS_UDEV_DEVICE_IFACE)
-       			self.device.connect_to_signal("PasswordFlagsChanged", self._CBUdevDeviceAuthStateChanged)
-			self.deviceName = self.device.GetName()
-			self.logger.info(" device %s connected" % self.deviceName)
-			self.devicePath = obj_path
-			self.iface_addr = self.device.GetIfaceAddress()
-       			if self._ProcessAuth():
-				self.OnConnect()
-		else:
-			if obj_path == self.devicePath:
-				self.logger.info("_CBUdevDeviceConnected: device already connected")
-			else:
-				self.logger.info("_CBUdevDeviceConnected: other device already connected - ignoring new device")
+				return
 
-	#
-	# _CBUdevDeviceDisconnected
-	#
-	# INTERNAL
-	#
-	# Callback triggered when a device is disconnected
-	#
-
-	def _CBUdevDeviceDisconnected(self, obj_path):
-
-		self.logger.info("_CBUdevDeviceDisconnected: device disconnected from path %s", obj_path)
-		if self.devicePath == obj_path:
-			self.device=None
-			self.deviceName = ""
-			self.OnDisconnect()
-			self.devicePath = ""
-			self.iface_addr = ""
-		else:
-			self.logger.info("_CBUdevDeviceDisconnected: ignoring non-live device detach")
-
-	#
-	# _CheckDeviceConnected
-	#
-	# INTERNAL
-	#
-	# Function to check if a device is connected.
-	#
-
-	def _CheckDeviceConnected(self):
-			
-		if not self.isConnected:
-			raise errors.Disconnected
-
-	#
-	# _CBDeviceAuthStateChanged
-	#
-	# INTERNAL
-	#
-	# Callback triggered when a device authorization state is changed
-	#
-
-	def _CBDeviceAuthStateChanged(self,added,removed):
-			
-		self.logger.info("_CBDeviceAuthStateChanged: device authorization state changed: reauthorizing")
-		if not self.isConnected:
-			if self._ProcessAuth():
-				self.OnConnect()
-
-	#
-	# _CBUdevDeviceAuthStateChanged
-	#
-	# INTERNAL
-	#
-	# Callback triggered when a udev dccm device authorization state changes
-	#
-
-	def _CBUdevDeviceAuthStateChanged(self,pw_status):
-			
-		self.logger.info("_CBUdevDeviceAuthStateChanged: device authorization state changed: reauthorizing")
-		if not self.isConnected:
-			if self._ProcessAuth():
-				self.OnConnect()
+		self.logger.info("_CBDeviceDisconnected: ignoring non-live device detach")
 
 	#
 	# _CheckAndGetValidPartnership
@@ -381,251 +325,22 @@ class SyncEngine(dbus.service.Object):
 	def _CheckAndGetValidPartnership(self):
 
 		self._CheckDeviceConnected()
-		pship = self.PshipManager.GetCurrentPartnership()
+		pship = self.active_device.PshipManager.GetCurrentPartnership()
 		if pship is None:
 			raise errors.NoBoundPartnership
 		return pship
 
 	#
-	# _ProcessAuth
+	# _CheckDeviceConnected
 	#
 	# INTERNAL
 	#
-	# Process authorization on either callback or initial connection
-
-	def _ProcessAuth(self):
-	
-		self.logger.info("ProcessAuth : processing authorization for device '%s'" % self.deviceName) 
-		rc=True
-		if auth.IsAuthRequired(self.device):
-		
-			# if we suddenly need auth, first shut down all threads if they
-			# are running
-		
-			if self.PshipManager.GetCurrentPartnership() != None:
-				self.OnDisconnect()
-
-			result = auth.Authorize(self.devicePath,self.device,self.config.config_Global)
-			if result == 0:
-				self.logger.info("Authorization pending")
-				rc = False
-			elif result == 1:
-				self.logger.info("Authorization successful - reconnecting to device")
-			elif result == 2:
-				self.logger.info("Authorization pending - waiting for password on device")
-				rc = False
-			else:
-				self.logger.info("Failed to authorize - disconnect and reconnect device to try again")
-				rc = False
-		else:
-			self.logger.info("ProcessAuth: authorization not required for device '%s'" % self.deviceName)
-
-		return rc
-		
-	#
-	# _ResetCurrentState
-	#
-	# INTERNAL
-	#
-	# Called to reset any internal state objects to defaults, usually
-	# called on disconnect. Just so we can put them all in one place
-
-	def _ResetCurrentState(self):
-			
-		autosync_triggered=False
-		self.syncing.unlock()
-
-	# 
-	# OnConnect
-	#
-	# Called when device is firmly established. Sets up the RAPI connection
-	# and then starts the sync handler sessions
+	# Function to check if a device is connected.
 	#
 
-	def OnConnect(self):
-	
-		# ensure current state is set to defaults
-	
-		self._ResetCurrentState()
-		self.isConnected = True
-
-		# and start the sessions
-
-		self.logger.debug("OnConnect: setting up RAPI session")
-		self.rapi_session = rapicontext.RapiContext(None, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
-
-		self.logger.debug("OnConnect: Attempting to bind partnerships")
-		self.PshipManager.AttemptToBind()
-	
-		# don't start any sessions if we don't have a valid partnership.
-	
-		try:
-			self._CheckAndGetValidPartnership()
-			self.StartSessions()
-				
-		except Exception,e:
-			self.logger.debug("OnConnect: No valid partnership bindings are available, please create one (%s)" % str(e))
-			pass
-
-	#
-	# OnDisconnect
-	#
-	# Called when the device disconnects from the bus. Ensures all sessions
-	# are cleanly shut down.
-
-	def OnDisconnect(self):
-
-		self.StopSessions()
-		self.WaitForStoppingSessions()
-
-		self.logger.debug("OnDisconnect: closing RAPI session")
-		self.rapi_session = None
-
-		self.logger.debug("OnDisconnect: clearing partnerships")
-		self.PshipManager.ClearDevicePartnerships()
-	
-		self.isConnected = False
-		
-		# now, if the config tells us to run once, we need to 
-		# trigger an exit here.
-		
-		if self.config.runonce == True:
-			self.logger.debug("OnDisconnect: RunOnce specified on command line, requesting sync-engine shutdown")
-			gobject.idle_add(self.mainloop.quit)
-
-	#
-	# StartSessions
-	#
-	# Performs the mechanics of actually starting the sync handler sessions
-	#
-	
-	def StartSessions(self):
-
-		# We know we have a valid partnership if we get here, so run the config
-		# without looking for exceptions
-	
-		pship = self.PshipManager.GetCurrentPartnership()
-	
-		# check if DTPT is enabled for this partnership - if so, start it
-	
-		mh = pship.QueryConfig("/syncpartner-config/DTPT/Enabled[position()=1]","0")
-		gh = self.config.config_Global.cfg["EnableDTPT"]
-	
-		#### we MUST change this to bind to the device address only!
-	
-		if mh == "1" and gh == 1:
-			self.logger.debug("StartSessions: DTPT starting")
-			self.dtptsession = dtptserver.DTPTServer("0.0.0.0")
-			self.dtptsession.start()
-		else:
-			self.dtptsession = None
-
-		self.logger.debug("StartSessions: starting AirSync handler")
-		self.airsync = AirsyncThread(self)
-        	self.sync_begin_handler_id = self.airsync.connect("sync-begin", self._CBStartDeviceTriggeredSync)
-        	self.airsync.start()
-
-		self.logger.debug("StartSessions: calling RAPI start_replication")
-		self.rapi_session.start_replication()
-
-		# The device will never trigger an autosync, or attempt to sync, until
-		# sync_resume is called.
-
-		self.logger.debug("StartSessions: calling RAPI sync_resume")
-		self.rapi_session.sync_resume()
-
-		self.logger.debug("StartSessions: starting RRA session")
-		self.RRASession.StartRRAEventHandler()
-
-	#
-	# StopSessions
-	#
-	# Triggers all sync session threads and servers to stop. It does not
-	# wait for a stop.
-
-	def StopSessions(self):
-
-		self.logger.debug("StopSessions: stopping RRA server")
-		self.RRASession.StopRRAEventHandler()
-		
-		if self.dtptsession != None:
-			self.logger.debug("StopSessions: stopping DTPT server")
-			self.dtptsession.shutdown()
-	
-		if self.synchandler != None:
-			self.logger.debug("StopSessions: stopping sync handler thread")
-			self.synchandler.stop()
-
-		if self.airsync != None:
-			self.logger.debug("StopSessions: stopping Airsync server")
-			self.airsync.stop()
-
-	#
-	# WaitForStoppingSessions
-	#
-	# Once StopSessions has been called, this function can be called to wait
-	# until all threads and servers have actually stopped
-	#
-		
-	def WaitForStoppingSessions(self):
-
-		if self.dtptsession != None:
-        		self.logger.debug("WaitForStoppingSessions: waiting for DTPT server thread")
-			self.dtptsession.join()
-			self.dtptsession = None
-
-		if self.synchandler != None:
-			self.logger.debug("WaitForStoppingSessions: waiting for sync handler thread")
-			self.synchandler.join()
-			self.synchandler = None
-
-		if self.airsync != None:
-			self.logger.debug("WaitForStoppingSessions: waiting for Airsync server thread")
-			self.airsync.join()
-			self.sync_begin_handler_id = None
-			self.airsync = None
-
-		self.logger.debug("sessions_wait_for_stop: shutting down RRA server")
-		self.RRASession.StopRRAEventHandler()
-
-	# _CBStartDeviceTriggeredSync
-	#
-	# Called to trigger a device-triggered sync autosync, either a manual sync from the device,
-	# or from the timer
-	#
-
-	def _CBStartDeviceTriggeredSync(self, res):
-
-		pship=self._CheckAndGetValidPartnership()
-	
-		if not self.syncing.testandset():
-			raise errors.SyncRunning
-		
-		self.logger.info("_CBStartDeviceTriggeredSync: monitoring auto sync with partnership %s", pship)
-	
-		if not pship.itemDBLoaded:
-			pship.LoadItemDB()
-		
-		self.logger.info("_CBStartDeviceTriggeredSync: itemDB loaded")
-
-		self.synchandler = SyncHandler(self, True)
-		self.synchandler.start()
-	
-		if self.config.config_AutoSync.cfg["Disable"] == 0:
-		
-			cmd_list = self.config.config_AutoSync.cfg["AutoSyncCommand"]
-				
-			if len(cmd_list) > 0:
-				self.logger.info("_CBStartDeviceTriggeredSync: command %s" % cmd_list[0])
-				try:
-					self.autosync_triggered = True	
-					pid = os.spawnvp(os.P_NOWAIT,cmd_list[0],cmd_list)
-					self.logger.info("_CBStartDeviceTriggeredSync: process spawned with PID %d" % pid)
-				except:
-					self.autosync_triggered = False
-					self.logger.debug("_CBStartDeviceTriggeredSync : failed to spawn process : cmd=%s" % cmd_list[0])
-		else:
-			self.logger.debug("_CBStartDeviceTriggeredSync : device triggered sync disabled in config")
+	def _CheckDeviceConnected(self):
+		if self.active_device == None:
+			raise errors.Disconnected
 
 
 	##############################
@@ -646,11 +361,12 @@ class SyncEngine(dbus.service.Object):
 	def GetDeviceBindingState(self):
 		
 		rc=BSTATE_DEVNOTCONNECTED
-		
-		if self.isConnected:
-			rc=BSTATE_DEVNOTBOUND
-			if self.PshipManager.GetCurrentPartnership() is not None:
-				rc=BSTATE_DEVBOUND
+
+		if self.active_device != None:
+			if self.active_device.isConnected:
+				rc=BSTATE_DEVNOTBOUND
+				if self.active_device.PshipManager.GetCurrentPartnership() is not None:
+					rc=BSTATE_DEVBOUND
 	
 		return rc
 	#
@@ -668,11 +384,11 @@ class SyncEngine(dbus.service.Object):
 
 		pship = self._CheckAndGetValidPartnership()
 	
-		if not self.syncing.testandset():
+		if not self.active_device.syncing.testandset():
 			self.logger.info("Synchronize: doing nothing because we're already syncing")
 			return
 
-		if not self.autosync_triggered:
+		if not self.active_device.autosync_triggered:
 
 			self.logger.info("Synchronize: starting manual sync with partnership %s", pship)
 				
@@ -680,13 +396,13 @@ class SyncEngine(dbus.service.Object):
 				pship.LoadItemDB()
 				self.logger.info("Synchronize: itemDB loaded")
 
-			self.synchandler = SyncHandler(self, False)
-			self.synchandler.start()
+			self.active_device.synchandler = SyncHandler(self.active_device, False)
+			self.active_device.synchandler.start()
 		else:
-			self.syncing.unlock()
+			self.active_device.syncing.unlock()
 			self.logger.debug("Synchronize: previous sync triggered externally, no need to repeat")
-			self.autosync_triggered = False
-			self.Synchronized()
+			self.active_device.autosync_triggered = False
+			self.active_device.Synchronized()
 
 		self.logger.info("Synchronize: leaving method")
 
@@ -713,8 +429,8 @@ class SyncEngine(dbus.service.Object):
 		rc = 0
 
 		if not self.config.config_Global.cfg["SlowSyncDisable"]:
-			if self.syncing.testandset():
-				pfThread = prefill.PrefillThread(self,types)
+			if self.active_device.syncing.testandset():
+				pfThread = prefill.PrefillThread(self.active_device,types)
 				pfThread.start()
 				rc=1
 			else:
@@ -760,7 +476,7 @@ class SyncEngine(dbus.service.Object):
 		self._CheckDeviceConnected()
 
 		ret = []
-		for p in self.PshipManager.GetList():
+		for p in self.active_device.PshipManager.GetList():
 			ret.append((p.info.id, p.info.guid, p.info.name, p.info.hostname, p.info.devicename, p.storetype, p.devicesyncitems))
 		return ret
 
@@ -787,7 +503,7 @@ class SyncEngine(dbus.service.Object):
 		#
 	
 		bindstructs = []
-		bindings = self.PshipManager.GetHostBindings()
+		bindings = self.active_device.PshipManager.GetHostBindings()
 		for binding in bindings:
 			bindstructs.append((binding.id, binding.guid, binding.name, binding.hostname, binding.devicename, binding.lastSyncItems))
 		return bindstructs
@@ -804,7 +520,7 @@ class SyncEngine(dbus.service.Object):
 	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='us',out_signature='s')
 	def QueryBindingConfig(self,id,guid):
 			
-		n=libxml2.parseDoc(self.PshipManager.QueryBindingConfiguration(id,guid))
+		n=libxml2.parseDoc(self.active_device.PshipManager.QueryBindingConfiguration(id,guid))
 			
 		# 'prettify' the stored XML somewhat...
 		return n.serialize("utf-8",1)
@@ -821,7 +537,7 @@ class SyncEngine(dbus.service.Object):
 	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='uss', out_signature='')
 	def SetBindingConfig(self,id,guid,config):
 
-		self.PshipManager.SetBindingConfiguration(id,guid,config)
+		self.active_device.PshipManager.SetBindingConfiguration(id,guid,config)
 
 	#
 	# CreatePartnership
@@ -840,15 +556,15 @@ class SyncEngine(dbus.service.Object):
 		# set a flag if we have a current partnership (already bound)
 	
 		start = True
-		if self.PshipManager.GetCurrentPartnership() != None:
+		if self.active_device.PshipManager.GetCurrentPartnership() != None:
 			start = False
 	
-		id=self.PshipManager.CreateNewPartnership(name, sync_items).info.id
+		id=self.active_device.PshipManager.CreateNewPartnership(name, sync_items).info.id
 
 		if start:
-			self.StartSessions()
+			self.active_device.StartSessions()
 		
-		self.PartnershipsChanged()
+		self.active_device.PartnershipsChanged()
 		return id
 	
 	#
@@ -875,7 +591,7 @@ class SyncEngine(dbus.service.Object):
 	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='us', out_signature='')
 	def DeletePartnership(self,id,guid):
 	
-		if not self.syncing.testandset():
+		if not self.active_device.syncing.testandset():
 			raise errors.SyncRunning
 	
 		# We need to do this in all cases
@@ -884,17 +600,17 @@ class SyncEngine(dbus.service.Object):
 			cpship = self._CheckAndGetValidPartnership()
 			if cpship.info.id == id:
 				self.logger.debug("DeletePartnership: calling sync pause")
-				self.rapi_session.sync_pause()
-				self.StopSessions()
-				self.WaitForStoppingSessions()
+				self.active_device.rapi_session.sync_pause()
+				self.active_device.StopSessions()
+				self.active_device.WaitForStoppingSessions()
 		except Exception,e:
 			# ignore if we have no valid partnership
 			pass
 
-		self.PshipManager.DeleteDevicePartnership(id,guid)
+		self.active_device.PshipManager.DeleteDevicePartnership(id,guid)
 	
-		self.syncing.unlock()
-		self.PartnershipsChanged()
+		self.active_device.syncing.unlock()
+		self.active_device.PartnershipsChanged()
 	
 	#
 	# AddLocalChanges
@@ -1024,7 +740,7 @@ class SyncEngine(dbus.service.Object):
 
 		pship = self._CheckAndGetValidPartnership()
 
-		if not self.syncing.testandset():
+		if not self.active_device.syncing.testandset():
 			self.logger.debug("FlushItemDB: impossible while syncing")
 			return
 
@@ -1032,7 +748,7 @@ class SyncEngine(dbus.service.Object):
 			self.logger.info("FlushItemDB: flushing current partnership DB")
 			pship.FlushItemDB()
 
-		self.syncing.unlock()
+		self.active_device.syncing.unlock()
 
 	##############################
 	## OUTGOING DBUS SIGNALS
@@ -1077,7 +793,6 @@ class SyncEngine(dbus.service.Object):
 		self.logger.info("Synchronized: Emitting PartnershipsChanged signal")
 
 
-
 	@dbus.service.signal('org.synce.SyncEngine.Status', signature='u')
 	def StatusSetMaxProgressValue(self, maxProgressValue):
 		self.logger.info("Status: Emitting StatusSetMaxProgressValue signal")
@@ -1087,21 +802,17 @@ class SyncEngine(dbus.service.Object):
 	def StatusSetProgressValue(self, progressValue):
 		self.logger.info("Status: Emitting StatusSetProgressValue signal")
 
-
 	@dbus.service.signal('org.synce.SyncEngine.Status', signature='s')
 	def StatusSetStatusString(self, statusString):
 		self.logger.info("Status: Emitting StatusSetStatusString signal")
 
-
-
 	@dbus.service.signal('org.synce.SyncEngine.Status', signature='')
 	def StatusSyncStart(self):
 		self.logger.info("Status: Emitting StatusSyncStart signal")
-	
+
 	@dbus.service.signal('org.synce.SyncEngine.Status', signature='')
 	def StatusSyncEnd(self):
 		self.logger.info("Status: Emitting StatusSyncEnd signal")
-	
 	
 	@dbus.service.signal('org.synce.SyncEngine.Status', signature='s')
 	def StatusSyncStartPartner(self,partner):
@@ -1111,7 +822,6 @@ class SyncEngine(dbus.service.Object):
 	def StatusSyncEndPartner(self,partner):
 		self.logger.info("Status: Emitting StatusSyncEndPartner signal")
 	
-	
 	@dbus.service.signal('org.synce.SyncEngine.Status', signature='ss')
 	def StatusSyncStartDatatype(self,partner,datatype):
 		self.logger.info("Status: Emitting StatusSyncStartDatatype signal")
@@ -1119,3 +829,44 @@ class SyncEngine(dbus.service.Object):
 	@dbus.service.signal('org.synce.SyncEngine.Status', signature='ss')
 	def StatusSyncEndDatatype(self,partner,datatype):
 		self.logger.info("Status: Emitting StatusSyncEndDatatype signal")
+
+
+	##############################
+	## callbacks from device objects to emit dbus signals
+	##
+
+	def PrefillCompleteCB(self, device, data=None):
+		self.PrefillComplete()
+
+	def SynchronizedCB(self, device, data=None):
+		self.Synchronized()
+
+	def PartnershipsChangedCB(self, device, data=None):
+		self.PartnershipsChanged()
+
+	def StatusSetMaxProgressValueCB(self, device, maxProgressValue, data=None):
+		self.StatusSetMaxProgressValue(maxProgressValue)
+
+	def StatusSetProgressValueCB(self, device, progressValue, data=None):
+		self.StatusSetProgressValue(progressValue)
+
+	def StatusSetStatusStringCB(self, device, statusString, data=None):
+		self.StatusSetStatusString(statusString)
+
+	def StatusSyncStartCB(self, device, data=None):
+		self.StatusSyncStart()
+
+	def StatusSyncEndCB(self, device, data=None):
+		self.StatusSyncEnd()
+
+	def StatusSyncStartPartnerCB(self, device, partner, data=None):
+		self.StatusSyncStartPartner(partner)
+
+	def StatusSyncEndPartnerCB(self, device, partner, data=None):
+		self.StatusSyncEndPartner(partner)
+
+	def StatusSyncStartDatatypeCB(self, device, partner, datatype, data=None):
+		self.StatusSyncStartDatatype(partner,datatype)
+
+	def StatusSyncEndDatatypeCB(self, device, partner, datatype, data=None):
+		self.StatusSyncEndDatatype(partner,datatype)

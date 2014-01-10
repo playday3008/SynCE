@@ -303,7 +303,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 		rsp_colls_node = rsp_doc.getRootElement().newChild(None,"Collections",None)
 
-		AvailableItemDBs = self.server.engine.PshipManager.GetCurrentPartnership().deviceitemdbs
+		AvailableItemDBs = self.server.device.PshipManager.GetCurrentPartnership().deviceitemdbs
 
 		xp = req_doc.xpathNewContext()
 		xp.xpathRegisterNs("s","http://synce.org/formats/airsync_wm5/airsync")
@@ -357,7 +357,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 						as_doc=formatapi.ConvertFormat(DIR_TO_AIRSYNC,
 						                               itemDB.type,
 						                               os_doc,
-						                               self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
+						                               self.server.device.config.config_Global.cfg["OpensyncXMLFormat"])
 
 						self.server.logger.debug("_ProcessSync: converting item to airsync, result is \n%s", as_doc.serialize("utf-8",1))
 					
@@ -402,7 +402,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 					os_doc=formatapi.ConvertFormat(DIR_FROM_AIRSYNC,
 					                               itemDB.type,
 					                               app_node,
-					                               self.server.engine.config.config_Global.cfg["OpensyncXMLFormat"])
+					                               self.server.device.config.config_Global.cfg["OpensyncXMLFormat"])
 
 					self.server.logger.debug("_ProcessSync: converting item from airsync, result is \n%s", os_doc.serialize("utf-8",1))
 
@@ -447,7 +447,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 		rsp_changes_node = rsp_folder_node.newChild(None,"Changes",None)
 
-		cpship = self.server.engine.PshipManager.GetCurrentPartnership()
+		cpship = self.server.device.PshipManager.GetCurrentPartnership()
 
 		rsp_changes_node.newChild(None,"Count",str(len(cpship.info.folders)))
 
@@ -481,7 +481,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
 		rsp_doc = self._CreateWBXMLDoc("GetItemEstimate", "http://synce.org/formats/airsync_wm5/getitemestimate")
 
-		AvailableItemDBs = self.server.engine.PshipManager.GetCurrentPartnership().deviceitemdbs
+		AvailableItemDBs = self.server.device.PshipManager.GetCurrentPartnership().deviceitemdbs
 
 		xp=req_doc.xpathNewContext()
 		xp.xpathRegisterNs("e","http://synce.org/formats/airsync_wm5/getitemestimate")
@@ -554,7 +554,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 						self.server.error_title = ""
 						self.server.error_code = ""
 
-						self.server.engine.StatusSyncStart()
+						self.server.device.StatusSyncStart()
 
 					else:
 
@@ -569,7 +569,7 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 						self.server.status = ""
 						self.server.status_type = ""
 
-						self.server.engine.StatusSyncEnd()
+						self.server.device.StatusSyncEnd()
 
 				elif self.server.datatype == "":
 
@@ -577,14 +577,14 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 					# One example of this is the exchange partnership
 
 					_my_partner = self.server.partner 
-					for p in self.server.engine.PshipManager.GetList():
+					for p in self.server.device.PshipManager.GetList():
 						if p.info.guid == self.server.partner:
 							_my_partner = p.info.name
 
 					if n.name == "SyncBegin":
-						self.server.engine.StatusSyncStartPartner(_my_partner)
+						self.server.device.StatusSyncStartPartner(_my_partner)
 					else:
-						self.server.engine.StatusSyncEndPartner(_my_partner)
+						self.server.device.StatusSyncEndPartner(_my_partner)
 
 				else:
 
@@ -594,14 +594,14 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 						_my_datatype = SYNC_ITEMS[ SYNC_ITEM_ID_FROM_GUID[ self.server.datatype ]][0]
 
 					_my_partner = self.server.partner 
-					for p in self.server.engine.PshipManager.GetList():
+					for p in self.server.device.PshipManager.GetList():
 						if p.info.guid == self.server.partner:
 							_my_partner = p.info.name
 
 					if n.name == "SyncBegin":
-						self.server.engine.StatusSyncStartDatatype(_my_partner, _my_datatype)
+						self.server.device.StatusSyncStartDatatype(_my_partner, _my_datatype)
 					else:
-						self.server.engine.StatusSyncEndDatatype(_my_partner, _my_datatype)
+						self.server.device.StatusSyncEndDatatype(_my_partner, _my_datatype)
 
 			elif n.name == "Status" and xml2util.GetNodeAttr(n,"Partner") == self.server.partner:
 
@@ -610,18 +610,18 @@ class AirsyncHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 					if s.name == "Progress":
 
 						self.server.progress_current = int(xml2util.GetNodeAttr(s,"value"))
-						self.server.engine.StatusSetProgressValue( self.server.progress_current )
+						self.server.device.StatusSetProgressValue( self.server.progress_current )
 
 					elif s.name == "Total":
 
 						self.server.progress_max = int(xml2util.GetNodeAttr(s,"value"))
-						self.server.engine.StatusSetMaxProgressValue( self.server.progress_max )
+						self.server.device.StatusSetMaxProgressValue( self.server.progress_max )
 
 					elif s.name == "StatusString":
 
 						self.server.status = xml2util.GetNodeAttr(s,"value")
 						self.server.status_type = xml2util.GetNodeAttr(s,"type")
-						self.server.engine.StatusSetStatusString( self.server.status )
+						self.server.device.StatusSetStatusString( self.server.status )
 
 			elif n.name == "Error" and xml2util.GetNodeAttr(n,"Partner") == self.server.partner:
 
@@ -645,14 +645,14 @@ class AirsyncServer(BaseHTTPServer.HTTPServer):
 	# CONSTRUCTOR
 	#
 	
-	def __init__(self, server_address, RequestHandlerClass, thread, engine):
+	def __init__(self, server_address, RequestHandlerClass, thread, device):
 
 		BaseHTTPServer.HTTPServer.__init__(self, server_address, RequestHandlerClass)
 
 		self.logger = logging.getLogger("engine.airsync.AirsyncServer")
 
 		self.thread = thread
-		self.engine = engine
+		self.device = device
 
 		self.stopped = False
 
@@ -712,7 +712,7 @@ class AirsyncThread(gobject.GObject, threading.Thread):
 	# CONSTRUCTOR
 	#
 
-	def __init__(self, engine):
+	def __init__(self, device):
 		
 		self.__gobject_init__()
 		threading.Thread.__init__(self)
@@ -721,8 +721,8 @@ class AirsyncThread(gobject.GObject, threading.Thread):
 
 		self.setDaemon(True)
 
-		self.engine = engine
-		self.server = AirsyncServer(("", AIRSYNC_PORT), AirsyncHandler, self, engine)
+		self.device = device
+		self.server = AirsyncServer(("", AIRSYNC_PORT), AirsyncHandler, self, device)
 
 	#
 	# stop

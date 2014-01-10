@@ -26,11 +26,11 @@ import rapicontext
 import pyrapi2
 class SyncHandler(threading.Thread):
 
-    def __init__(self, engine, auto_sync):
+    def __init__(self, device, auto_sync):
         threading.Thread.__init__(self)
         self.logger = logging.getLogger("engine.synchandler.SyncHandler")
 
-        self.engine = engine
+        self.device = device
         self.auto_sync = auto_sync
 
         self.stopped = False
@@ -47,17 +47,17 @@ class SyncHandler(threading.Thread):
 	self.evtSyncRunFinished.clear()
 
 
-	self.rapi_context =rapicontext.RapiContext(None, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
+	self.rapi_context = rapicontext.RapiContext(None, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
 	
 	# Temporarily uninstall the previous handler for the beginning of the
         # synchronization.  The previous handler was for the auto-syncs, which
         # we disable temporarily while we are syncing here
 	
-        self.engine.airsync.handler_block(self.engine.sync_begin_handler_id)
+        self.device.airsync.handler_block(self.device.sync_begin_handler_id)
 
         # Set up our own handler so we can catch the end of the Airsync phase
         
-	self.sync_end_handler_id = self.engine.airsync.connect("sync-end", self._sync_end_cb)
+	self.sync_end_handler_id = self.device.airsync.connect("sync-end", self._sync_end_cb)
 
         if not self.auto_sync:
 		
@@ -69,7 +69,7 @@ class SyncHandler(threading.Thread):
 	    doc_node.setProp("type", "Interactive")
  
  	    partnernode = doc_node.newChild(None,"partner",None)
-	    partnernode.setProp("id",self.engine.PshipManager.GetCurrentPartnership().info.guid)
+	    partnernode.setProp("id",self.device.PshipManager.GetCurrentPartnership().info.guid)
 
             self.logger.debug("run: sending request to device \n%s", doc_node.serialize("utf-8",1))
             self.rapi_context.sync_start(doc_node.serialize("utf-8",0))
@@ -90,17 +90,17 @@ class SyncHandler(threading.Thread):
 
         if not self.stopped:
             self.logger.debug("run: saving itemDB")
-	    self.engine.PshipManager.GetCurrentPartnership().SaveItemDB()
+	    self.device.PshipManager.GetCurrentPartnership().SaveItemDB()
 	    
         self.logger.info("run: finished synchronization")
-        self.engine.syncing.unlock()
+        self.device.syncing.unlock()
 
-        self.engine.airsync.handler_unblock(self.engine.sync_begin_handler_id)
+        self.device.airsync.handler_unblock(self.device.sync_begin_handler_id)
 
         if not self.stopped:
-            self.engine.Synchronized()
+            self.device.Synchronized()
 
     def _sync_end_cb(self, res):
         self.logger.info("_sync_end_cb: Called")
 	self.evtSyncRunFinished.set()
-        self.engine.airsync.disconnect(self.sync_end_handler_id)
+        self.device.airsync.disconnect(self.sync_end_handler_id)

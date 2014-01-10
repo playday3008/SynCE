@@ -1078,8 +1078,8 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 
 class RRASyncManager:
 	
-	def __init__(self,engine):
-		self.engine = engine
+	def __init__(self,device):
+		self.device = device
 		self.thread = None
 		self.logger = logging.getLogger("engine.rrasyncmanager.RRASyncManager")
 
@@ -1088,14 +1088,14 @@ class RRASyncManager:
 		
 		# get current partnership
 		
-		pship = self.engine.PshipManager.GetCurrentPartnership()
+		pship = self.device.PshipManager.GetCurrentPartnership()
 		self.thread = RRAThread()
 		self.thread.syncmgr = self
-		self.thread.config = self.engine.config
+		self.thread.config = self.device.config
 		if pship:
 			self.logger.info("connecting to RRA")
 			try:
-				self.thread.Connect(self.engine.rapi_session)
+				self.thread.Connect(self.device.rapi_session)
 
 				self.logger.info("connected")
 				if not self.thread.Subscribe(pship):
