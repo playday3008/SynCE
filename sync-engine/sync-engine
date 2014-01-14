@@ -57,8 +57,9 @@ mainloop = None
 def TerminationHandler(signum, frame):
 	
 	logger.info("Received termination signal. Exiting")
-	if engine.active_device != None:
-		engine.active_device.StopSessions()
+	logger.debug("Waiting for engine to clean up")
+	engine.shutdown()
+	logger.debug("Quitting ....")
 	gobject.idle_add(mainloop.quit)
 
 #
@@ -158,6 +159,3 @@ if __name__ == "__main__":
 	except KeyboardInterrupt:
 		pass
 
-	logger.debug("waiting for engine to clean up")
-	if engine.active_device != None:
-		engine.active_device.WaitForStoppingSessions()

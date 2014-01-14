@@ -107,6 +107,19 @@ class SyncEngine(dbus.service.Object):
 
 
 	#
+	#
+	# shutdown
+	# 
+	# We are to shut down, clean up
+	#
+
+	def shutdown(self):
+		self._ODCCMDisconnect()
+		self._UdevDisconnect()
+		self.dbus_manager = None
+
+
+	#
 	# _ODCCMConnect
 	#
 	# INTERNAL
@@ -129,6 +142,24 @@ class SyncEngine(dbus.service.Object):
 				self._CBDeviceConnected(obj_path)
 		except:
 			self.isOdccmRunning = False
+
+	#
+	# _ODCCMDisconnect
+	#
+	# INTERNAL
+	#
+	# Disconnect from odccm, either because odccm has disappeared or we are shutting down. 
+	#
+
+	def _ODCCMDisconnect(self):
+
+		self.device_manager = None
+		self.isOdccmRunning = False
+
+		for device in self.devices:
+			if "/org/synce/odccm" in device.devicePath:
+				self.logger.info("_ODCCMDisconnect: disconnecting device: %s" % device.devicePath)
+				self._CBDeviceDisconnected(device.devicePath)
 
 	#
 	# _UdevConnect
@@ -156,6 +187,25 @@ class SyncEngine(dbus.service.Object):
 			self.isUdevRunning = False
 
 	#
+	# _UdevDisconnect
+	#
+	# INTERNAL
+	#
+	# Disconnect from udev, either because dccm has disappeared or we are shutting down. 
+	#
+
+	def _UdevDisconnect(self):
+
+		self.udev_manager = None
+		self.isUdevRunning = False
+
+		for device in self.devices:
+			self.logger.info("_UdevDisconnect: found device: %s" % device.devicePath)
+			if "/org/synce/dccm" in device.devicePath:
+				self.logger.info("_UdevDisconnect: disconnecting device: %s" % device.devicePath)
+				self._CBDeviceDisconnected(device.devicePath)
+
+	#
 	# _CBDCCMStatusChanged
 	#
 	# INTERNAL
@@ -174,6 +224,7 @@ class SyncEngine(dbus.service.Object):
 			if old_owner == "":
 				self.isOdccmRunning = True
 				self.logger.info("_CBDCCMStatusChanged: odccm came online")
+				self._ODCCMConnect()
 
 			# If this parameter is empty, the odccm just went offline
 
@@ -181,12 +232,8 @@ class SyncEngine(dbus.service.Object):
 
 				self.isOdccmRunning = False
 				self.logger.info("_CBDCCMStatusChanged: odccm went offline")
+				self._ODCCMDisconnect()
 
-				# must remove all odccm devices here
-
-			if self.isOdccmRunning:
-
-				self._ODCCMConnect()
 
 		if obj_path == "org.synce.dccm":
 
@@ -195,6 +242,7 @@ class SyncEngine(dbus.service.Object):
 			if old_owner == "":
 				self.isUdevRunning = True
 				self.logger.info("_CBDCCMStatusChanged: udev dccm came online")
+				self._UdevConnect()
 
 			# If this parameter is empty, the odccm just went offline
 
@@ -202,11 +250,8 @@ class SyncEngine(dbus.service.Object):
 
 				self.isUdevRunning = False
 				self.logger.info("_CBDCCMStatusChanged: udev dccm went offline")
+				self._UdevDisconnect()
 
-
-			if self.isUdevRunning:
-
-				self._UdevConnect()
 
 	#
 	# DeviceConnectSignals

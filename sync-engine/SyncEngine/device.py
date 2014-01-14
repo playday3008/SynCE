@@ -91,7 +91,7 @@ class Device(gobject.GObject):
 		self.iface_addr = ""
 		self.partnerships = None
 
-		if "org.synce.odccm" in objpath:
+		if "/org/synce/odccm" in objpath:
 			device_obj = dbus.SystemBus().get_object("org.synce.odccm",objpath)
 			self.dev_iface = dbus.Interface(device_obj,"org.synce.odccm.Device")
 			self.iface_addr = "0.0.0.0"
