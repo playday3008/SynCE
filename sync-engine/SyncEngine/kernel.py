@@ -319,7 +319,7 @@ class SyncEngine(dbus.service.Object):
 			self.active_device = new_device
                         self.DeviceConnectSignals(self.active_device)
 
-		if new_device._ProcessAuth():
+		if new_device.ProcessAuth():
 			new_device.OnConnect()
 
 
@@ -370,10 +370,7 @@ class SyncEngine(dbus.service.Object):
 	def _CheckAndGetValidPartnership(self):
 
 		self._CheckDeviceConnected()
-		pship = self.active_device.PshipManager.GetCurrentPartnership()
-		if pship is None:
-			raise errors.NoBoundPartnership
-		return pship
+		return self.active_device.CheckAndGetValidPartnership()
 
 	#
 	# _CheckDeviceConnected
@@ -385,6 +382,8 @@ class SyncEngine(dbus.service.Object):
 
 	def _CheckDeviceConnected(self):
 		if self.active_device == None:
+			raise errors.Disconnected
+		if self.active_device.isConnected == False:
 			raise errors.Disconnected
 
 

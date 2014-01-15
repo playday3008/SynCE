@@ -117,18 +117,18 @@ class Device(gobject.GObject):
 			
 		self.logger.info("_CBDeviceAuthStateChanged: device authorization state changed: reauthorizing")
 		if not self.isConnected:
-			if self._ProcessAuth():
+			if self.ProcessAuth():
 				self.OnConnect()
 
 
 	#
-	# _ProcessAuth
+	# ProcessAuth
 	#
-	# INTERNAL
+	# EXTERNAL
 	#
 	# Process authorization on either callback or initial connection
 
-	def _ProcessAuth(self):
+	def ProcessAuth(self):
 
 		self.logger.info("ProcessAuth : processing authorization for device '%s'" % self.name) 
 		rc=True
@@ -162,6 +162,8 @@ class Device(gobject.GObject):
 	# 
 	# OnConnect
 	#
+	# EXTERNAL
+	#
 	# Called when device is firmly established. Sets up the RAPI connection
 	# and then starts the sync handler sessions
 	#
@@ -183,7 +185,7 @@ class Device(gobject.GObject):
 		# don't start any sessions if we don't have a valid partnership.
 
 		try:
-			self._CheckAndGetValidPartnership()
+			self.CheckAndGetValidPartnership()
 			self.StartSessions()
 
 		except Exception,e:
@@ -195,6 +197,8 @@ class Device(gobject.GObject):
 
 	#
 	# OnDisconnect
+	#
+	# EXTERNAL
 	#
 	# Called when the device disconnects from the bus. Ensures all sessions
 	# are cleanly shut down.
@@ -214,6 +218,8 @@ class Device(gobject.GObject):
 		
 	#
 	# StartSessions
+	#
+	# EXTERNAL
 	#
 	# Performs the mechanics of actually starting the sync handler sessions
 	#
@@ -259,6 +265,8 @@ class Device(gobject.GObject):
 	#
 	# StopSessions
 	#
+	# EXTERNAL
+	#
 	# Triggers all sync session threads and servers to stop. It does not
 	# wait for a stop.
 
@@ -281,6 +289,8 @@ class Device(gobject.GObject):
 
 	#
 	# WaitForStoppingSessions
+	#
+	# EXTERNAL
 	#
 	# Once StopSessions has been called, this function can be called to wait
 	# until all threads and servers have actually stopped
@@ -309,13 +319,15 @@ class Device(gobject.GObject):
 
 	# _CBStartDeviceTriggeredSync
 	#
+	# INTERNAL
+	#
 	# Called to trigger a device-triggered sync autosync, either a manual sync from the device,
 	# or from the timer
 	#
 
 	def _CBStartDeviceTriggeredSync(self, res):
 
-		pship=self._CheckAndGetValidPartnership()
+		pship=self.CheckAndGetValidPartnership()
 	
 		if not self.syncing.testandset():
 			raise errors.SyncRunning
@@ -347,15 +359,15 @@ class Device(gobject.GObject):
 			self.logger.debug("_CBStartDeviceTriggeredSync : device triggered sync disabled in config")
 
 	#
-	# _CheckAndGetValidPartnership
+	# CheckAndGetValidPartnership
 	#
-	# INTERNAL
+	# EXTERNAL
 	#
 	# Utility function to retrieve the current partnership. Will throw if 
 	# the system is currently unbound.
 	#
 
-	def _CheckAndGetValidPartnership(self):
+	def CheckAndGetValidPartnership(self):
 
 		pship = self.PshipManager.GetCurrentPartnership()
 		if pship is None:
