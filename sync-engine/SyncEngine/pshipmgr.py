@@ -229,120 +229,6 @@ class PartnershipManager:
 		return pships
 	
 	#
-	# GetHostBindings
-	#
-	# Returns an array of PSInfo structures associated with each
-	# host binding.
-	
-	def GetHostBindings(self):
-		
-		self.logger.info("GetHostBindings: reading existing host bindings")
-		
-		psdir = os.path.join(self.device.config.config_user_dir,"partnerships")
-		bindings = []
-		
-		# get all items in the dir.
-		
-		entries = os.listdir(psdir)
-		
-		for d in entries:
-			
-			# is it a file? - shouldn't be here so
-			# ignore it.
-			
-			fullPath = os.path.join(psdir,d)
-			if not os.path.isdir(fullPath):
-				continue
-			
-			# it is a dir. Look for a psinfo.dat file
-			
-			infofp = os.path.join(fullPath,"psinfo.dat")
-			
-			# no psinfo, just ignore it
-			
-			if not os.path.isfile(infofp):
-				continue
-			
-			# otherwise attempt to load the psinfo file
-		
-			try:
-				f = open(infofp,"r")
-				info = pickle.load(f)
-				f.close()
-			except Exception, e:
-				self.logger.info("GetHostBindings: corrupted binding found at %s (%s), ignoring" % (infofp,e))
-				continue
-			
-			bindings.append(info)
-			
-		return bindings
-	
-	#
-	# QueryBindingConfiguration
-	#
-	# Returns an XML string containing the configuration block of a host binding
-	
-	def QueryBindingConfiguration(self,id,guid):
-		
-		# we need to load the config entries for a partnership from its
-		# bindings
-		
-		psdir = os.path.join(self.device.config.config_user_dir,"partnerships")
-		pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
-		
-		s = ""
-		if os.path.isdir(pspath):
-			conffile = os.path.join(pspath,"psconfig.xml")
-			try:
-				f=open(conffile,"r")
-				s=f.read()
-				f.close()
-			except Exception,e:
-				self.logger.info("QueryBindingConfiguration: unable to read configuration for binding %s" % pspath)
-				raise Exception("corrupt binding")
-		else:
-			raise Exception("Binding has no configuration")
-		
-		return s
-
-	#
-	# SetBindingConfiguration
-	#
-	# Returns an XML string containing the configuration block of a host binding
-	
-	def SetBindingConfiguration(self,id,guid,config):
-		
-		# first check that we can parse the config!
-		
-		try:
-			node = libxml2.parseDoc(config)
-		except:
-			self.logger.error("SetBindingConfiguration: bad XML in configuration string")
-			raise Exception("bad XML in configuration string")
-		
-		# we need to load the config entries for a partnership from its
-		# bindings
-		
-		psdir = os.path.join(self.device.config.config_user_dir,"partnerships")
-		pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
-
-		if os.path.isdir(pspath):
-			conffile = os.path.join(pspath,"psconfig.xml")
-			if os.path.isfile(conffile):
-				try:
-					f=open(conffile,"wb")
-					f.write(config)
-					f.close()
-				except Exception,e:
-					self.logger.info("SetBindingConfiguration: unable to write configuration for binding %s" % pspath)
-					raise
-			else:
-				raise Exception("corrupted binding")
-		else:
-			raise Exception("Binding has no configuration")
-
-
-	#
 	# GetDevicePartnershipByID (formerly get)
 	#
 	# Return a device partnership by ID, if it exists
@@ -1138,4 +1024,123 @@ class Partnership:
 		del self.deviceitemdbs
 		self.deviceitemdbs = {}
 
+
+#
+# GetHostBindings
+#
+# Returns an array of PSInfo structures associated with each
+# host binding.
+
+def GetHostBindings(user_dir):
+	
+	logger = logging.getLogger("engine.pshipmgr.PartnershipManager")
+
+	logger.info("GetHostBindings: reading existing host bindings")
+	
+	psdir = os.path.join(user_dir,"partnerships")
+	bindings = []
+	
+	# get all items in the dir.
+	
+	entries = os.listdir(psdir)
+	
+	for d in entries:
+		
+		# is it a file? - shouldn't be here so
+		# ignore it.
+		
+		fullPath = os.path.join(psdir,d)
+		if not os.path.isdir(fullPath):
+			continue
+		
+		# it is a dir. Look for a psinfo.dat file
+		
+		infofp = os.path.join(fullPath,"psinfo.dat")
+		
+		# no psinfo, just ignore it
+		
+		if not os.path.isfile(infofp):
+			continue
+		
+		# otherwise attempt to load the psinfo file
+	
+		try:
+			f = open(infofp,"r")
+			info = pickle.load(f)
+			f.close()
+		except Exception, e:
+			logger.info("GetHostBindings: corrupted binding found at %s (%s), ignoring" % (infofp,e))
+			continue
+		
+		bindings.append(info)
+		
+	return bindings
+
+#
+# QueryBindingConfiguration
+#
+# Returns an XML string containing the configuration block of a host binding
+
+def QueryBindingConfiguration(user_dir,id,guid):
+	
+	logger = logging.getLogger("engine.pshipmgr.PartnershipManager")
+
+	# we need to load the config entries for a partnership from its
+	# bindings
+	
+	psdir = os.path.join(user_dir,"partnerships")
+	pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
+	
+	s = ""
+	if os.path.isdir(pspath):
+		conffile = os.path.join(pspath,"psconfig.xml")
+		try:
+			f=open(conffile,"r")
+			s=f.read()
+			f.close()
+		except Exception,e:
+			logger.info("QueryBindingConfiguration: unable to read configuration for binding %s" % pspath)
+			raise Exception("corrupt binding")
+	else:
+		raise Exception("Binding has no configuration")
+	
+	return s
+
+#
+# SetBindingConfiguration
+#
+# Returns an XML string containing the configuration block of a host binding
+
+def SetBindingConfiguration(user_dir,id,guid,config):
+	
+	logger = logging.getLogger("engine.pshipmgr.PartnershipManager")
+
+	# first check that we can parse the config!
+	
+	try:
+		node = libxml2.parseDoc(config)
+	except:
+		logger.error("SetBindingConfiguration: bad XML in configuration string")
+		raise Exception("bad XML in configuration string")
+	
+	# we need to load the config entries for a partnership from its
+	# bindings
+	
+	psdir = os.path.join(user_dir,"partnerships")
+	pspath = os.path.join(psdir,"PS" + "-" + str(id) + "-" + str(guid))
+
+	if os.path.isdir(pspath):
+		conffile = os.path.join(pspath,"psconfig.xml")
+		if os.path.isfile(conffile):
+			try:
+				f=open(conffile,"wb")
+				f.write(config)
+				f.close()
+			except Exception,e:
+				logger.info("SetBindingConfiguration: unable to write configuration for binding %s" % pspath)
+				raise
+		else:
+			raise Exception("corrupted binding")
+	else:
+		raise Exception("Binding has no configuration")
 

@@ -2,6 +2,9 @@
 import dbus
 import logging
 import rrasyncmanager
+import os
+import array
+import prefill
 import auth
 import rapicontext
 import pyrapi2
@@ -386,6 +389,336 @@ class Device(gobject.GObject):
 		
 		self.autosync_triggered=False
 		self.syncing.unlock()
+
+
+	##############################
+	## EXPORTED DBUS API - exported by Engine for the active_device, ideally 
+	## we would have this exported by each Device
+	##
+
+	#
+	# GetDeviceBindingState
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Query the binding state of the device, and if it is connected
+	# or not. If it is connected, whether it is bound. This function
+	# is safe to call at any time and should not throw.
+	#
+
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='u')
+	def GetDeviceBindingState(self):
+		
+		rc=BSTATE_DEVNOTCONNECTED
+
+		if self.isConnected:
+			rc=BSTATE_DEVNOTBOUND
+			if self.PshipManager.GetCurrentPartnership() is not None:
+				rc=BSTATE_DEVBOUND
+	
+		return rc
+
+	#
+	# Synchronize
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Trigger a synchronization run from the host
+	#
+
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='')
+	def Synchronize(self):
+ 
+		self.logger.info("Synchronize: manual sync triggered")
+
+		pship = self.CheckAndGetValidPartnership()
+	
+		if not self.syncing.testandset():
+			self.logger.info("Synchronize: doing nothing because we're already syncing")
+			return
+
+		if not self.autosync_triggered:
+
+			self.logger.info("Synchronize: starting manual sync with partnership %s", pship)
+				
+			if not pship.itemDBLoaded:
+				pship.LoadItemDB()
+				self.logger.info("Synchronize: itemDB loaded")
+
+			self.synchandler = SyncHandler(self, False)
+			self.synchandler.start()
+		else:
+			self.syncing.unlock()
+			self.logger.debug("Synchronize: previous sync triggered externally, no need to repeat")
+			self.autosync_triggered = False
+			self.Synchronized()
+
+		self.logger.info("Synchronize: leaving method")
+
+	#
+	# PrefillRemote
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# PrefillRemote should be called after a sync run, and it alters the list of
+	# remote changes that will be reported to the synchronizer plugin to include everything	
+	# in the db.
+
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='as', out_signature='u')
+	def PrefillRemote(self,types):
+
+		pship = self.CheckAndGetValidPartnership()
+		self.logger.info("PrefillRemote: slow sync prefill triggered")
+		
+		# Ensure the itemDB is loaded
+
+		if not pship.itemDBLoaded:
+			pship.LoadItemDB()
+
+		rc = 0
+
+		if not self.config.config_Global.cfg["SlowSyncDisable"]:
+			if self.syncing.testandset():
+				pfThread = prefill.PrefillThread(self,types)
+				pfThread.start()
+				rc=1
+			else:
+				self.logger.debug("PrefillRemote: impossible while syncing")
+		else:
+			self.logger.info("PrefillRemote: slow sync prefill disabled in config")
+
+		return rc
+
+	#
+	# GetPartnerships
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Get a list of partnerships on the device. Returns an array of structs containing:
+	#     Partnership ID
+	#     Partnership GUID
+	#     Partnership name
+	#     Hostname
+	#     Device name
+	#     an array of sync item ids
+
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='a(ussssuau)')
+	def GetPartnerships(self):
+
+		ret = []
+		for p in self.PshipManager.GetList():
+			ret.append((p.info.id, p.info.guid, p.info.name, p.info.hostname, p.info.devicename, p.storetype, p.devicesyncitems))
+		return ret
+
+	#
+	# CreatePartnership
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Pass it a name, and an array of items to sync. The function will return the
+	# ID of the newly created partnership. If no bound partnership exists, the
+	# new partnership will be made current and the sync sessions started.
+	
+	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='sau', out_signature='u')
+	def CreatePartnership(self, name, sync_items):
+
+		# set a flag if we have a current partnership (already bound)
+	
+		start = True
+		if self.PshipManager.GetCurrentPartnership() != None:
+			start = False
+	
+		id=self.PshipManager.CreateNewPartnership(name, sync_items).info.id
+
+		if start:
+			self.StartSessions()
+		
+		self.PartnershipsChanged()
+		return id
+	
+	#
+	# GetSynchronizedItemTypes
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Returns a list of synchronizeable item types offered by the current partnership
+	
+	@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='au')
+	def GetSynchronizedItemTypes(self):
+
+		pship = self.CheckAndGetValidPartnership()
+		return pship.devicesyncitems
+
+	#
+	# DeletePartnership
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Delete a partnership on the device, specified by ID and GUID. If we hit our
+	# current partnership, stop all sessions before doing it.
+
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='us', out_signature='')
+	def DeletePartnership(self,id,guid):
+	
+		if not self.syncing.testandset():
+			raise errors.SyncRunning
+	
+		# We need to do this in all cases
+	
+		try:
+			cpship = self.CheckAndGetValidPartnership()
+			if cpship.info.id == id:
+				self.logger.debug("DeletePartnership: calling sync pause")
+				self.rapi_session.sync_pause()
+				self.StopSessions()
+				self.WaitForStoppingSessions()
+		except Exception,e:
+			# ignore if we have no valid partnership
+			pass
+
+		self.PshipManager.DeleteDevicePartnership(id,guid)
+	
+		self.syncing.unlock()
+		self.PartnershipsChanged()
+	
+	#
+	# AddLocalChanges
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Called during a sync run by the host synchronization system to pass information
+	# relating to changes on the host side.
+		
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='a{ua(ayuay)}', out_signature='')
+	def AddLocalChanges(self, changesets):
+
+		pship = self.CheckAndGetValidPartnership()
+
+		if not pship.itemDBLoaded:
+			pship.LoadItemDB()
+
+		AvailableItemDBs = pship.deviceitemdbs
+
+		for item_type, changes in changesets.items():
+
+			if not AvailableItemDBs.has_key(item_type):
+				self.logger.info("AddLocalChanges: skipping changes for item of type %d", item_type)
+				continue
+
+			itemDB = AvailableItemDBs[item_type]
+			self.logger.debug("AddLocalChanges: adding changes for item of type %d", itemDB.type)
+
+			for change in changes:
+
+				itemID, chg_type, data = change
+				itemID = array.array('B',itemID).tostring()
+				data = array.array('B',data).tostring()
+				self.logger.debug("AddLocalChanges: adding change GUID = %s, ChangeType = %d, Data = %s",
+				itemID, chg_type, data)
+				
+				itemDB.AddLocalChanges([(itemID, chg_type, data)])
+
+		self.logger.debug("AddLocalChanges: added (or ignored) %d changesets", len(changesets))
+	
+		# we have updated the IDB, so must save it.
+	
+		pship.SaveItemDB()
+
+	#
+	# GetRemoteChanges
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Used by the host synchronization software to retrieve changes on the remote
+	#
+
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='au', out_signature='a{ua(ayuay)}')
+	def GetRemoteChanges(self, item_types):
+
+		pship = self.CheckAndGetValidPartnership()
+
+		AvailableItemDBs = pship.deviceitemdbs
+
+		if not pship.itemDBLoaded:
+       			pship.LoadItemDB()
+
+		changes = {}
+	
+		self.logger.debug("GetRemoteChanges: pship %s",str(pship))
+
+
+		for type in item_types:
+			
+			changes[type] = []
+
+			self.logger.debug("GetRemoteChanges: getting changes for items of type %d", type)
+
+			for itemID, change in AvailableItemDBs[type].GetRemoteChanges().items():
+			
+				chgtype, chgdata = change
+
+				self.logger.debug("GetRemoteChanges: got change GUID = %s, ChangeType = %d, Data = %s",
+						   itemID, chgtype, chgdata)
+
+				changes[type].append((itemID, chgtype, chgdata))
+		
+		self.logger.debug("return")
+		return changes
+
+	#
+	# AcknowledgeRemoteChanges
+	#
+	# EXPORTED: DBUS SERVICED API
+	#
+	# Used by the host synchronization software to acknowledge the processing
+	# of remote changes, in order that they can be removed from the remote's
+	# change stack
+	
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='a{uaay}', out_signature='')
+	def AcknowledgeRemoteChanges(self, changes):
+
+		pship = self.CheckAndGetValidPartnership()
+
+		AvailableItemDBs = pship.deviceitemdbs
+
+		for item_type, itemIDs in changes.items():
+
+			itemDB = AvailableItemDBs[item_type]
+
+			self.logger.debug("AcknowledgeRemoteChanges: acking changes for items of type %d", item_type)
+
+			for itemID in itemIDs:
+				itemID = array.array('B',itemID).tostring()
+				self.logger.debug("AcknowledgeRemoteChanges: acking change for items GUID = %s", itemID)
+				itemDB.AcknowledgeRemoteChange(itemID)
+
+		self.logger.debug("AcknowledgeRemoteChanges: saving synchronization state and itemDB")
+
+		pship.SaveItemDB()
+
+	#
+	# FlushItemDB
+	#
+	# Called at the end of a sync session to save and flush the itemDB from memory.
+	# There will be no ill-effects if this function is not called other than to retain the
+	# item database in memory for all time, instead of just when syncing.
+	#
+
+	#@dbus.service.method(DBUS_SYNCENGINE_IFACE, in_signature='', out_signature='')
+	def FlushItemDB(self):
+
+		pship = self.CheckAndGetValidPartnership()
+
+		if not self.syncing.testandset():
+			self.logger.debug("FlushItemDB: impossible while syncing")
+			return
+
+		if self.config.config_Global.cfg["FlushIDB"]==1:
+			self.logger.info("FlushItemDB: flushing current partnership DB")
+			pship.FlushItemDB()
+
+		self.syncing.unlock()
+
 
 	# emit signals
 	#
