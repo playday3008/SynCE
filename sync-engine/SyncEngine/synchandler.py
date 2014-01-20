@@ -46,9 +46,6 @@ class SyncHandler(threading.Thread):
 	
 	self.evtSyncRunFinished.clear()
 
-
-	self.rapi_context = rapicontext.RapiContext(None, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
-	
 	# Temporarily uninstall the previous handler for the beginning of the
         # synchronization.  The previous handler was for the auto-syncs, which
         # we disable temporarily while we are syncing here
@@ -72,7 +69,7 @@ class SyncHandler(threading.Thread):
 	    partnernode.setProp("id",self.device.PshipManager.GetCurrentPartnership().info.guid)
 
             self.logger.debug("run: sending request to device \n%s", doc_node.serialize("utf-8",1))
-            self.rapi_context.sync_start(doc_node.serialize("utf-8",0))
+            self.device.rapi_session.sync_start(doc_node.serialize("utf-8",0))
 
         self.logger.debug("run: performing synchronization")
 
@@ -85,8 +82,8 @@ class SyncHandler(threading.Thread):
 	# this, otherwise we get RAPI timeouts.
 
         self.logger.debug("run: calling RAPI sync_pause and sync_resume")
-        self.rapi_context.sync_pause()
-        self.rapi_context.sync_resume()
+        self.device.rapi_session.sync_pause()
+        self.device.rapi_session.sync_resume()
 
         if not self.stopped:
             self.logger.debug("run: saving itemDB")
