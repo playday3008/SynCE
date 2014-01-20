@@ -675,7 +675,7 @@ class AirsyncServer(BaseHTTPServer.HTTPServer):
 	def StopServer(self):
 		
 		self.logger.debug("StopServer: stopping Airsync server")
-		conn = httplib.HTTPConnection("localhost:%d" % self.server_address[1])
+		conn = httplib.HTTPConnection("%s:%d" % (self.server_address[0],self.server_address[1]))
 		conn.request("QUIT", "/")
 		conn.getresponse()
 
@@ -722,7 +722,7 @@ class AirsyncThread(gobject.GObject, threading.Thread):
 		self.setDaemon(True)
 
 		self.device = device
-		self.server = AirsyncServer(("", AIRSYNC_PORT), AirsyncHandler, self, device)
+		self.server = AirsyncServer((self.device.iface_addr, AIRSYNC_PORT), AirsyncHandler, self, device)
 
 	#
 	# stop
