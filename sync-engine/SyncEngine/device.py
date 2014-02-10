@@ -239,8 +239,6 @@ class Device(gobject.GObject):
 		mh = pship.QueryConfig("/syncpartner-config/DTPT/Enabled[position()=1]","0")
 		gh = self.config.config_Global.cfg["EnableDTPT"]
 	
-		#### we MUST change this to bind to the device address only!
-	
 		if mh == "1" and gh == 1:
 			self.logger.debug("StartSessions: DTPT starting")
 			self.dtptsession = dtptserver.DTPTServer(self.iface_addr)
