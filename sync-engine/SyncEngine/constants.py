@@ -18,6 +18,8 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
+import pyrra
+
 DBUS_DBUS_BUSNAME	= "org.freedesktop.DBus"
 DBUS_DBUS_IFACE		= "org.freedesktop.DBus"
 DBUS_DBUS_OBJPATH	= "/org/freedesktop/DBus"
@@ -63,6 +65,7 @@ SYNC_ITEMS = {
     SYNC_ITEM_WORLDMATE : ("WorldMate", False)
 }
 
+# Airsync Class to sync engine id
 SYNC_ITEM_CLASS_TO_ID = {
     "Calendar" : SYNC_ITEM_CALENDAR,
     "Contacts" : SYNC_ITEM_CONTACTS,
@@ -70,10 +73,16 @@ SYNC_ITEM_CLASS_TO_ID = {
     "Tasks"    : SYNC_ITEM_TASKS
 }
 
+# sync engine id to RRA type name
 SYNC_ITEM_PSHIPID_TO_RRANAME = {
-    SYNC_ITEM_FILES : "File",
-    SYNC_ITEM_MEDIA : "Media",
-    SYNC_ITEM_FAVORITES : "Favorite"
+    SYNC_ITEM_CALENDAR  : pyrra.RRA_SYNCMGR_TYPE_APPOINTMENT,
+    SYNC_ITEM_CONTACTS  : pyrra.RRA_SYNCMGR_TYPE_CONTACT,
+    SYNC_ITEM_EMAIL     : pyrra.RRA_SYNCMGR_TYPE_INBOX,
+    SYNC_ITEM_FAVORITES : pyrra.RRA_SYNCMGR_TYPE_FAVORITE,
+    SYNC_ITEM_FILES     : pyrra.RRA_SYNCMGR_TYPE_FILE,
+    SYNC_ITEM_MEDIA     : pyrra.RRA_SYNCMGR_TYPE_FILE,
+    SYNC_ITEM_NOTES     : pyrra.RRA_SYNCMGR_TYPE_INK,
+    SYNC_ITEM_TASKS     : pyrra.RRA_SYNCMGR_TYPE_TASK
 }
 
 GUID_WM5_ACTIVESYNC_ENGINE = "{176F4FFD-F20C-4BD4-BDD7-01D0726C567B}"
