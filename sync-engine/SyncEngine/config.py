@@ -29,6 +29,7 @@ import logging
 import libxml2
 import xml2util
 import shutil
+import errno
 from formatapi import SupportedFormats,DefaultFormat
 
 #
@@ -338,6 +339,12 @@ class Config:
 	def _ScanConfigFile(self,path):
 		try:
 			f = open(path, "rb")
+		except IOError, e:
+			if e.errno == errno.ENOENT:
+				self.logger.info("UpdateConfig - no config file at %s - using defaults" % (path))
+			else:
+				self.logger.info("UpdateConfig - unable to open config file %s (%s) - using defaults" % (path, e))
+			return False
 		except Exception, e:
 			self.logger.info("UpdateConfig - unable to open config file %s (%s) - using defaults" % (path, e))
 			return False
