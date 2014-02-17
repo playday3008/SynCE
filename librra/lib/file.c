@@ -20,9 +20,15 @@ bool rra_file_unpack(
   char *tmp_path, *parsepath = NULL;
   uint8_t *tmp_content = NULL;
 
-  /* first 4 bytes are a little-endian unsigned int
-   * containing the file type */
-  filetype = letoh32(*((DWORD*)data));
+  /* first 4 bytes are metadata
+   * We used to think the whole was a little-endian unsigned int
+   * containing the file type. However, while the first byte is
+   * identical on all encountered devices, the second byte for files
+   * is zero on WM5, and 0x08 on WM2003. We therefore use just the
+   * first byte as the file type.
+   * 
+   */
+  filetype = *((BYTE*)data);
 
   /* next comes the path and file name in UCS-16, find
    * a 2 byte NULL ending the file name */
