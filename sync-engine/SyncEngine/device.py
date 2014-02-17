@@ -104,9 +104,16 @@ class Device(gobject.GObject):
 			self.iface_addr = self.dev_iface.GetIfaceAddress()
 
 		self.dev_iface.connect_to_signal("PasswordFlagsChanged", self._CBDeviceAuthStateChanged)
+		self.deviceName = self.dev_iface.GetName()
 		self.name = self.dev_iface.GetName()
 		self.logger.info(" device %s connected" % self.name)
 		self.devicePath = objpath
+
+		os_major, os_minor = self.dev_iface.GetOsVersion()
+		if os_major < 5:
+			self.pim_type = PIM_TYPE_RRA
+		else:
+			self.pim_type = PIM_TYPE_AIRSYNC
 
 	#
 	# _CBDeviceAuthStateChanged
@@ -235,30 +242,32 @@ class Device(gobject.GObject):
 		pship = self.PshipManager.GetCurrentPartnership()
 	
 		# check if DTPT is enabled for this partnership - if so, start it
+		# ## assuming here that pre WM5 doesn't support DTPT, need to check this
+		if self.pim_type != PIM_TYPE_RRA:
+			mh = pship.QueryConfig("/syncpartner-config/DTPT/Enabled[position()=1]","0")
+			gh = self.config.config_Global.cfg["EnableDTPT"]
 	
-		mh = pship.QueryConfig("/syncpartner-config/DTPT/Enabled[position()=1]","0")
-		gh = self.config.config_Global.cfg["EnableDTPT"]
-	
-		if mh == "1" and gh == 1:
-			self.logger.debug("StartSessions: DTPT starting")
-			self.dtptsession = dtptserver.DTPTServer(self.iface_addr)
-			self.dtptsession.start()
-		else:
-			self.dtptsession = None
+			if mh == "1" and gh == 1:
+				self.logger.debug("StartSessions: DTPT starting")
+				self.dtptsession = dtptserver.DTPTServer(self.iface_addr)
+				self.dtptsession.start()
+			else:
+				self.dtptsession = None
 
-		self.logger.debug("StartSessions: starting AirSync handler")
-		self.airsync = AirsyncThread(self)
-        	self.sync_begin_handler_id = self.airsync.connect("sync-begin", self._CBStartDeviceTriggeredSync)
-        	self.airsync.start()
+		if self.pim_type == PIM_TYPE_AIRSYNC:
+			self.logger.debug("StartSessions: starting AirSync handler")
+			self.airsync = AirsyncThread(self)
+			self.sync_begin_handler_id = self.airsync.connect("sync-begin", self._CBStartDeviceTriggeredSync)
+			self.airsync.start()
 
-		self.logger.debug("StartSessions: calling RAPI start_replication")
-		self.rapi_session.start_replication()
+			self.logger.debug("StartSessions: calling RAPI start_replication")
+			self.rapi_session.start_replication()
 
-		# The device will never trigger an autosync, or attempt to sync, until
-		# sync_resume is called.
+			# The device will never trigger an autosync, or attempt to sync, until
+			# sync_resume is called.
 
-		self.logger.debug("StartSessions: calling RAPI sync_resume")
-		self.rapi_session.sync_resume()
+			self.logger.debug("StartSessions: calling RAPI sync_resume")
+			self.rapi_session.sync_resume()
 
 		self.logger.debug("StartSessions: starting RRA session")
 		self.RRASession.StartRRAEventHandler()

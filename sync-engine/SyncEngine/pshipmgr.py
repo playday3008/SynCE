@@ -89,6 +89,38 @@ class PartnershipManager:
 	
 			self.logger.warn("ReadDevicePartnerships: Error opening partnership keys in remote registry (%d, %s)" % (e.err_code, e))
 
+
+		# pre-WM5 does not store much information about the partnership on
+		# the device, so we gather what we can and fill in the remainder from
+		# the host bindings later, including enabled sync items
+
+		if self.device.pim_type != PIM_TYPE_AIRSYNC:
+			self.logger.debug("ReadDevicePartnerships: RRA device, initializing partnerships from registry entries only")
+
+			for hostname in reg_entries.keys():
+				pos, id = reg_entries[hostname]
+
+				guid = "RRA-"+str(id)
+
+				# partnership name must be obtained from host bindings later
+				name = ""
+
+				storetype = PSHMGR_STORETYPE_AS
+				if pos == 3:
+					storetype = PSHMGR_STORETYPE_EXCH
+
+				pship = Partnership(self.device.config,
+						    pos,
+						    id, guid,
+						    hostname, name,
+						    storetype,
+						    self.device.deviceName,
+						    self.device.rapi_session)
+
+				self.DevicePartnerships[pos-1] = pship
+
+			return
+
 		# Look up the synchronization data on each
 		
 		self.logger.debug("ReadDevicePartnerships: querying synchronization source information from device")
@@ -293,45 +325,15 @@ class PartnershipManager:
 			return True
 
 	#
-	# CreateNewPartnership (formerly add)
+	# _CreateConfigSource
 	#
-	# Allows us to create a brand new device-host binding if there is a free slot.
-	# This call will also make the new binding current.
+	# INTERNAL
 	#
-	# Add a new partnership, make it current if we do not have one
+	# Create the synchronization config data source
 	#
 
-	def CreateNewPartnership(self, name, sync_items):
+	def _CreateConfigSource(self, pship, sync_items):
 
-		# Basic argument checking
-
-		if len(name) > 20:
-			raise errors.InvalidArgument("name too long (20 chars max)")
-
-		for item in sync_items:
-			if not item in SYNC_ITEMS:
-				raise errors.InvalidArgument("sync item identifier %d is invalid" % item)
-
-		if not (None in self.DevicePartnerships[0:2]):
-			raise errors.NoFreeSlots("all slots are currently full")
-
-		slot = self.DevicePartnerships[0:2].index(None) + 1
-
-		self.logger.debug("CreateNewPartnership: attempting to create new partnership in slot %d", slot)
-		pship = Partnership(self.device.config, 
-		                    slot, 
-				    util.generate_id(), util.generate_guid(), 
-				    socket.gethostname(), name,
-				    PSHMGR_STORETYPE_AS,
-				    self.device.deviceName,
-				    self.device.rapi_session)
-
-		for item in sync_items:
-			self.logger.debug("CreateNewPartnership: adding synchronization item %s", item)
-			pship.devicesyncitems.append(item)
-
-		# Create the synchronization config data source
-	
 		source = characteristics.Characteristic(pship.info.guid)
 		source["Name"] = pship.info.name
 		source["Server"] = pship.info.hostname
@@ -370,9 +372,61 @@ class PartnershipManager:
 			provider["Name"] = item_str
 			providers.add_child(provider)
 
-		self.logger.debug("CreateNewPartnership: setting synchronization data source \n%s", source)
+		return source
 
-		self.device.rapi_session.SetConfig("Sync.Sources", source)
+	#
+	# CreateNewPartnership (formerly add)
+	#
+	# Allows us to create a brand new device-host binding if there is a free slot.
+	# This call will also make the new binding current.
+	#
+	# Add a new partnership, make it current if we do not have one
+	#
+
+	def CreateNewPartnership(self, name, sync_items):
+
+		# Basic argument checking
+
+		if len(name) > 20:
+			raise errors.InvalidArgument("name too long (20 chars max)")
+
+		for item in sync_items:
+			if not item in SYNC_ITEMS:
+				raise errors.InvalidArgument("sync item identifier %d is invalid" % item)
+
+		if not (None in self.DevicePartnerships[0:2]):
+			raise errors.NoFreeSlots("all slots are currently full")
+
+		slot = self.DevicePartnerships[0:2].index(None) + 1
+
+		self.logger.debug("CreateNewPartnership: attempting to create new partnership in slot %d", slot)
+		if self.device.pim_type == PIM_TYPE_AIRSYNC:
+			id = util.generate_id()
+			guid = util.generate_guid()
+		else:
+			id = util.generate_id()
+			# GUID has no meaning with RRA devices, so we use it with
+			# the partnership id to identify the type of partnership
+			guid = "RRA-"+str(id)
+
+		pship = Partnership(self.device.config, 
+		                    slot, 
+				    id, guid, 
+				    socket.gethostname(), name,
+				    PSHMGR_STORETYPE_AS,
+				    self.device.deviceName,
+				    self.device.rapi_session)
+
+		for item in sync_items:
+			self.logger.debug("CreateNewPartnership: adding synchronization item %s", item)
+			pship.devicesyncitems.append(item)
+
+		if self.device.pim_type != PIM_TYPE_RRA:
+			# Create the synchronization config data source
+			source = self._CreateConfigSource(pship, sync_items)
+			self.logger.debug("CreateNewPartnership: setting synchronization data source \n%s", source)
+
+			self.device.rapi_session.SetConfig("Sync.Sources", source)
 
 		# Update the registry
 
@@ -384,7 +438,8 @@ class PartnershipManager:
 
 		key = partners_key.create_sub_key("P%d" % slot)
 		key.set_value("PId", pship.info.id)
-		key.set_value("DataSourceID", pship.info.guid)
+		if self.device.pim_type != PIM_TYPE_RRA:
+			key.set_value("DataSourceID", pship.info.guid)
 		key.set_value("PName", pship.info.hostname)
 		key.close()
 
@@ -443,7 +498,8 @@ class PartnershipManager:
 						hklm.delete_sub_key(r"Software\Microsoft\Windows CE Services\Partners\P%d" % pship.slot)
 
 					self.logger.debug("DeletePartnership: removing partnership %s from device", pship)
-					self.device.rapi_session.RemoveConfig("Sync.Sources", pship.info.guid)
+					if self.device.pim_type != PIM_TYPE_RRA:
+						self.device.rapi_session.RemoveConfig("Sync.Sources", pship.info.guid)
 
 					self.logger.debug("DeletePartnership: cleaning up partnership")
 					pship.DeleteBinding()
@@ -502,10 +558,18 @@ class PSInfo:
 
 	def isEqual(self, b):
 		
-		if self.id == b.id and self.guid == b.guid and self.name == b.name:
-			return True
+		# We don't have access to the name of an RRA partnership until the bindings are
+		# loaded, therefore we match on an empty name
+		if "RRA-" in self.guid:
+			if self.id == b.id and self.guid == b.guid and (self.name == b.name or self.name == "" or b.name == ""):
+				return True
+			else:
+				return False
 		else:
-			return False
+			if self.id == b.id and self.guid == b.guid and self.name == b.name:
+				return True
+			else:
+				return False
  	
 	#
 	# Debug dumps...
@@ -590,6 +654,10 @@ class Partnership:
 			self.rapisession.SyncTimeToPc()
 		else:
 			self.logger.info("synchronization of time to host is disabled")
+
+		# Don't think DTPT works on pre-WM5 devices
+		if "RRA-" in self.info.guid:
+			return
 			
 		# 2. Set up DTPT
 		
@@ -831,6 +899,13 @@ class Partnership:
 			# everything down the wire when an item is deselected then subsequently
 			# selected is handled in the itemDB
 
+			# For an RRA device, we use the binding lastSyncItems field to store the enabled items
+			# so we need to reload devicesyncitems from this field
+			# The partnership name is also only available from the bindings
+			if "RRA-" in self.info.guid:
+				self.devicesyncitems = self.info.lastSyncItems
+				self.name = self.info.name
+
 			self.info.lastSyncItems = self.devicesyncitems
 
 			# Binding is now complete
@@ -893,6 +968,10 @@ class Partnership:
 		
 		self._CreateNewConfig()
 		
+		# for an RRA device, we use the binding lastSyncItems field to store the enabled items
+		if "RRA-" in self.info.guid:
+			self.info.lastSyncItems = self.devicesyncitems
+
 		# save out our info
 					
 		try:

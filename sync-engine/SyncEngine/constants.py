@@ -137,6 +137,12 @@ RRA_PORT     = 5678
 AIRSYNC_PORT = 26675
 
 #
+# device types
+
+PIM_TYPE_RRA = 1
+PIM_TYPE_AIRSYNC = 2
+
+#
 # Storetypes for partnerships
 
 PSHMGR_STORETYPE_AS   = 2
