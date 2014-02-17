@@ -98,12 +98,13 @@ class Device(gobject.GObject):
 			device_obj = dbus.SystemBus().get_object("org.synce.odccm",objpath)
 			self.dev_iface = dbus.Interface(device_obj,"org.synce.odccm.Device")
 			self.iface_addr = "0.0.0.0"
+			self.dev_iface.connect_to_signal("PasswordFlagsChanged", self._CBOdccmDeviceAuthStateChanged)
 		else:
 			device_obj = dbus.SystemBus().get_object("org.synce.dccm", objpath)
 			self.dev_iface = dbus.Interface(device_obj,"org.synce.dccm.Device")
 			self.iface_addr = self.dev_iface.GetIfaceAddress()
+			self.dev_iface.connect_to_signal("PasswordFlagsChanged", self._CBUdevDeviceAuthStateChanged)
 
-		self.dev_iface.connect_to_signal("PasswordFlagsChanged", self._CBDeviceAuthStateChanged)
 		self.deviceName = self.dev_iface.GetName()
 		self.name = self.dev_iface.GetName()
 		self.logger.info(" device %s connected" % self.name)
@@ -116,16 +117,31 @@ class Device(gobject.GObject):
 			self.pim_type = PIM_TYPE_AIRSYNC
 
 	#
-	# _CBDeviceAuthStateChanged
+	# _CBOdccmDeviceAuthStateChanged
 	#
 	# INTERNAL
 	#
 	# Callback triggered when a device authorization state is changed
 	#
 
-	def _CBDeviceAuthStateChanged(self,added,removed):
+	def _CBOdccmDeviceAuthStateChanged(self,added,removed):
 			
-		self.logger.info("_CBDeviceAuthStateChanged: device authorization state changed: reauthorizing")
+		self.logger.info("_CBOdccmDeviceAuthStateChanged: device authorization state changed: reauthorizing")
+		if not self.isConnected:
+			if self.ProcessAuth():
+				self.OnConnect()
+
+	#
+	# _CBUdevDeviceAuthStateChanged
+	#
+	# INTERNAL
+	#
+	# Callback triggered when a device authorization state is changed
+	#
+
+	def _CBUdevDeviceAuthStateChanged(self,flag):
+			
+		self.logger.info("_CBUdevDeviceAuthStateChanged: device authorization state changed: reauthorizing")
 		if not self.isConnected:
 			if self.ProcessAuth():
 				self.OnConnect()
