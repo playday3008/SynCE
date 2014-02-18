@@ -950,9 +950,9 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 		# get us a list of object IDs - we need this to know what we
 		# can support.
 
-		oj = self.GetObjectTypes()
+		objtypes = self.GetObjectTypes()
 		
-		self.logger.debug("have %d object types" % len(oj))
+		self.logger.debug("have %d object types" % len(objtypes))
 		
 		# If we have other ID processor classes available, make sure we 
 		# assign them here, in this loop. We only have 'File' types here
@@ -965,9 +965,9 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 		
 		# scan for object types
 		
-		for ot in oj:
-			if ot.name1 == "File":
-				self.tidhandlers[ot.id] = ObjTypeHandler(ot.name1,FileProcessor(ot.id,pship,self))
+		for objtype in objtypes:
+			if objtype.name1 == "File":
+				self.tidhandlers[objtype.id] = ObjTypeHandler(objtype.name1,FileProcessor(objtype.id,pship,self))
 			
 		# search for and subscribe to events specified by the partnership
 			
@@ -982,7 +982,7 @@ class RRAThread(pyrra.RRASession,threading.Thread):
 							self.tidhandlers[tid].subscribed=True
 							rc=True
 						except pyrra.RRAError, e:
-							self.logger.debug("Subscribe failed: type %s: %s" % (self.tidhandlers[oid].name, e))
+							self.logger.debug("Subscribe failed: type %s: %s" % (self.tidhandlers[tid].name, e))
 		return rc
 
 
