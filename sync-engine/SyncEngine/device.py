@@ -591,13 +591,18 @@ class Device(gobject.GObject):
 		try:
 			cpship = self.CheckAndGetValidPartnership()
 			if cpship.info.id == id:
-				self.logger.debug("DeletePartnership: calling sync pause")
-				self.rapi_session.sync_pause()
+				if self.pim_type != PIM_TYPE_RRA:
+					self.logger.debug("DeletePartnership: calling sync pause")
+					self.rapi_session.sync_pause()
+				self.logger.debug("DeletePartnership: stopping sessions")
 				self.StopSessions()
 				self.WaitForStoppingSessions()
-		except Exception,e:
+		except NoBoundPartnership,e:
 			# ignore if we have no valid partnership
 			pass
+		except Exception,e:
+			self.logger.warning("DeletePartnership: encountered a problem stopping sessions: %s" % str(e))
+			self.logger.warning("DeletePartnership: trying to delete partnership anyway")
 
 		self.PshipManager.DeleteDevicePartnership(id,guid)
 	
