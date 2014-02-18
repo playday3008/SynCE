@@ -77,7 +77,6 @@ class Device(gobject.GObject):
 		# RAPI connection to the device
 		self.rapi_session = None	
 
-#		self.rra = None
 		# RRA connection to the device
 		self.RRASession = rrasyncmanager.RRASyncManager(self)
 
@@ -88,7 +87,6 @@ class Device(gobject.GObject):
 		self.sync_begin_handler_id = None
 		self.autosync_triggered = False
 
-#		self.device = None
 		self.deviceName = ""
 		self.devicePath = ""
 		self.iface_addr = ""
@@ -106,8 +104,7 @@ class Device(gobject.GObject):
 			self.dev_iface.connect_to_signal("PasswordFlagsChanged", self._CBUdevDeviceAuthStateChanged)
 
 		self.deviceName = self.dev_iface.GetName()
-		self.name = self.dev_iface.GetName()
-		self.logger.info(" device %s connected" % self.name)
+		self.logger.info(" device %s connected" % self.deviceName)
 		self.devicePath = objpath
 
 		os_major, os_minor = self.dev_iface.GetOsVersion()
@@ -156,7 +153,7 @@ class Device(gobject.GObject):
 
 	def ProcessAuth(self):
 
-		self.logger.info("ProcessAuth : processing authorization for device '%s'" % self.name) 
+		self.logger.info("ProcessAuth : processing authorization for device '%s'" % self.deviceName) 
 		rc=True
 		if auth.IsAuthRequired(self.dev_iface):
 		
@@ -180,7 +177,7 @@ class Device(gobject.GObject):
 				self.logger.info("Failed to authorize - disconnect and reconnect device to try again")
 				rc = False
 		else:
-			self.logger.info("ProcessAuth: authorization not required for device '%s'" % self.name)
+			self.logger.info("ProcessAuth: authorization not required for device '%s'" % self.deviceName)
 			self.isConnected = True
 
 		return rc
@@ -203,7 +200,7 @@ class Device(gobject.GObject):
 		# and start the sessions
 
 		self.logger.debug("OnConnect: setting up RAPI session")
-		self.rapi_session = rapicontext.RapiContext(self.name, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
+		self.rapi_session = rapicontext.RapiContext(self.deviceName, pyrapi2.SYNCE_LOG_LEVEL_DEFAULT)
 
 		self.logger.debug("OnConnect: Attempting to bind partnerships")
 		self.PshipManager.AttemptToBind()
