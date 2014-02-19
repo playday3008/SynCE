@@ -12,6 +12,14 @@
 #include <string.h>
 #include <sys/param.h> /* for MIN(a,b) */
 
+/** 
+ * @defgroup RRASyncmgr RRA Syncmgr public API
+ * @ingroup RRA
+ * @brief The public RRASyncmgr API
+ *
+ * @{ 
+ */ 
+
 #define VERBOSE 0
 
 static const char* RRA_DIRECTORY    = "rra";
@@ -159,6 +167,12 @@ exit:
   return success;
 }/*}}}*/
 
+/** @brief Create an RRASyncMgr object
+ * 
+ * This function creates an RRASyncMgr to perform synchronisation tasks.
+ * 
+ * @return address of the RRASyncMgr object
+ */ 
 RRA_SyncMgr* rra_syncmgr_new()/*{{{*/
 {
   RRA_SyncMgr* self = (RRA_SyncMgr*)calloc(1, sizeof(RRA_SyncMgr));
@@ -170,6 +184,13 @@ RRA_SyncMgr* rra_syncmgr_new()/*{{{*/
   return self;
 }/*}}}*/
 
+/** @brief Destroy an RRASyncMgr object
+ * 
+ * This function disconnects the RRASyncMgr, if it is connected,
+ * and then destroys the object.
+ * 
+ * @param[in] self address of the object of which to destroy
+ */ 
 void rra_syncmgr_destroy(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
@@ -182,6 +203,15 @@ void rra_syncmgr_destroy(RRA_SyncMgr* self)/*{{{*/
   }
 }/*}}}*/
 
+/** @brief Connect an RRASyncMgr object
+ * 
+ * This function requests the RRASyncMgr to connect to a
+ * device, using the given initialised session.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] session IRAPISession initialised to the device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_connect(RRA_SyncMgr* self, IRAPISession *session)/*{{{*/
 {
   if (self)
@@ -197,6 +227,12 @@ bool rra_syncmgr_connect(RRA_SyncMgr* self, IRAPISession *session)/*{{{*/
   }
 }/*}}}*/
 
+/** @brief Disconnect an RRASyncMgr object
+ * 
+ * This function disconnects the RRASyncMgr.
+ * 
+ * @param[in] self address of the object of which to disconnect
+ */ 
 void rra_syncmgr_disconnect(RRA_SyncMgr* self)/*{{{*/
 {
   if (self) 
@@ -206,11 +242,28 @@ void rra_syncmgr_disconnect(RRA_SyncMgr* self)/*{{{*/
   }
 }/*}}}*/
 
+/** @brief Determine if an RRASyncMgr object is connected
+ * 
+ * This function is used to determine if an RRASyncMgr
+ * is connected.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return TRUE if connected, FALSE if disconnected
+ */ 
 bool rra_syncmgr_is_connected(RRA_SyncMgr* self)
 {
   return self && rrac_is_connected(self->rrac);
 }
 
+/** @brief Get number of object types
+ * 
+ * This function is used to determine the number of object 
+ * types supported by the device. The RRASyncMgr must be 
+ * connected.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return number of object types
+ */ 
 uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
@@ -219,6 +272,17 @@ uint32_t rra_syncmgr_get_type_count(RRA_SyncMgr* self)/*{{{*/
     return 0;
 }/*}}}*/
 
+/** @brief Get list of object types
+ * 
+ * This function returns the list of information about object
+ * types supported by the device. The RRASyncMgr must be 
+ * connected.
+ * 
+ * The list is owned by the SyncMgr, and must not be modified.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return array of RRA_SyncMgrType pointers
+ */ 
 const RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)/*{{{*/
 {
   if (self)
@@ -227,6 +291,18 @@ const RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)/*{{{*/
     return NULL;
 }/*}}}*/
 
+/** @brief Get information about an object type, by id
+ * 
+ * This function returns the information about an object
+ * types supported by the device, with a particular RRA id.
+ * The RRASyncMgr must be  connected.
+ * 
+ * The returned data is owned by the SyncMgr, and must not be modified.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] RRA id of the type
+ * @return RRA_SyncMgrType pointer
+ */ 
 const RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id)/*{{{*/
 {
   RRA_SyncMgrType* result = NULL;
@@ -251,6 +327,18 @@ exit:
   return result;
 }/*}}}*/
 
+/** @brief Get information about an object type, by name
+ * 
+ * This function returns the information about an object
+ * types supported by the device, with a particular RRA type
+ * name. The RRASyncMgr must be  connected.
+ * 
+ * The returned data is owned by the SyncMgr, and must not be modified.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] RRA name of the type
+ * @return RRA_SyncMgrType pointer
+ */ 
 const RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
 {
   RRA_SyncMgrType* result = NULL;
@@ -1374,3 +1462,5 @@ exit:
   return success;
 }/*}}}*/
 
+
+/** @} */

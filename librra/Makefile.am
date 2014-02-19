@@ -15,4 +15,4 @@ EXTRA_DIST = librra.pc.in LICENSE
 
 CLEANFILES = $(pcfiles) python/pyrra.c
 
-SUBDIRS = lib src man python .
+SUBDIRS = lib src man python docs .
