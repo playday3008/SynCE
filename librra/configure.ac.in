@@ -8,7 +8,7 @@ AC_CONFIG_SRCDIR(lib/syncmgr.h)
 dnl AC_CANONICAL_HOST
 dnl AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([1.4])
 
 dnl Checks for programs.
 AC_PROG_AWK

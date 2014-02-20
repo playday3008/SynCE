@@ -1,7 +1,7 @@
 AM_CFLAGS = @LIBSYNCE_CFLAGS@
 AM_LDFLAGS = @LIBSYNCE_LIBS@
 
-INCLUDES = -I$(top_srcdir)/lib
+AM_CPPFLAGS = -I$(top_srcdir)/lib
 LDADD = -L$(top_builddir)/lib $(top_builddir)/lib/librra.la
 
 MINOR_TOOLS_LIST = rra-get-types rra-get-ids \
