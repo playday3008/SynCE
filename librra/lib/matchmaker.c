@@ -10,6 +10,14 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+/** 
+ * @defgroup RRA_Matchmaker RRA Matchmaker public API
+ * @ingroup RRA
+ * @brief The public RRAMatchmaker API
+ *
+ * @{ 
+ */ 
+
 static const char* PARTNERS =
 	"Software\\Microsoft\\Windows CE Services\\Partners";
 
@@ -33,6 +41,13 @@ struct _RRA_Matchmaker
 #define KEY_PARTNER_2   2
 #define KEY_COUNT       3
 
+/** @brief Create an RRAMatchmaker object
+ * 
+ * This function creates an RRAMatchmaker to perform partnership administration tasks.
+ * 
+ * @param[in] session IRAPISession initialised to the device
+ * @return address of the RRAMatchmaker object
+ */ 
 RRA_Matchmaker* rra_matchmaker_new(IRAPISession *session)
 {
   HKEY partnersKey;
@@ -70,6 +85,13 @@ RRA_Matchmaker* rra_matchmaker_new(IRAPISession *session)
   return result;
 }
 
+/** @brief Destroy an RRAMatchmaker object
+ * 
+ * This function disconnects the RRAMatchmaker,
+ * and then destroys the object.
+ * 
+ * @param[in] self address of the object of which to destroy
+ */ 
 void rra_matchmaker_destroy(RRA_Matchmaker* matchmaker)
 {
   if (matchmaker)
@@ -141,6 +163,14 @@ static bool rra_matchmaker_open_key(RRA_Matchmaker* matchmaker, uint32_t index)
     return false;
 }
 
+/** @brief Sets current partnership
+ * 
+ * This function sets the current partnership on a device.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[in] index index of the partnership, 1 or 2
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_matchmaker_set_current_partner(RRA_Matchmaker* matchmaker, uint32_t index)
 {
   if (!(index == 1 || index == 2))
@@ -156,6 +186,14 @@ bool rra_matchmaker_set_current_partner(RRA_Matchmaker* matchmaker, uint32_t ind
   return ERROR_SUCCESS == result;
 }
 
+/** @brief Gets current partnership
+ * 
+ * This function gets the index of the current partnership on a device.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[out] index index of the current partnership, 1 or 2
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_matchmaker_get_current_partner(RRA_Matchmaker* matchmaker, uint32_t* index)
 {
   DWORD type;
@@ -188,6 +226,15 @@ static bool rra_matchmaker_set_partner_id(RRA_Matchmaker* matchmaker, uint32_t i
   return ERROR_SUCCESS == result;
 }
 
+/** @brief Get id of a partnership
+ * 
+ * This function gets the id of the specified partnership on a device.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[in] index index of the partnership, 1 or 2
+ * @param[out] id id of the partnership
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_matchmaker_get_partner_id(RRA_Matchmaker* matchmaker, uint32_t index, uint32_t* id)
 {
   if (!rra_matchmaker_open_key(matchmaker, index))
@@ -230,6 +277,15 @@ static bool rra_matchmaker_set_partner_name(RRA_Matchmaker* matchmaker, uint32_t
   return ERROR_SUCCESS == result;
 }
 
+/** @brief Get name of a partnership
+ * 
+ * This function gets the name of the specified partnership on a device.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[in] index index of the partnership, 1 or 2
+ * @param[out] name name of the partnership
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_matchmaker_get_partner_name(RRA_Matchmaker* matchmaker, uint32_t index, char** name)
 {
   if (!rra_matchmaker_open_key(matchmaker, index))
@@ -278,6 +334,18 @@ static char* rra_matchmaker_get_filename(uint32_t id)
   return strdup(filename);
 }
 
+/** @brief Create a partnership
+ * 
+ * This function creates a new partnership on a device, in the specified
+ * slot. It will not overwrite an existing partnership at this index.
+
+ * The partnership id is randomly generated, and the name is the hosts
+ * hostname. A partnership file is written to the synce rra directory.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[in] index index of the partnership, 1 or 2
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_matchmaker_new_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
 {
   bool success = false;
@@ -396,6 +464,17 @@ exit:
   return success;
 }
 
+/** @brief Remove a partnership
+ * 
+ * This function removes an existing partnership from a device, in
+ * the specified slot.
+
+ * It also removes the partnership file in the synce rra directory.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[in] index index of the partnership, 1 or 2
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_matchmaker_clear_partnership(RRA_Matchmaker* matchmaker, uint32_t index)
 {
   bool success = false;
@@ -436,6 +515,18 @@ exit:
   return success;
 }
 
+/** @brief Checks for a partnership
+ * 
+ * This function checks for a valid partnership on a device, in
+ * the specified slot.
+ *
+ * A valid partnership in this context includes the presence of
+ * a matching partnership file in the synce rra directory.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[in] index index of the partnership, 1 or 2
+ * @return TRUE if present, FALSE otherwise
+ */ 
 bool rra_matchmaker_have_partnership_at(RRA_Matchmaker* matchmaker, uint32_t index)
 {
   bool success = false;
@@ -495,6 +586,18 @@ exit:
   return success;
 }
 
+/** @brief Checks for a partnership
+ * 
+ * This function checks for a valid partnership on a device, in
+ * either slot.
+ *
+ * A valid partnership in this context includes the presence of
+ * a matching partnership file in the synce rra directory.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[out] index index of the partnership, 1 or 2
+ * @return TRUE if present, FALSE otherwise
+ */ 
 bool rra_matchmaker_have_partnership(RRA_Matchmaker* matchmaker, uint32_t* index)
 {
   bool success = false;
@@ -514,6 +617,18 @@ exit:
   return success;
 }
 
+/** @brief Create a partnership
+ * 
+ * This function creates a new partnership on a device, in any available
+ * slot. It will not create a partnership if a valid one already exists.
+
+ * The partnership id is randomly generated, and the name is the hosts
+ * hostname. A partnership file is written to the synce rra directory.
+ * 
+ * @param[in] self address of the RRAMatchmaker
+ * @param[out] index index of the partnership, 1 or 2
+ * @return TRUE on success, or if a partnership already exists, FALSE on otherwise
+ */ 
 bool rra_matchmaker_create_partnership(RRA_Matchmaker* matchmaker, uint32_t* index)
 {
   bool success = false;
@@ -550,3 +665,4 @@ exit:
   return success;
 }
 
+/** @} */

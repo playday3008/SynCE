@@ -13,9 +13,9 @@
 #include <sys/param.h> /* for MIN(a,b) */
 
 /** 
- * @defgroup RRASyncmgr RRA Syncmgr public API
+ * @defgroup RRA_SyncMgr RRA SyncMgr public API
  * @ingroup RRA
- * @brief The public RRASyncmgr API
+ * @brief The public RRASyncMgr API
  *
  * @{ 
  */ 
@@ -300,7 +300,7 @@ const RRA_SyncMgrType* rra_syncmgr_get_types(RRA_SyncMgr* self)/*{{{*/
  * The returned data is owned by the SyncMgr, and must not be modified.
  * 
  * @param[in] self address of the RRASyncMgr instance
- * @param[in] RRA id of the type
+ * @param[in] type_id RRA id of the type
  * @return RRA_SyncMgrType pointer
  */ 
 const RRA_SyncMgrType* rra_syncmgr_type_from_id(RRA_SyncMgr* self, uint32_t type_id)/*{{{*/
@@ -336,7 +336,7 @@ exit:
  * The returned data is owned by the SyncMgr, and must not be modified.
  * 
  * @param[in] self address of the RRASyncMgr instance
- * @param[in] RRA name of the type
+ * @param[in] name RRA name of the type
  * @return RRA_SyncMgrType pointer
  */ 
 const RRA_SyncMgrType* rra_syncmgr_type_from_name(RRA_SyncMgr* self, const char* name)/*{{{*/
@@ -364,6 +364,15 @@ exit:
   return result;
 }/*}}}*/
 
+/** @deprecated Not used by any current applications
+ * @brief Get deleted ids from local database
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type id
+ * @param[in] current_ids list of current ids
+ * @param[out] deleted_ids list of deleted ids
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_get_deleted_object_ids(/*{{{*/
     RRA_SyncMgr* self,
     uint32_t type_id,
@@ -490,6 +499,14 @@ exit:
   return success;
 }/*}}}*/
 
+/** @deprecated Not used by any current applications
+ * @brief Remove deleted ids from local database
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type id
+ * @param[in] deleted_ids list of deleted ids
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_purge_deleted_object_ids(/*{{{*/
     RRA_SyncMgr* self,
     uint32_t type_id,
@@ -601,6 +618,14 @@ exit:
   return success;
 }/*}}}*/
 
+/** @deprecated Not used by any current applications
+ * @brief Add object ids to local database
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type id
+ * @param[in] added_ids list of ids to add
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_register_added_object_ids(/*{{{*/
     RRA_SyncMgr* self,
     uint32_t type_id,
@@ -689,6 +714,16 @@ exit:
   return success;
 }/*}}}*/
 
+/** @brief Subscribe to events
+ * 
+ * This function registers the SyncMgr to receive events of
+ * the specified type. The RRASyncMgr must be  connected.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type RRA id of the type
+ * @param[in] callback function pointer to execute for events
+ * @param[in] cookie user data to pass to the callback
+ */ 
 void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
   uint32_t type, RRA_SyncMgrTypeCallback callback, void* cookie)
 {
@@ -705,6 +740,14 @@ void rra_syncmgr_subscribe(RRA_SyncMgr* self, /*{{{*/
     synce_error("RRA_SyncMgr pointer is NULL");
 }/*}}}*/
 
+/** @brief Unsubscribe from events
+ * 
+ * This function unregisters the SyncMgr from receivinge events
+ * of the specified type. The RRASyncMgr must be  connected.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type RRA id of the type
+ */ 
 void rra_syncmgr_unsubscribe(RRA_SyncMgr* self, uint32_t type) /*{{{*/
 {
   if (self)
@@ -719,6 +762,14 @@ void rra_syncmgr_unsubscribe(RRA_SyncMgr* self, uint32_t type) /*{{{*/
   }
 }/*}}}*/   
 
+/** @brief Notify the device to start sending
+ * 
+ * This function requests that the device begin sending events
+ * of the types previously subscribed to.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_start_events(RRA_SyncMgr* self)/*{{{*/
 {
   bool success = false;
@@ -767,6 +818,14 @@ exit:
   return success;
 }/*}}}*/
 
+/** @brief Get event file descriptor
+ * 
+ * This function retrieves the file descriptor that
+ * receives events.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return event file descriptor
+ */ 
 int rra_syncmgr_get_event_descriptor(RRA_SyncMgr* self)/*{{{*/
 {
   if (self && self->rrac)
@@ -775,6 +834,14 @@ int rra_syncmgr_get_event_descriptor(RRA_SyncMgr* self)/*{{{*/
     return SYNCE_SOCKET_INVALID_DESCRIPTOR;
 }/*}}}*/
 
+/** @brief Test for pending events
+ * 
+ * This function checks if there are events pending from the
+ * device.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return TRUE is events are pending, FALSE if not
+ */ 
 bool rra_syncmgr_event_pending(RRA_SyncMgr* self)/*{{{*/
 {
   if (self && self->rrac)
@@ -783,6 +850,16 @@ bool rra_syncmgr_event_pending(RRA_SyncMgr* self)/*{{{*/
     return false;
 }/*}}}*/
 
+/** @brief Wait for events
+ * 
+ * This function checks if there are events pending from the
+ * device, and waits for the specified time if there are not.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] timeoutInSeconds time to wait
+ * @param[out] got_event TRUE if events are pending
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_event_wait(RRA_SyncMgr* self, int timeoutInSeconds, bool* got_event)/*{{{*/
 {
   if (self && self->rrac)
@@ -956,6 +1033,13 @@ static bool rra_syncmgr_on_notify(RRA_SyncMgr* self, SyncCommand* command)/*{{{*
   return success;
 }/*}}}*/
 
+/** @brief Handle a single event
+ * 
+ * This function handles a single pending event.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_handle_event(RRA_SyncMgr* self)/*{{{*/
 {
   bool success = false;
@@ -994,6 +1078,14 @@ bool rra_syncmgr_handle_event(RRA_SyncMgr* self)/*{{{*/
   return success;
 }/*}}}*/
 
+/** @brief Handle all pending events
+ * 
+ * This function handles all pending events in the queue.
+ * processing is stopped on failure to process an event.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_handle_all_pending_events(RRA_SyncMgr* self)/*{{{*/
 {
   if (!self)
@@ -1014,6 +1106,20 @@ bool rra_syncmgr_handle_all_pending_events(RRA_SyncMgr* self)/*{{{*/
   return true;
 }/*}}}*/
 
+/** @brief Get object data for multiple objects
+ * 
+ * This function fetches the object data for multiple object ids
+ * from the device. Processing is stopped on failure to retrieve
+ * an object. The callback writer is called for each object.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type of the objects
+ * @param[in] object_id_count the number of objects requested
+ * @param[in] object_id_array array of object ids
+ * @param[in] writer callback function to process each object
+ * @param[in] cookie user data to pass to the callback
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_get_multiple_objects(RRA_SyncMgr* self, /*{{{*/
     uint32_t type_id,
     uint32_t object_id_count,
@@ -1104,6 +1210,16 @@ static bool rra_syncmgr_get_single_object_writer(/*{{{*/
   return true;
 }/*}}}*/
 
+/** @brief Mark an object as unchanged
+ * 
+ * This function marks the object as unchanged, so it is
+ * not reported as an event until later modified.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type of the object
+ * @param[in] object_id the object id
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_mark_object_unchanged(
     RRA_SyncMgr* self, 
     uint32_t type_id,
@@ -1128,6 +1244,18 @@ exit:
   return success;
 }
 
+/** @brief Get object data for a single object
+ * 
+ * This function fetches the object data for the specified object id
+ * from the device.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type of the object
+ * @param[in] object_id the object id
+ * @param[out] data address of a pointer to receive location of the data, this buffer belongs to the application and must be free'd
+ * @param[out] data_size address of a location to receive the data size
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_get_single_object(RRA_SyncMgr* self, /*{{{*/
     uint32_t type_id,
     uint32_t object_id,
@@ -1168,6 +1296,23 @@ exit:
 
 #define SYNCMGRREADER_BUFFER_SIZE   32768
 
+/** @brief Sends object data for multiple objects
+ * 
+ * This function sends the object data for multiple object ids
+ * to the device. The callback writer is called at least once for
+ * each object, and may be called multiple times for a single
+ * object.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type of the objects
+ * @param[in] object_id_count the number of objects
+ * @param[in] object_id_array array of object ids to send
+ * @param[out] recv_object_id_array array of object ids returned, which may be different from those sent
+ * @param[in] flags RRA_SYNCMGR_NEW_OBJECT or RRA_SYNCMGR_UPDATE_OBJECT
+ * @param[in] reader callback function to process each object
+ * @param[in] cookie user data to pass to the callback
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_put_multiple_objects(/*{{{*/
     RRA_SyncMgr* self,  
     uint32_t type_id,
@@ -1380,6 +1525,20 @@ static ssize_t rra_syncmgr_put_single_object_reader(/*{{{*/
   }
 }/*}}}*/
 
+/** @brief Sends object data for a single object
+ * 
+ * This function sends the object data for a single object id
+ * to the device.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type of the object
+ * @param[in] object_id object id to send
+ * @param[in] flags RRA_SYNCMGR_NEW_OBJECT or RRA_SYNCMGR_UPDATE_OBJECT
+ * @param[in] data the data to send
+ * @param[in] data_size size of the data to send
+ * @param[out] new_object_id_array object id returned, which may be different from that sent
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_put_single_object(/*{{{*/
     RRA_SyncMgr* self,  
     uint32_t type_id,
@@ -1416,6 +1575,15 @@ exit:
   return success;
 }/*}}}*/
 
+/** @brief Deletes an object
+ * 
+ * This function deletes an object from the device.
+ * 
+ * @param[in] self address of the RRASyncMgr instance
+ * @param[in] type_id RRA type of the object
+ * @param[in] object_id object id to delete
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_syncmgr_delete_object(/*{{{*/
   RRA_SyncMgr* self, 
   uint32_t type_id, 
