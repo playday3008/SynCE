@@ -125,7 +125,7 @@ static void strbuf_append_comma_separated(StrBuf* result, char* source, uint32_t
     }
 }/*}}}*/
 
-void strbuf_append_escaped_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{{*/
+static void strbuf_append_escaped_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{{*/
 {
   if (wstr)
     {
@@ -141,7 +141,7 @@ void strbuf_append_escaped_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{
     }
 }/*}}}*/
 
-void strbuf_append_comma_separated_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{{*/
+static void strbuf_append_comma_separated_wstr(StrBuf* strbuf, WCHAR* wstr, uint32_t flags)/*{{{*/
 {
   if (wstr)
     {
@@ -211,7 +211,7 @@ static void strbuf_append_date(StrBuf* strbuf, const char* name, FILETIME* filet
   strbuf_append_crlf(strbuf);
 }
 
-void rra_contact_to_vcard2_email(StrBuf* vcard, WCHAR* email, WCHAR* meta, bool pref, uint32_t flags)
+static void rra_contact_to_vcard2_email(StrBuf* vcard, WCHAR* email, WCHAR* meta, bool pref, uint32_t flags)
 {
   if (email)
   {
@@ -230,7 +230,7 @@ void rra_contact_to_vcard2_email(StrBuf* vcard, WCHAR* email, WCHAR* meta, bool 
   }
 };
 
-void rra_contact_to_vcard2_tel(StrBuf* vcard, WCHAR* tel, const char* type, WCHAR* meta, uint32_t flags)
+static void rra_contact_to_vcard2_tel(StrBuf* vcard, WCHAR* tel, const char* type, WCHAR* meta, uint32_t flags)
 {
   if (tel)
   {
@@ -2223,7 +2223,7 @@ exit:
  * all tel_work, tel_home and email must be considered before
  * deciding which will get a slot, as there may be too many
  */
-void enqueue_field(/*{{{*/
+static void enqueue_field(/*{{{*/
 		struct FieldStrings *fs,
 		int *count,
 		struct FieldStrings *data)
@@ -2255,7 +2255,7 @@ void enqueue_field(/*{{{*/
 /*
  * process the queued fields.
  */
-void process_queue(/*{{{*/
+static void process_queue(/*{{{*/
 	Parser *parser,
 	struct FieldStrings *fs,
 	int count)

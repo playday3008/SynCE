@@ -151,7 +151,7 @@ static bool on_propval_start(Generator* g, CEPROPVAL* propval, void* cookie)
 }
 
 #if ENABLE_RECURRENCE
-bool on_propval_unique(Generator* g, CEPROPVAL* propval, void* cookie)
+static bool on_propval_unique(Generator* g, CEPROPVAL* propval, void* cookie)
 {
   GeneratorData* data = (GeneratorData*)cookie;
   data->unique = propval;
