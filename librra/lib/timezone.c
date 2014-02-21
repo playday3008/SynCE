@@ -12,6 +12,14 @@
 #include <string.h>
 #include <time.h>
 
+/** 
+ * @defgroup RRA_Timezone RRA Timezone public API
+ * @ingroup RRA
+ * @brief The public RRATimezone API
+ *
+ * @{ 
+ */ 
+
 #define REGISTRY_KEY_NAME     "Time"
 #define REGISTRY_VALUE_NAME   "TimeZoneInformation"
 
@@ -49,6 +57,15 @@ static const uint8_t default_timezone[172]={
   0x02,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
   0xc4,0xff,0xff,0xff};
 
+/** @brief Fetch timezone information
+ * 
+ * This function fetches the timezone information for a device into
+ * the provided location.
+ * 
+ * @param[out] tzi address of an existing instance to populate
+ * @param[in] session IRAPISession initialised to the device
+ * @return TRUE on success, FALSE on failure
+ */
 bool rra_timezone_get(RRA_Timezone* tzi, IRAPISession *session)/*{{{*/
 {
   bool success = false;
@@ -134,6 +151,15 @@ exit:
 }/*}}}*/
 
 /* XXX: improve ID generation */
+/** @brief Create a timezone ID
+ * 
+ * This function creates a timezone id based on the name of the
+ * timezone and the synce url. The id belongs to the application
+ * and must be free'd.
+ * 
+ * @param[in] tzi address of a valid timezone object
+ * @param[out] id address of a pointer to store the new id
+ */
 void rra_timezone_create_id(RRA_Timezone* tzi, char** id)/*{{{*/
 {
   char* name = wstr_to_ascii(tzi->StandardName);
@@ -267,6 +293,14 @@ static bool using_daylight_saving(RRA_Timezone* tzi, struct tm* time_struct)
   return false;
 }
 
+/** @brief Convert a time to this timezone
+ * 
+ * This function converts the given time in UTC to this timezone.
+ * 
+ * @param[in] tzi address of a valid timezone object
+ * @param[in] unix_time time to convert
+ * @return converted time
+ */
 time_t rra_timezone_convert_from_utc(RRA_Timezone* tzi, time_t unix_time)
 {
   time_t result = RRA_TIMEZONE_INVALID_TIME;
@@ -287,6 +321,14 @@ time_t rra_timezone_convert_from_utc(RRA_Timezone* tzi, time_t unix_time)
   return result;
 }
 
+/** @brief Convert a time from this timezone
+ * 
+ * This function converts the given time in this timezone to UTC.
+ * 
+ * @param[in] tzi address of a valid timezone object
+ * @param[in] unix_time time to convert
+ * @return converted time
+ */
 time_t rra_timezone_convert_to_utc(RRA_Timezone* tzi, time_t unix_time)
 {
   time_t result = RRA_TIMEZONE_INVALID_TIME;
@@ -356,6 +398,15 @@ static void add_tzid(Generator* generator, RRA_Timezone* tzi)/*{{{*/
   rra_timezone_free_id(id);
 }/*}}}*/
 
+/** @brief Write this timezone as a vTimezone
+ * 
+ * This function writes this timezone as a vTimezone inside a
+ * librra Generator object.
+ * 
+ * @param[in,out] generator a librra Generator object
+ * @param[in] tzi address of a valid timezone object
+ * @return TRUE on success, FALSE on failure
+ */
 bool rra_timezone_generate_vtimezone(Generator* generator, RRA_Timezone* tzi)/*{{{*/
 {
   bool success = false;

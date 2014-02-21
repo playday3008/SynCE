@@ -17,6 +17,14 @@
 #include "timezone.h"
 #include "../rra_config.h"
 
+/** 
+ * @defgroup RRA_converters RRA format conversion public API
+ * @ingroup RRA
+ * @brief The public RRA API for converting data objects to and from vcard, vcal etc.
+ *
+ * @{ 
+ */ 
+
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
 #define MINUTES_PER_DAY (24*60)
@@ -227,6 +235,20 @@ static bool on_propval_attendee_notified_time(Generator* g, CEPROPVAL* propval, 
 }
 
 
+/** @brief Convert an RRA appointment to vcal
+ * 
+ * This function converts an appointment in RRA format from a WM
+ * device to vcal format.
+ * 
+ * @param[in] id unique id of the record, or RRA_APPOINTMENT_ID_UNKNOWN
+ * @param[in] data record data to be converted
+ * @param[in] data_size size of the data
+ * @param[out] vevent address of a pointer to recieve the location of the resulting vevent
+ * @param[in] flags bitwise or the flags to control the conversion
+ * @param[in] tzi timezone of the device
+ * @param[in] codepage encoding used by the device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_appointment_to_vevent(/*{{{*/
     uint32_t id,
     const uint8_t* data,
@@ -740,6 +762,20 @@ static bool process_attendees(Parser *p, RRA_MdirLineVector *attendees)/*{{{*/
   return true;
 }
 
+/** @brief Convert to an RRA appointment from vcal
+ * 
+ * This function converts an event in vcal format to RRA format
+ * for a WM device.
+ * 
+ * @param[in] vevent the event to convert
+ * @param[out] id location to store the unique id of the record
+ * @param[out] data location to store the resulting record
+ * @param[out] data_size location to store the size of the data
+ * @param[in] flags bitwise or the flags to control the conversion
+ * @param[in] tzi timezone used by the device
+ * @param[in] codepage encoding used by the device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_appointment_from_vevent(/*{{{*/
     const char* vevent,
     uint32_t* id,

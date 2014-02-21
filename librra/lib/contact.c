@@ -17,6 +17,14 @@
 #include <assert.h>
 #include "internal.h"
 
+/** 
+ * @defgroup RRA_converters RRA format conversion public API
+ * @ingroup RRA
+ * @brief The public RRA API for converting data objects to and from vcard, vcal etc.
+ *
+ * @{ 
+ */ 
+
 #define VERBOSE 0
 
 static const char* product_id = "-//SYNCE RRA//NONSGML Version 1//EN";
@@ -1201,6 +1209,19 @@ exit:
   return success;
 }/*}}}*/
 
+/** @brief Convert an RRA contact to vcard
+ * 
+ * This function converts a contact in RRA format from a WM
+ * device to vcard format.
+ * 
+ * @param[in] id unique id of the record, or RRA_CONTACT_ID_UNKNOWN
+ * @param[in] data record data to be converted
+ * @param[in] data_size size of the data
+ * @param[out] vcard address of a pointer to recieve the location of the resulting vcard
+ * @param[in] flags bitwise or the flags to control the conversion
+ * @param[in] codepage encoding used by the device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_contact_to_vcard(/*{{{*/
 		uint32_t id, 
 		const uint8_t* data, 
@@ -2473,6 +2494,19 @@ exit:
   return success;
 }/*}}}*/
 
+/** @brief Convert to an RRA contact from vcard
+ * 
+ * This function converts a contact in vcard format to RRA format
+ * for a WM device.
+ * 
+ * @param[in] vcard the vcard to convert
+ * @param[out] id location to store the unique id of the record
+ * @param[out] data location to store the resulting record
+ * @param[out] data_size location to store the size of the data
+ * @param[in] flags bitwise or the flags to control the conversion
+ * @param[in] codepage encoding used by the device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_contact_from_vcard(/*{{{*/
 		const char* vcard, 
 		uint32_t* id,

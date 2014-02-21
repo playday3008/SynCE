@@ -11,6 +11,14 @@
 #include <stdio.h>
 #include <string.h>
 
+/** 
+ * @defgroup RRA_converters RRA format conversion public API
+ * @ingroup RRA
+ * @brief The public RRA API for converting data objects to and from vcard, vcal etc.
+ *
+ * @{ 
+ */ 
+
 #define STR_EQUAL(a,b)  (0 == strcasecmp(a,b))
 
 static uint8_t invalid_filetime_buffer[] = 
@@ -97,6 +105,20 @@ static bool on_propval_notes(Generator* g, CEPROPVAL* propval, void* cookie)/*{{
   return process_propval_notes(g, propval, cookie, ((GeneratorData*)cookie)->codepage);
 }
 
+/** @brief Convert an RRA task to vcal
+ * 
+ * This function converts a task in RRA format from a WM
+ * device to vcal format.
+ * 
+ * @param[in] id unique id of the record, or RRA_TASK_ID_UNKNOWN
+ * @param[in] data record data to be converted
+ * @param[in] data_size size of the data
+ * @param[out] vtodo address of a pointer to recieve the location of the resulting vtodo
+ * @param[in] flags bitwise or the flags to control the conversion
+ * @param[in] tzi timezone of the device
+ * @param[in] codepage encoding used by the device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_task_to_vtodo(
     uint32_t id,
     const uint8_t* data,
@@ -308,6 +330,20 @@ static bool on_mdir_line_description(Parser* p, mdir_line* line, void* cookie)
   return process_mdir_line_description(p, line, cookie, ((EventParserData*)cookie)->codepage);
 }
 
+/** @brief Convert to an RRA task from vcal
+ * 
+ * This function converts a task in vcal format to RRA format
+ * for a WM device.
+ * 
+ * @param[in] vtodo the task to convert
+ * @param[out] id location to store the unique id of the record
+ * @param[out] data location to store the resulting record
+ * @param[out] data_size location to store the size of the data
+ * @param[in] flags bitwise or the flags to control the conversion
+ * @param[in] tzi timezone used by the device
+ * @param[in] codepage encoding used by the device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool rra_task_from_vtodo(
     const char* vtodo,
     uint32_t* id,
