@@ -12,3 +12,5 @@ libsynce_la_LIBADD += @DBUS_LIBS@
 endif
 
 SUBDIRS = utils rapi
+
+EXTRA_DIST = mainpage.md
