@@ -86,6 +86,15 @@ guid_to_string(GUID *guid)
  * IRAPISession
  */
 
+/**
+ * @defgroup IRAPISession IRAPISession public API
+ * @ingroup RAPI2 
+ * 
+ * An object representing a command session to a device.
+ *
+ *@{ 
+ */
+
 struct _IRAPISession {
         IRAPIDevice *device;
         RapiContext *context;
@@ -93,6 +102,13 @@ struct _IRAPISession {
 };
 
 
+/** @brief Add a reference to the IRAPISession object
+ * 
+ * This function increases the reference count of the IRAPISession
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to increase the ref count
+ */ 
 void
 IRAPISession_AddRef(IRAPISession *session)
 {
@@ -100,6 +116,13 @@ IRAPISession_AddRef(IRAPISession *session)
         return;
 }
 
+/** @brief Remove a reference to the IRAPISession object
+ * 
+ * This function decreases the reference count of the IRAPISession
+ * object by one.
+ * 
+ * @param[in] self address of the object of which to decrease the ref count
+ */ 
 void
 IRAPISession_Release(IRAPISession *session)
 {
@@ -114,6 +137,14 @@ IRAPISession_Release(IRAPISession *session)
         return;
 }
 
+/** @brief Obtain a reference to the session's device object
+ * 
+ * Obtain a reference to the IRAPIDevice object representing the
+ * device the session is connected to.
+ * 
+ * @param[in] self address of the session object
+ * @return a reference to the device object
+ */ 
 IRAPIDevice *
 IRAPISession_get_device(IRAPISession *session)
 {
@@ -124,6 +155,15 @@ IRAPISession_get_device(IRAPISession *session)
 /*
  * Standard rapi-calls valid for PocketPC 2002/2003 and Windows Mobile 5
  */
+
+/** @brief Free a buffer
+ * 
+ * Free a buffer returned by a previous function call
+ * 
+ * @param[in] self address of the session object
+ * @param[in] self address of the buffer to free
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPISession_CeRapiFreeBuffer(IRAPISession *session SYNCE_UNUSED,
                               LPVOID Buffer)
@@ -132,24 +172,61 @@ IRAPISession_CeRapiFreeBuffer(IRAPISession *session SYNCE_UNUSED,
         return S_OK;
 }
 
+/** @brief Initialise connection
+ * 
+ * Initialise the connection to a device using the
+ * specified Session
+ * 
+ * @param[in] self address of the session object
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPISession_CeRapiInit(IRAPISession *session)
 {
   return rapi_context_connect(session->context);
 }
 
+/** @brief Close connection
+ * 
+ * Close the connection to a device using the
+ * specified Session. Note this does not disconnect
+ * the device, merely closes the session's connection
+ * 
+ * @param[in] self address of the session object
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPISession_CeRapiUninit(IRAPISession *session)
 {
   return rapi_context_disconnect(session->context);
 }
 
+/** @brief Get RAPI call error
+ * 
+ * Get the last RAPI error caused by a call to the device
+ * using the specified Session. This should be used in
+ * conjunction with IRAPISession_CeGetLastError for errors
+ * that are not RAPI specific.
+ * 
+ * @param[in] self address of the session object
+ * @return an HRESULT indicating the error
+ */ 
 HRESULT
 IRAPISession_CeRapiGetError(IRAPISession *session)
 {
   return session->context->rapi_error;
 }
 
+/** @brief Get last call error
+ * 
+ * Get the last non-RAPI error caused by a call to the device
+ * using the specified Session. This should be used in
+ * conjunction with IRAPISession_CeRapiGetError for errors
+ * that are RAPI specific.
+ * 
+ * @param[in] self address of the session object
+ * @return a DWORD indicating the error
+ */ 
 DWORD
 IRAPISession_CeGetLastError(IRAPISession *session)
 {
@@ -164,6 +241,14 @@ IRAPISession_CeGetLastError(IRAPISession *session)
 
 #ifndef SWIG
 
+/** @brief Close a file handle on device
+ *
+ * Closes a previously opened handle on a device.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] hObject handle to close
+ * @return TRUE on success, FALSE on failure
+ */ 
 BOOL
 IRAPISession_CeCloseHandle(IRAPISession *session,
                            HANDLE hObject)
@@ -178,6 +263,21 @@ IRAPISession_CeCloseHandle(IRAPISession *session,
         return ( *context->rapi_ops->CeCloseHandle ) ( context, hObject );
 }
 
+/** @brief Open a file on device
+ *
+ * Creates, opens, or truncates a file, pipe, communications
+ * resource, disk device, or console on a device.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] lpFileName name of the file or object
+ * @param[in] dwDesiredAccess access required, GENERIC_READ and/or GENERIC_WRITE
+ * @param[in] dwShareMode 0 for unshared, or FILE_SHARE_READ or FILE_SHARE_WRITE
+ * @param[in] lpSecurityAttributes ignored, set to NULL
+ * @param[in] dwCreationDisposition
+ * @param[in] dwFlagsAndAttributes
+ * @param[in] hTemplateFile ignored
+ * @return a valid HANDLE on success, or INVALID_HANDLE_VALUE on failure
+ */ 
 HANDLE
 IRAPISession_CeCreateFile(IRAPISession *session,
                           LPCWSTR lpFileName,
@@ -1418,6 +1518,7 @@ IRAPISession_CeRapiInvoke(IRAPISession *session,
 
 #endif /* SWIG */
 
+/** @} */
 
 
 /*
@@ -1513,6 +1614,17 @@ IRAPIDevice_CreateSession(IRAPIDevice *self, IRAPISession** ppISession)
 }
 
 
+/** @brief Obtain connection information
+ * 
+ * This function retrieves information about the connection in the form of a
+ * RAPI_CONNECTIONINFO struct.
+ * The struct differs from the Microsoft definition, due to differences in
+ * the way SynCE handles the connection.
+ * 
+ * @param[in] self address of the device object
+ * @param[out] pConnInfo address of the struct to receive connection information
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDevice_GetConnectionInfo(IRAPIDevice *self, RAPI_CONNECTIONINFO* pConnInfo)
 {
@@ -1526,6 +1638,14 @@ IRAPIDevice_GetConnectionInfo(IRAPIDevice *self, RAPI_CONNECTIONINFO* pConnInfo)
   return S_OK;
 }
 
+/** @brief Obtain connection status
+ * 
+ * This function retrieves the connection status.
+ * 
+ * @param[in] self address of the device object
+ * @param[out] pStat address of the variable to receive connection status
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDevice_GetConnectStat(IRAPIDevice *self, RAPI_DEVICESTATUS* pStat)
 {
@@ -1533,6 +1653,15 @@ IRAPIDevice_GetConnectStat(IRAPIDevice *self, RAPI_DEVICESTATUS* pStat)
   return S_OK;
 }
 
+/** @brief Obtain device information
+ * 
+ * This function retrieves information about the device in the form of a
+ * RAPI_DEVICEINFO struct.
+ * 
+ * @param[in] self address of the device object
+ * @param[out] pDevInfo address of the struct to receive device information
+ * @return an HRESULT indicating success or an error
+ */ 
 HRESULT
 IRAPIDevice_GetDeviceInfo(IRAPIDevice *self, RAPI_DEVICEINFO* pDevInfo)
 {
@@ -1552,48 +1681,109 @@ IRAPIDevice_GetDeviceInfo(IRAPIDevice *self, RAPI_DEVICEINFO* pDevInfo)
 }
 
 
+/** @brief Obtain device name
+ * 
+ * This function retrieves the name of the device.
+ * 
+ * @param[in] self address of the device object
+ * @return device name, or NULL on failure
+ */ 
 const char *
 IRAPIDevice_get_name(IRAPIDevice *self)
 {
   return synce_info_get_name(self->info);
 }
 
+/** @brief Obtain device OS version
+ * 
+ * This function retrieves the OS version of the device.
+ * 
+ * @param[in] self address of the device object
+ * @param[out] os_major address of an int to recieve the major version
+ * @param[out] os_minor address of an int to recieve the minor version
+ * @return true on success, false on failure
+ */ 
 bool
 IRAPIDevice_get_os_version(IRAPIDevice *self, unsigned int *os_major, unsigned int *os_minor)
 {
   return synce_info_get_os_version(self->info, os_major, os_minor);
 }
 
+/** @brief Obtain device build number
+ * 
+ * This function retrieves the build number of the device.
+ * 
+ * @param[in] self address of the device object
+ * @return device build number, 0 on failure
+ */ 
 unsigned int
 IRAPIDevice_get_build_number(IRAPIDevice *self)
 {
   return synce_info_get_build_number(self->info);
 }
 
+/** @brief Obtain device processor type
+ * 
+ * This function retrieves processor type of the device.
+ * 
+ * @param[in] self address of the device object
+ * @return device processor type, 0 on failure
+ */ 
 unsigned int
 IRAPIDevice_get_processor_type(IRAPIDevice *self)
 {
   return synce_info_get_processor_type(self->info);
 }
 
+/** @brief Obtain device OS name
+ * 
+ * This function retrieves the OS name of the device.
+ * 
+ * @param[in] self address of the device object
+ * @return device OS name, or NULL on failure
+ */ 
 const char *
 IRAPIDevice_get_os_name(IRAPIDevice *self)
 {
   return synce_info_get_os_name(self->info);
 }
 
+/** @brief Obtain device model
+ * 
+ * This function retrieves the model of the device.
+ * 
+ * @param[in] self address of the device object
+ * @return device model, or NULL on failure
+ */ 
 const char *
 IRAPIDevice_get_model(IRAPIDevice *self)
 {
   return synce_info_get_model(self->info);
 }
 
+/** @brief Obtain device IP
+ * 
+ * This function retrieves the IP address of the device,
+ * in dotted quad notation.
+ * 
+ * @param[in] self address of the device object
+ * @return device IP address, or NULL on failure
+ */ 
 const char *
 IRAPIDevice_get_device_ip(IRAPIDevice *self)
 {
   return synce_info_get_device_ip(self->info);
 }
 
+/** @brief Obtain local IP
+ * 
+ * This function retrieves the local IP address of the 
+ * interface the device is connected to, in dotted quad
+ * notation.
+ * 
+ * @param[in] self address of the device object
+ * @return local IP address, or NULL on failure
+ */ 
 const char *
 IRAPIDevice_get_local_ip(IRAPIDevice *self)
 {
@@ -1720,7 +1910,9 @@ IRAPIEnumDevices_GetCount(IRAPIEnumDevices *self, ULONG* pcElt)
 
 /** @brief Retrieve the next device from the enumerator
  * 
- * This function retrieve the next device in the sequence of connected devices in the enumerator.
+ * This function retrieves the next device in the sequence of connected devices in the enumerator.
+ * The reference to the device is owned by the enumerator, if you wish to use the object after
+ * the enumerator has been destroyed, you should reference it yourself.
  * 
  * @param[in] self address of the enumerator
  * @param[out] ppIDevice address of the pointer to receive the reference to the device.

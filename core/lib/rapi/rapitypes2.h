@@ -21,9 +21,13 @@ typedef struct _GUID {
 
 typedef GUID RAPIDEVICEID;
 
+/** @brief Connection status
+ * 
+ * The device's connection status.
+ */ 
 typedef enum {
-        RAPI_DEVICE_DISCONNECTED = 0,
-        RAPI_DEVICE_CONNECTED = 1
+  RAPI_DEVICE_DISCONNECTED = 0, /**< disconnected */
+  RAPI_DEVICE_CONNECTED = 1 /**< connected */
 } RAPI_DEVICESTATUS;
 
 typedef enum {
