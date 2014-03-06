@@ -243,7 +243,9 @@ IRAPISession_CeGetLastError(IRAPISession *session)
 
 /** @brief Close a file handle on device
  *
- * Closes a previously opened handle on a device.
+ * Closes a previously opened handle on a device. Handles closed by
+ * this function include files, databases, processes and sockets, but
+ * not Find handles.
  * 
  * @param[in] session address of the session object
  * @param[in] hObject handle to close
@@ -268,13 +270,21 @@ IRAPISession_CeCloseHandle(IRAPISession *session,
  * Creates, opens, or truncates a file, pipe, communications
  * resource, disk device, or console on a device.
  * 
+ * dwCreationDisposition determines what action is taken if the file
+ * does or does not exist, and must be one of the following:
+ *  - CREATE_NEW - creates the file, fails if it already exists
+ *  - CREATE_ALWAYS - creates the file, overwrites it if it exists and clears any attributes
+ *  - OPEN_EXISTING - fails if the file does not exist
+ *  - OPEN_ALWAYS - opens an existing file, otherwise creates it
+ *  - TRUNCATE_EXISTING - opens the file and truncates it to zero, fails if it doesn't exist
+ *
  * @param[in] session address of the session object
  * @param[in] lpFileName name of the file or object
  * @param[in] dwDesiredAccess access required, GENERIC_READ and/or GENERIC_WRITE
  * @param[in] dwShareMode 0 for unshared, or FILE_SHARE_READ or FILE_SHARE_WRITE
  * @param[in] lpSecurityAttributes ignored, set to NULL
- * @param[in] dwCreationDisposition
- * @param[in] dwFlagsAndAttributes
+ * @param[in] dwCreationDisposition action to take when files exist or don't exist
+ * @param[in] dwFlagsAndAttributes any combination of FILE_ATTRIBUTE_ flags
  * @param[in] hTemplateFile ignored
  * @return a valid HANDLE on success, or INVALID_HANDLE_VALUE on failure
  */ 
@@ -306,6 +316,19 @@ IRAPISession_CeCreateFile(IRAPISession *session,
 }
 
 
+/** @brief Read from a file
+ *
+ * Read from a file at the current position of the file pointer,
+ * which is moved by the read operation.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] hFile handle to the file
+ * @param[out] lpBuffer address of the buffer to receive the data
+ * @param[in] nNumberOfBytesToRead bytes to read from the file
+ * @param[out] lpNumberOfBytesRead address of a location to receive the number of bytes read
+ * @param[in] lpOverlapped unsupported, set to NULL
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeReadFile(IRAPISession *session,
                         HANDLE hFile,
@@ -330,6 +353,19 @@ IRAPISession_CeReadFile(IRAPISession *session,
 }
 
 
+/** @brief Write to a file
+ *
+ * Write to a file at the current position of the file pointer,
+ * which is moved by the write operation.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] hFile handle to the file
+ * @param[in] lpBuffer address of the buffer containing the data
+ * @param[in] nNumberOfBytesToWrite bytes to write to the file
+ * @param[out] lpNumberOfBytesWritten address of a location to receive the number of bytes written
+ * @param[in] lpOverlapped unsupported, set to NULL
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeWriteFile(IRAPISession *session,
                          HANDLE hFile,
