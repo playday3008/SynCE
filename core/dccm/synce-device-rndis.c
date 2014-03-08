@@ -467,7 +467,7 @@ synce_device_rndis_request_connection_impl (SynceDevice *self, DBusGMethodInvoca
 
   if (priv->state != CTRL_STATE_CONNECTED)
     {
-      error = g_error_new (SYNCE_ERRORS, NotAvailable,
+      error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			   (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) ?
           "Not authenticated, you need to call ProvidePassword with the "
 			   "correct password." : "Not yet connected.");

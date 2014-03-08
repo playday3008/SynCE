@@ -7,12 +7,19 @@ G_BEGIN_DECLS
 
 typedef enum
 {
-  InvalidArgument,
-  NotAvailable,
-} SynceErrors;
+  SYNCE_DCCM_ERROR_INVALID_ARGUMENT,
+  SYNCE_DCCM_ERROR_NOT_AVAILABLE,
+  SYNCE_DCCM_N_ERRORS,
+} SynceDccmError;
 
-GQuark synce_errors_quark (void);
-#define SYNCE_ERRORS synce_errors_quark ()
+GQuark synce_dccm_error_quark (void);
+#define SYNCE_DCCM_ERROR synce_dccm_error_quark ()
+
+
+#if !USE_GDBUS
+GType synce_dccm_error_get_type (void);
+#define SYNCE_DCCM_TYPE_ERROR (synce_dccm_error_get_type ())
+#endif
 
 G_END_DECLS
 

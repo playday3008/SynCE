@@ -135,13 +135,13 @@ synce_device_provide_password_impl (SynceDevice *self,
   if (priv->state != CTRL_STATE_AUTH ||
       (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) == 0)
     {
-      error = g_error_new (SYNCE_ERRORS, NotAvailable,
+      error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			   "No password expected in the current state.");
       goto OUT;
     }
   else if (priv->pw_ctx != NULL)
     {
-      error = g_error_new (SYNCE_ERRORS, NotAvailable,
+      error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			   "An authentication attempt is still in progress.");
       goto OUT;
     }

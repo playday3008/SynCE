@@ -411,7 +411,7 @@ synce_device_legacy_client_event_password_cb(GObject *source_object,
     g_error_free(error);
     g_object_unref(conn);
     g_object_unref(broker);
-    error = g_error_new (SYNCE_ERRORS, NotAvailable,
+    error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			 "Failed to authenticate connection");
     goto OUT;
   }
@@ -420,7 +420,7 @@ synce_device_legacy_client_event_password_cb(GObject *source_object,
     g_warning ("%s: Failed to get password reply from device, read length != 1", G_STRFUNC);
     g_object_unref(conn);
     g_object_unref(broker);
-    error = g_error_new (SYNCE_ERRORS, NotAvailable,
+    error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			 "Failed to authenticate connection");
     goto OUT;
   }
@@ -434,7 +434,7 @@ synce_device_legacy_client_event_password_cb(GObject *source_object,
     g_warning("%s: Password rejected", G_STRFUNC);
     g_object_unref(conn);
     g_object_unref(broker);
-    error = g_error_new (SYNCE_ERRORS, NotAvailable,
+    error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
                          "Failed to authenticate connection");
   }
  OUT:
@@ -471,7 +471,7 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
 
   if (priv->state != CTRL_STATE_CONNECTED)
     {
-      error = g_error_new(SYNCE_ERRORS, NotAvailable,
+      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			  (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) ?
 			  "Not authenticated, you need to call ProvidePassword with the "
 			  "correct password." : "Not yet connected.");
@@ -580,13 +580,13 @@ synce_device_legacy_provide_password_impl(SynceDevice *self,
   if (priv->state != CTRL_STATE_AUTH ||
       (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) == 0)
     {
-      error = g_error_new (SYNCE_ERRORS, NotAvailable,
+      error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			   "No password expected in the current state.");
       goto OUT;
     }
   else if (priv->pw_ctx != NULL)
     {
-      error = g_error_new (SYNCE_ERRORS, NotAvailable,
+      error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
 			   "An authentication attempt is still in progress.");
       goto OUT;
     }
