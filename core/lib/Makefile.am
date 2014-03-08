@@ -8,7 +8,7 @@ libsynce_la_LIBADD  = -lm @LTLIBICONV@ @GLIB_LIBS@ \
 		$(top_builddir)/lib/rapi/librapi.la
 
 if !USE_GDBUS
-libsynce_la_LIBADD += @DBUS_LIBS@
+libsynce_la_LIBADD += $(DBUS_LIBS) $(DBUSGLIB_LIBS)
 endif
 
 SUBDIRS = utils rapi

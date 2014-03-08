@@ -76,7 +76,7 @@ PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4, gio-2.0 >= 2.22, g
 dnl Check for D-Bus, we need dbus-1 for config file locations
 dnl irrespective of which dbus library we use
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60], dbus_found=yes, dbus_found=no)
-PKG_CHECK_MODULES(DBUS, [dbus-glib-1 >= 0.74], dbusglib_found=yes, dbusglib_found=no)
+PKG_CHECK_MODULES(DBUSGLIB, [dbus-glib-1 >= 0.74], dbusglib_found=yes, dbusglib_found=no)
 
 dnl Check if GLib version is high enough for GDBus
 AC_MSG_CHECKING([whether to use GDBus])

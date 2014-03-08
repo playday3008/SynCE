@@ -50,8 +50,8 @@ dccm_LDADD = \
 	$(GUDEV_LIBS)
 
 if !USE_GDBUS
-dccm_CPPFLAGS += $(DBUS_CFLAGS)
-dccm_LDADD += $(DBUS_LIBS)
+dccm_CPPFLAGS += $(DBUS_CFLAGS) $(DBUSGLIB_CFLAGS)
+dccm_LDADD += $(DBUS_LIBS) $(DBUSGLIB_LIBS)
 endif
 
 synce_serial_chat_SOURCES = synce-serial-chat.c

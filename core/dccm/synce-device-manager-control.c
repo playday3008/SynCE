@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+#include "synce-device-manager-control.h"
 #if USE_GDBUS
 #include "synce-device-manager-control-dbus.h"
 #else

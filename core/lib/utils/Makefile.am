@@ -28,8 +28,8 @@ libutils_la_CFLAGS = @GLIB_CFLAGS@
 libutils_la_LIBADD  = config/libconfig.la -lm @LTLIBICONV@ @LTLIBOBJS@ @GLIB_LIBS@
 
 if !USE_GDBUS
-libutils_la_CFLAGS += @DBUS_CFLAGS@
-libutils_la_LIBADD += @DBUS_LIBS@
+libutils_la_CFLAGS += @DBUS_CFLAGS@ @DBUSGLIB_CFLAGS@
+libutils_la_LIBADD += @DBUS_LIBS@ @DBUSGLIB_LIBS@
 endif
 
 include_HEADERS = \

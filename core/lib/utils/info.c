@@ -553,6 +553,11 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
   GPtrArray *devices = NULL;
   guint i;
   gboolean dccm_running = FALSE;
+  const gchar *service = NULL;
+  const gchar *mgr_path = NULL;
+  const gchar *mgr_iface = NULL;
+  const gchar *dev_iface = NULL;
+  const gchar *dccm_name = NULL;
   if (udev) {
 #if ENABLE_UDEV_SUPPORT
     service = DCCM_SERVICE;
