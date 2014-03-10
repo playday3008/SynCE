@@ -465,14 +465,18 @@ synce_device_rndis_request_connection_impl (SynceDevice *self, DBusGMethodInvoca
   SynceConnectionBroker *broker;
   guint32 buf[3];
 
-  if (priv->state != CTRL_STATE_CONNECTED)
-    {
-      error = g_error_new (SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
-			   (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) ?
-          "Not authenticated, you need to call ProvidePassword with the "
-			   "correct password." : "Not yet connected.");
+  if (priv->state != CTRL_STATE_CONNECTED) {
+    if (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) {
+      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_DEVICE_LOCKED,
+                          "Not authenticated, you need to call ProvidePassword with the "
+                          "correct password.");
+      goto OUT;
+    } else {
+      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
+                          "Not yet connected.");
       goto OUT;
     }
+  }
 
   /* 
    * Create a local copy of the global req_id variable to avoid

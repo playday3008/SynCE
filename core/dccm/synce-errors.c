@@ -10,6 +10,7 @@ static const GDBusErrorEntry synce_dccm_error_entries[] =
 {
   {SYNCE_DCCM_ERROR_INVALID_ARGUMENT, "org.synce.dccm.Error.InvalidArgument"},
   {SYNCE_DCCM_ERROR_NOT_AVAILABLE,    "org.synce.dccm.Error.NotAvailable"},
+  {SYNCE_DCCM_ERROR_DEVICE_LOCKED,    "org.synce.dccm.Error.DeviceLocked"},
 };
 
 /* Ensure that every error code has an associated D-Bus error name */
@@ -53,6 +54,7 @@ synce_dccm_error_get_type (void)
 
         ENUM_ENTRY (SYNCE_DCCM_ERROR_INVALID_ARGUMENT, "InvalidArgument"),
         ENUM_ENTRY (SYNCE_DCCM_ERROR_NOT_AVAILABLE, "NotAvailable"),
+        ENUM_ENTRY (SYNCE_DCCM_ERROR_DEVICE_LOCKED, "DeviceLocked"),
         { 0, 0, 0 }
       };
 

@@ -469,14 +469,18 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
   guchar *buf = NULL;
   gsize buf_size = 0;
 
-  if (priv->state != CTRL_STATE_CONNECTED)
-    {
-      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
-			  (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) ?
+  if (priv->state != CTRL_STATE_CONNECTED) {
+    if (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) {
+      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_DEVICE_LOCKED,
 			  "Not authenticated, you need to call ProvidePassword with the "
-			  "correct password." : "Not yet connected.");
+			  "correct password.");
+      goto OUT;
+    } else {
+      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,
+			  "Not yet connected.");
       goto OUT;
     }
+  }
 
   SynceDeviceLegacyPrivate *legacy_priv = SYNCE_DEVICE_LEGACY_GET_PRIVATE (SYNCE_DEVICE_LEGACY(self));
 
