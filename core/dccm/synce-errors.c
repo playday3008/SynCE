@@ -28,8 +28,10 @@ synce_dccm_error_quark (void)
   return (GQuark) quark_volatile;
 #else /* USE_GDBUS */
   static GQuark quark = 0;
-  if (quark == 0)
+  if (quark == 0) {
     quark = g_quark_from_static_string ("synce-dccm-error-quark");
+    dbus_g_error_domain_register (SYNCE_DCCM_ERROR, "org.synce.dccm.Error", SYNCE_DCCM_TYPE_ERROR);
+  }
   return quark;
 #endif
 }

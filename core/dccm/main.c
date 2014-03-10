@@ -16,7 +16,6 @@
 #endif
 
 #include "synce-device-manager.h"
-#include "synce-errors.h"
 
 #include "log.h"
 #include "utils.h"
@@ -178,8 +177,6 @@ main(gint argc,
       g_free(bus_name);
       return EXIT_FAILURE;
     }
-
-  dbus_g_error_domain_register (SYNCE_DCCM_ERROR, "org.synce.dccm.Error", SYNCE_DCCM_TYPE_ERROR);
 
   device_manager = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER, NULL, &error, NULL);
   if (!device_manager) {
