@@ -22,7 +22,7 @@
 #include "synce-device-glue.h"
 #endif
 
-#include "synce-errors.h"
+#include "synce_gerrors.h"
 
 static void     synce_device_initable_iface_init (GInitableIface  *iface);
 static gboolean synce_device_initable_init       (GInitable       *initable,

@@ -21,6 +21,7 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib.h>
 #endif
+#include "synce_gerrors.h"
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
@@ -287,10 +288,34 @@ OUT:
 
 #if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
 
+/*
+ * synce_glib_init:
+ *
+ * Does various one-time init things such as
+ *
+ *  - registering the SYNCE_DCCM_ERROR error domain
+ */
+static void
+synce_glib_init(void)
+{
+  static volatile gsize initialized = 0;
+
+  if (g_once_init_enter (&initialized))
+  {
+    volatile GQuark synce_dccm_error_domain;
+
+    synce_dccm_error_domain = SYNCE_DCCM_ERROR;
+    (synce_dccm_error_domain); /* To avoid -Wunused-but-set-variable */
+
+    g_once_init_leave (&initialized, 1);
+  }
+}
+
+
 #if USE_GDBUS
 
-static int
-get_connection_from_udev_or_odccm(SynceInfo *info)
+static HRESULT
+get_connection_from_udev_or_odccm(SynceInfo *info, int *sockfd)
 {
   GError *error = NULL;
   GDBusProxy *dbus_proxy = NULL;
@@ -302,6 +327,10 @@ get_connection_from_udev_or_odccm(SynceInfo *info)
   const gchar *service = NULL;
   const gchar *dev_iface = NULL;
   const gchar *dccm_name = NULL;
+  HRESULT result = E_FAIL;
+
+  /* Ensure that e.g. SYNCE_DCCM_ERROR is registered using g_dbus_error_register_error() */
+  synce_glib_init();
 
 #if ENABLE_ODCCM_SUPPORT
   const gchar *transport = synce_info_get_transport(info);
@@ -379,6 +408,11 @@ get_connection_from_udev_or_odccm(SynceInfo *info)
   if (!ret) {
     synce_warning("%s: Failed to get a connection for %s: %s", G_STRFUNC, synce_info_get_name(info), error->message);
     g_object_unref(dev_proxy);
+
+    /* INVALID_PASSWORD isn't perfect, but seems to be the best we have */
+    if (g_error_matches(error, SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_DEVICE_LOCKED))
+      result = HRESULT_FROM_WIN32(ERROR_INVALID_PASSWORD);
+
     goto ERROR;
   }
   g_variant_get (ret, "(s)", &unix_path);
@@ -395,6 +429,7 @@ get_connection_from_udev_or_odccm(SynceInfo *info)
     goto ERROR;
   }
 
+  result = S_OK;
   goto OUT;
 
 ERROR:
@@ -403,13 +438,14 @@ ERROR:
 
 OUT:
 
-  return fd;
+  *sockfd = fd;
+  return result;
 }
 
 #else /* USE_GDBUS */
 
-static int
-get_connection_from_udev_or_odccm(SynceInfo *info)
+static HRESULT
+get_connection_from_udev_or_odccm(SynceInfo *info, int *sockfd)
 {
   GError *error = NULL;
   DBusGConnection *bus = NULL;
@@ -421,6 +457,10 @@ get_connection_from_udev_or_odccm(SynceInfo *info)
   const gchar *service = NULL;
   const gchar *dev_iface = NULL;
   const gchar *dccm_name = NULL;
+  HRESULT result = E_FAIL;
+
+  /* Ensure that e.g. SYNCE_DCCM_ERROR is registered using g_dbus_error_register_error() */
+  synce_glib_init();
 
 #if ENABLE_ODCCM_SUPPORT
   const gchar *transport = synce_info_get_transport(info);
@@ -487,6 +527,11 @@ get_connection_from_udev_or_odccm(SynceInfo *info)
                          G_TYPE_INVALID))
   {
     synce_warning("%s: Failed to get a connection for %s: %s", G_STRFUNC, synce_info_get_name(info), error->message);
+
+    /* INVALID_PASSWORD isn't perfect, but seems to be the best we have */
+    if (dbus_g_error_has_name(error, "org.synce.dccm.Error.DeviceLocked"))
+      result = HRESULT_FROM_WIN32(ERROR_INVALID_PASSWORD);
+
     g_object_unref(dev_proxy);
     goto ERROR;
   }
@@ -502,6 +547,7 @@ get_connection_from_udev_or_odccm(SynceInfo *info)
     goto ERROR;
   }
 
+  result = S_OK;
   goto OUT;
 
 ERROR:
@@ -513,7 +559,8 @@ OUT:
   if (bus != NULL)
     dbus_g_connection_unref (bus);
 
-  return fd;
+  *sockfd = fd;
+  return result;
 }
 #endif /* USE_GDBUS */
 #endif /* ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT */
@@ -614,10 +661,12 @@ HRESULT rapi_context_connect(RapiContext* context)
          */
 #if ENABLE_ODCCM_SUPPORT
         if (strcmp(transport, "odccm") == 0) {
-	  int fd = get_connection_from_udev_or_odccm(info);
-	  if (fd < 0)
+	  int fd = -1;
+	  HRESULT fd_result = get_connection_from_udev_or_odccm(info, &fd);
+	  if (fd_result != S_OK)
 	  {
-	    synce_error("failed to get context fd from odccm");
+	    synce_error("failed to get context fd from odccm: %08x: %s", fd_result, synce_strerror(HRESULT_CODE(fd_result)));
+	    result = fd_result;
 	    goto fail;
 	  }
 	  synce_socket_take_descriptor(context->socket, fd);
@@ -626,10 +675,12 @@ HRESULT rapi_context_connect(RapiContext* context)
 #endif
 #if ENABLE_UDEV_SUPPORT
         if (strcmp(transport, "udev") == 0) {
-	  int fd = get_connection_from_udev_or_odccm(info);
-	  if (fd < 0)
+	  int fd = -1;
+	  HRESULT fd_result = get_connection_from_udev_or_odccm(info, &fd);
+	  if (fd_result != S_OK)
 	  {
-	    synce_error("failed to get context fd from udev");
+	    synce_error("failed to get context fd from udev: %08x: %s", fd_result, synce_strerror(HRESULT_CODE(fd_result)));
+	    result = fd_result;
 	    goto fail;
 	  }
 	  synce_socket_take_descriptor(context->socket, fd);

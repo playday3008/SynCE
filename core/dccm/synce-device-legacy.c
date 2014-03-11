@@ -16,7 +16,7 @@
 #include "synce-device-internal.h"
 #include "synce-device-legacy.h"
 #include "synce-connection-broker.h"
-#include "synce-errors.h"
+#include "synce_gerrors.h"
 #include "utils.h"
 
 G_DEFINE_TYPE(SynceDeviceLegacy, synce_device_legacy, SYNCE_TYPE_DEVICE)
@@ -474,6 +474,14 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
       error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_DEVICE_LOCKED,
 			  "Not authenticated, you need to call ProvidePassword with the "
 			  "correct password.");
+      goto OUT;
+    } else if (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE_ON_DEVICE) {
+      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_DEVICE_LOCKED,
+                          "Not authenticated, you need to enter a password on the device.");
+      goto OUT;
+    } else if (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_CHECKING) {
+      error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_DEVICE_LOCKED,
+                          "Authentication currently in progress.");
       goto OUT;
     } else {
       error = g_error_new(SYNCE_DCCM_ERROR, SYNCE_DCCM_ERROR_NOT_AVAILABLE,

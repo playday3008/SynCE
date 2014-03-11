@@ -30,7 +30,6 @@ dccm_SOURCES = log.c log.h \
 		synce-device-rndis.c synce-device-rndis.h \
 		synce-device-legacy.c synce-device-legacy.h \
 		synce-connection-broker.c synce-connection-broker.h \
-		synce-errors.c synce-errors.h \
 		utils.c utils.h \
 		synce-device-manager.c synce-device-manager.h \
 		synce-device-manager-control.c synce-device-manager-control.h \

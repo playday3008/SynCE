@@ -16,7 +16,10 @@ libutils_la_SOURCES = \
 	synce_socket.h synce_socket.c \
 	synce_vector_template.h \
 	time_fields.c \
-	wstr.c
+	wstr.c \
+	synce_gerrors.c
+
+noinst_HEADERS =  synce_gerrors.h
 
 nodist_libutils_la_SOURCES = synce.h
 
