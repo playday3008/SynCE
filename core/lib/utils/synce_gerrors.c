@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "synce-errors.h"
+#include "synce_gerrors.h"
 #include <gio/gio.h>
 
 #if USE_GDBUS
