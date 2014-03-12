@@ -654,8 +654,8 @@ synce_device_dbus_uninit(SynceDevice *self)
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
   g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
-  GError *error = NULL;
 #if !USE_GDBUS
+  GError *error = NULL;
   DBusGConnection *system_bus = NULL;
 #endif
 
@@ -671,7 +671,6 @@ synce_device_dbus_uninit(SynceDevice *self)
   if (system_bus == NULL) {
     g_critical("Failed to connect to system bus: %s", error->message);
     g_error_free(error);
-    g_free(obj_path);
     return;
   }
 
