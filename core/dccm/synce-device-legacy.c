@@ -653,8 +653,8 @@ synce_device_legacy_dispose (GObject *obj)
 
   /* unref other objects */
 
-  g_object_unref(priv_legacy->rapi_sock_client);
-  g_object_unref(priv_legacy->rapi_address);
+  if (priv_legacy->rapi_sock_client) g_object_unref(priv_legacy->rapi_sock_client);
+  if (priv_legacy->rapi_address) g_object_unref(priv_legacy->rapi_address);
 
   if (G_OBJECT_CLASS (synce_device_legacy_parent_class)->dispose)
     G_OBJECT_CLASS (synce_device_legacy_parent_class)->dispose (obj);
