@@ -80,6 +80,7 @@ synce_device_legacy_send_ping(gpointer data)
     g_object_get(self, "name", &name, NULL);
 
     g_warning("%s: Device %s not responded to %d pings, assume disconnected", G_STRFUNC, name, DCCM_MAX_PING_COUNT);
+    synce_device_dbus_uninit(SYNCE_DEVICE(self));
     g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_DISCONNECTED], 0);
     g_free(name);
     return FALSE;

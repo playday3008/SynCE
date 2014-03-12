@@ -239,6 +239,7 @@ gudev_uevent_callback(G_GNUC_UNUSED GUdevClient *client,
 
   g_debug("%s: received uevent remove for our device", G_STRFUNC);
 
+  synce_device_dbus_uninit(self);
   g_signal_emit(self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_DISCONNECTED], 0);
 
   return;
@@ -643,6 +644,41 @@ synce_device_dbus_init(SynceDevice *self)
   g_object_set (self, "object-path", obj_path, NULL);
   g_debug("%s: obj_path set to %s", G_STRFUNC, priv->obj_path);
   g_free(obj_path);
+
+  return;
+}
+
+void
+synce_device_dbus_uninit(SynceDevice *self)
+{
+  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+
+  GError *error = NULL;
+#if !USE_GDBUS
+  DBusGConnection *system_bus = NULL;
+#endif
+
+  g_message ("%s: unregistering object path '%s'", G_STRFUNC, priv->obj_path);
+
+#if USE_GDBUS
+  g_dbus_interface_skeleton_unexport(G_DBUS_INTERFACE_SKELETON(priv->interface));
+  g_object_unref(priv->interface);
+  priv->interface = NULL;
+
+#else
+  system_bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+  if (system_bus == NULL) {
+    g_critical("Failed to connect to system bus: %s", error->message);
+    g_error_free(error);
+    g_free(obj_path);
+    return;
+  }
+
+  dbus_g_connection_unregister_g_object(system_bus, G_OBJECT(self));
+
+  dbus_g_connection_unref(system_bus);
+#endif
 
   return;
 }
