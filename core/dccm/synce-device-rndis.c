@@ -227,7 +227,7 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
 
 	  GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
 	  priv->iobuf = g_malloc(sizeof(guint32));
-	  g_input_stream_read_async(in_stream, priv->iobuf, sizeof(guint32), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	  g_input_stream_read_async(in_stream, priv->iobuf, sizeof(guint32), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 
           /*
            * The flag should be that the password is set AND that the device
@@ -279,6 +279,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	{
 	  g_warning ("%s: unexpected length", G_STRFUNC);
 	  g_free(priv->iobuf);
+	  g_object_unref(self);
 	  return;
 	}
 
@@ -294,7 +295,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	case 4:
 	  priv->state = CTRL_STATE_GETTING_INFO;
 	  priv->iobuf = g_malloc(4);
-	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 	  break;
 	case 6:
 	  v = 7; g_array_append_val (resp, v);
@@ -325,7 +326,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	    g_error_free(error);
 	  }
 	  priv->iobuf = g_malloc(4);
-	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 
 	  g_free (buf);
 	}
@@ -340,6 +341,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	    {
 	      g_warning ("%s: event->length != 4", G_STRFUNC);
 	      g_free(priv->iobuf);
+	      g_object_unref(self);
 	      return;
 	    }
 
@@ -347,7 +349,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	  g_free(priv->iobuf);
 
 	  priv->iobuf = g_malloc(priv->info_buf_size);
-	  g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	  g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 	}
       else
 	{
@@ -356,6 +358,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	      g_warning ("%s: length read=%zd != info_buf_size=%d",
 			 G_STRFUNC, num_read, priv->info_buf_size);
 	      g_free(priv->iobuf);
+	      g_object_unref(self);
 	      return;
 	    }
 
@@ -378,6 +381,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	  {
 	    g_warning ("%s: length read != 2", G_STRFUNC);
 	    g_free(priv->iobuf);
+	    g_object_unref(self);
 	    return;
 	  }
 
@@ -448,6 +452,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 
       }
     }
+  g_object_unref(self);
 }
 
 #if USE_GDBUS
@@ -544,11 +549,13 @@ synce_device_rndis_client_event_cb(GObject *source_object,
   if (num_read == -1) {
     g_warning("%s: failed to read connection ID from device: %s", G_STRFUNC, error->message);
     g_error_free(error);
+    g_object_unref(self);
     return;
   }
 
   if (num_read != sizeof (guint32)) {
     g_warning("%s: failed to read full connection ID from device", G_STRFUNC);
+    g_object_unref(self);
     return;
   }
 
@@ -568,6 +575,7 @@ synce_device_rndis_client_event_cb(GObject *source_object,
 
   if (!conn) {
     g_warning("%s: data receieved from unexpected connection", G_STRFUNC);
+    g_object_unref(self);
     return;
   }
 
@@ -582,10 +590,12 @@ synce_device_rndis_client_event_cb(GObject *source_object,
     {
       _synce_connection_broker_take_connection (broker, conn);
 
+      g_object_unref(self);
       return;
     }
 
   g_warning ("%s: unhandled event", G_STRFUNC);
+  g_object_unref(self);
 }
 
 void
@@ -597,7 +607,7 @@ synce_device_rndis_client_connected (SynceDeviceRndis *self, GSocketConnection *
   GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(conn));
   guint *tmp_id = g_malloc(sizeof (guint32));
   g_hash_table_insert(priv_rndis->pending_client_conns, conn, tmp_id);
-  g_input_stream_read_async(in_stream, tmp_id, sizeof (guint32), G_PRIORITY_DEFAULT, NULL, synce_device_rndis_client_event_cb, self);
+  g_input_stream_read_async(in_stream, tmp_id, sizeof (guint32), G_PRIORITY_DEFAULT, NULL, synce_device_rndis_client_event_cb, g_object_ref(self));
 }
 
 

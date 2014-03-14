@@ -72,7 +72,7 @@ synce_device_legacy_send_ping(gpointer data)
   /* do a read here ? */
   priv->iobuf = g_malloc(4);
   GInputStream *istream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
-  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 
   if (++priv_legacy->ping_count == DCCM_MAX_PING_COUNT) {
     gchar *name = NULL;
@@ -244,6 +244,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	{
 	  g_warning ("%s: unexpected length", G_STRFUNC);
 	  g_free(priv->iobuf);
+	  g_object_unref(self);
 	  return;
 	}
 
@@ -253,18 +254,20 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
       if (header == 0) {
 	/* empty packet header */
 	priv->iobuf = g_malloc(4);
-	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
+	g_object_unref(self);
 	return;
       } else if (header < DCCM_MAX_PACKET_SIZE) {
 	if (header < DCCM_MIN_PACKET_SIZE) {
 	  g_warning ("%s: undersize packet", G_STRFUNC);
+	  g_object_unref(self);
 	  return;
 	}
 	/* info message */
 	priv->state = CTRL_STATE_GETTING_INFO;
 	priv->info_buf_size = header;
 	priv->iobuf = g_malloc(priv->info_buf_size);
-	g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
       } else {
 	/* password challenge */
 	priv->pw_key = header & 0xff;
@@ -272,7 +275,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	  synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
 	*/
 	priv->iobuf = g_malloc(4);
-	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
       }
     }
   else if (priv->state < CTRL_STATE_AUTH)
@@ -282,6 +285,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	{
 	  g_warning("%s: length read=%zd != info_buf_size=%d",
 		    G_STRFUNC, num_read, priv->info_buf_size);
+	  g_object_unref(self);
 	  return;
 	}
 
@@ -300,6 +304,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
       if (num_read != sizeof (guint16))
 	{
 	  g_warning ("%s: read length != 2", G_STRFUNC);
+	  g_object_unref(self);
 	  return;
 	}
 
@@ -334,6 +339,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
       if (num_read != 4)
 	{
 	  g_warning ("%s: unexpected length", G_STRFUNC);
+	  g_object_unref(self);
 	  return;
 	}
       req = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
@@ -342,7 +348,8 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
       if (req == 0) {
 	/* empty packet header */
 	priv->iobuf = g_malloc(4);
-	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
+	g_object_unref(self);
 	return;
       }
       if (req == DCCM_PING) {
@@ -353,6 +360,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	g_warning("%s: Received header, not a ping reply: %d", G_STRFUNC, req);
       }
     }
+  g_object_unref(self);
 }
 
 static void

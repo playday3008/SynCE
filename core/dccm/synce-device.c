@@ -164,7 +164,7 @@ synce_device_provide_password_impl (SynceDevice *self,
 
   GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
   priv->iobuf = g_malloc(sizeof (guint16));
-  g_input_stream_read_async(in_stream, priv->iobuf, sizeof (guint16), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+  g_input_stream_read_async(in_stream, priv->iobuf, sizeof (guint16), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 
   synce_device_change_password_flags (self, SYNCE_DEVICE_PASSWORD_FLAG_CHECKING);
 
@@ -942,7 +942,7 @@ synce_device_set_property (GObject      *obj,
 
     GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
     priv->iobuf = g_malloc(sizeof (guint32));
-    g_input_stream_read_async(in_stream, priv->iobuf, sizeof (guint32), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, self);
+    g_input_stream_read_async(in_stream, priv->iobuf, sizeof (guint32), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 
     GInetSocketAddress *address = NULL;
     GInetAddress *inet_address = NULL;
