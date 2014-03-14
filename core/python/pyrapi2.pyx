@@ -409,6 +409,9 @@ class RegKey(object):
         cdef LPBYTE data
         cdef LPDWORD dw_ptr
 
+        data = NULL
+        dw_ptr = NULL
+
         try:
             name = <LPWSTR> malloc(255)
 
@@ -713,6 +716,7 @@ class RegKey(object):
 
         name_w = NULL
         data = NULL
+        dw_ptr = NULL
 
         try:
             if value_name != None:
@@ -786,6 +790,7 @@ class RegKey(object):
 
         name_w = NULL
         data = NULL
+        dw_ptr = NULL
 
         try:
             if value_name != None:
