@@ -121,6 +121,14 @@ EXTRA_DIST += \
 	../gvfs/daemon/gvfsjoberror.c $(gvfs_src_dir)/daemon/gvfsjoberror.h
 endif
 
+if GVFS_VERSION_1_20
+libdaemon_la_SOURCES += \
+	$(gvfs_src_dir)/daemon/gvfsjobtruncate.c $(gvfs_src_dir)/daemon/gvfsjobtruncate.h
+else
+EXTRA_DIST += \
+	../gvfs/daemon/gvfsjobtruncate.c $(gvfs_src_dir)/daemon/gvfsjobtruncate.h
+endif
+
 
 mount_in_files = synce.mount.in
 mount_DATA = synce.mount

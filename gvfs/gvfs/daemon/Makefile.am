@@ -103,6 +103,14 @@ EXTRA_DIST += \
 	gvfsjoberror.c gvfsjoberror.h
 endif
 
+if GVFS_VERSION_1_20
+libdaemon_sources += \
+	$(gvfs_src_dir)/daemon/gvfsjobtruncate.c $(gvfs_src_dir)/daemon/gvfsjobtruncate.h
+else
+EXTRA_DIST += \
+	gvfsjobtruncate.c gvfsjobtruncate.h
+endif
+
 
 if LOCAL_LIBDAEMON_SRC
 
