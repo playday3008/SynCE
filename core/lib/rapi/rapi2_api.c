@@ -95,6 +95,15 @@ guid_to_string(GUID *guid)
  *@{ 
  */
 
+/** @typedef struct _IRAPISession IRAPISession
+ * @brief A command session to a device
+ * 
+ * This is an opaque structure, representing a command session
+ * to a connected device.
+ * It's contents should be accessed via the IRAPISession_*
+ * series of functions.
+ * 
+ */ 
 struct _IRAPISession {
         IRAPIDevice *device;
         RapiContext *context;
@@ -219,7 +228,7 @@ IRAPISession_CeRapiGetError(IRAPISession *session)
 
 /** @brief Get last call error
  * 
- * Get the last non-RAPI error caused by a call to the device
+ * Get the last system (non-RAPI) error caused by a call to the device
  * using the specified Session. This should be used in
  * conjunction with IRAPISession_CeRapiGetError for errors
  * that are RAPI specific.
@@ -412,6 +421,19 @@ IRAPISession_CeSetFilePointer(IRAPISession *session,
                                                          dwMoveMethod );
 }
 
+/** @brief Set end of file
+ *
+ * Set the end of file at the current file pointer position.
+ * If this is before the existing end of file, the file is truncated.
+ * If it is after the existing position, the file is extended, and the
+ * intervening contents are undefined.
+ * 
+ * The file handle must have been created with GENERIC_WRITE.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] hFile handle to the file
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeSetEndOfFile(IRAPISession *session,
                             HANDLE hFile)
@@ -426,6 +448,20 @@ IRAPISession_CeSetEndOfFile(IRAPISession *session,
         return ( *context->rapi_ops->CeSetEndOfFile ) ( context, hFile );
 }
 
+/** @brief Get file time stamps
+ *
+ * Get creation time, last access time, and last modified time
+ * for an open file.
+ * 
+ * The file handle must have been created with GENERIC_READ.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] hFile handle to the file
+ * @param[out] lpCreationTime location to receive creation time, can be NULL
+ * @param[out] lpLastAccessTime location to receive last access time, can be NULL
+ * @param[out] lpLastWriteTime location to receive last modified time, can be NULL
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeGetFileTime(IRAPISession *session,
                            HANDLE hFile,
@@ -447,6 +483,20 @@ IRAPISession_CeGetFileTime(IRAPISession *session,
                                                       lpLastWriteTime );
 }
 
+/** @brief Set file time stamps
+ *
+ * Set creation time, last access time, and last modified time
+ * for an open file.
+ * 
+ * The file handle must have been created with GENERIC_WRITE.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] hFile handle to the file
+ * @param[out] lpCreationTime creation time to set, can be NULL
+ * @param[out] lpLastAccessTime last access time to set, can be NULL
+ * @param[out] lpLastWriteTime last modified time to set, can be NULL
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeSetFileTime(IRAPISession *session,
                            HANDLE hFile,
@@ -477,6 +527,16 @@ IRAPISession_CeSetFileTime(IRAPISession *session,
 
 #ifndef SWIG
 
+/** @brief Copy a remote file
+ *
+ * Copy an existing file on the device to a new file.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] lpExistingFileName name of the existing file
+ * @param[in] lpNewFileName name of the new file
+ * @param[in] bfailIfExists if new file already exists, overwrite if FALSE, or fail if TRUE
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeCopyFile(IRAPISession *session,
                         LPCWSTR lpExistingFileName,
@@ -497,6 +557,15 @@ IRAPISession_CeCopyFile(IRAPISession *session,
 }
 
 
+/** @brief Create a remote directory
+ *
+ * Create a directory on the device.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] lpPathName name of the directory to create
+ * @param[in] lpSecurityAttributes ignored, set to NULL
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeCreateDirectory(IRAPISession *session,
                                LPCWSTR lpPathName,
@@ -515,6 +584,17 @@ IRAPISession_CeCreateDirectory(IRAPISession *session,
 }
 
 
+/** @brief Delete a remote file
+ *
+ * Delete a file on the device.
+ *
+ * This will fail if the file does not exist, or if the
+ * file is open.
+ * 
+ * @param[in] session address of the session object
+ * @param[in] lpFileName name of the file to delete
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeDeleteFile(IRAPISession *session,
                           LPCWSTR lpFileName )
@@ -531,6 +611,38 @@ IRAPISession_CeDeleteFile(IRAPISession *session,
 }
 
 
+/** @brief Get contents of a directory
+ *
+ * Retrieve information about the contents, files and directories
+ * of the given directory.
+ *
+ * The dwFlags parameter is a combination of flags to determine the type
+ * of items to search for (filter flags), and what information to retrieve
+ * about them (retrieval flags).
+ * 
+ * Filter flags
+ * - FAF_ATTRIB_CHILDREN - ignore directories with no child items
+ * - FAF_ATTRIB_NO_HIDDEN - ignore entries that are hidden
+ * - FAF_FOLDERS_ONLY - only directories, no files
+ * - FAF_NO_HIDDEN_SYS_ROMMODULES - ignore ROM files and directories
+ *
+ * Retrieval flags
+ * - FAF_ATTRIBUTES - retrieve file attributes
+ * - FAF_CREATION_TIME - retrieve creation time
+ * - FAF_LASTACCESS_TIME - retrieve last access time
+ * - FAF_LASTWRITE_TIME - retrieve last modified time
+ * - FAF_SIZE_HIGH - retrieve high order DWORD of the file size
+ * - FAF_SIZE_LOW - retrieve low order DWORD of the file size
+ * - FAF_OID - retrieve the object ID
+ * - FAF_NAME - retrieve the file name
+ *
+ * @param[in] session address of the session object
+ * @param[in] szPath path to search for files
+ * @param[in] dwFlags a combination of filter and retrieval flags
+ * @param[out] lpdwFoundCount location to store number of found items
+ * @param[out] ppFindDataArray pointer to the pointer to store the returned array of CE_FIND_DATA
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeFindAllFiles(IRAPISession *session,
                             LPCWSTR szPath,
@@ -553,6 +665,15 @@ IRAPISession_CeFindAllFiles(IRAPISession *session,
 }
 
 
+/** @brief Search for a file or directory
+ *
+ * Retrieve information about the specified file or directory.
+ *
+ * @param[in] session address of the session object
+ * @param[in] lpFileName directory or file path to search for, which can contain wildcards
+ * @param[out] lpFindFileData location of a CE_FIND_DATA to store the file information
+ * @return a valid search HANDLE, or INVALID_HANDLE_VALUE on failure
+ */ 
 HANDLE
 IRAPISession_CeFindFirstFile(IRAPISession *session,
                              LPCWSTR lpFileName,
@@ -571,6 +692,16 @@ IRAPISession_CeFindFirstFile(IRAPISession *session,
 }
 
 
+/** @brief Search for a subsequent file or directory
+ *
+ * Retrieve information about the next file or directory
+ * in a search context initiated by IRAPISession_CeFindFirstFile().
+ *
+ * @param[in] session address of the session object
+ * @param[in] hFindFile search handle returned from IRAPISession_CeFindFirstFile()
+ * @param[out] lpFindFileData location of a CE_FIND_DATA to store the file information
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeFindNextFile(IRAPISession *session,
                             HANDLE hFindFile,
@@ -589,6 +720,14 @@ IRAPISession_CeFindNextFile(IRAPISession *session,
 }
 
 
+/** @brief Close a search handle
+ *
+ * Closes a search handle previously opened by IRAPISession_CeFindFirstFile().
+ *
+ * @param[in] session address of the session object
+ * @param[in] hFindFile search handle returned from IRAPISession_CeFindFirstFile()
+ * @return non-zero on success, zero on failure
+ */ 
 BOOL
 IRAPISession_CeFindClose(IRAPISession *session,
                          HANDLE hFindFile )
@@ -604,6 +743,14 @@ IRAPISession_CeFindClose(IRAPISession *session,
 }
 
 
+/** @brief Get file attributes of a file or directory
+ *
+ * Retrieve the file attributes of the specified file or directory.
+ *
+ * @param[in] session address of the session object
+ * @param[in] lpFileName directory or file path
+ * @return DWORD value of the file attributes FILE_ATTRIBUTE_*, or 0xFFFFFFFF on failure
+ */ 
 DWORD
 IRAPISession_CeGetFileAttributes(IRAPISession *session,
                                  LPCWSTR lpFileName )
@@ -1570,6 +1717,15 @@ IRAPISession_CeRapiInvoke(IRAPISession *session,
  *@{ 
  */
 
+/** @typedef struct _IRAPIDevice IRAPIDevice
+ * @brief A connected device
+ * 
+ * This is an opaque structure, representing a connected
+ * device.
+ * It's contents should be accessed via the IRAPIDevice_*
+ * series of functions.
+ * 
+ */ 
 struct _IRAPIDevice {
         IRAPIDesktop *desktop;
         char *obj_path;
@@ -1826,6 +1982,14 @@ IRAPIDevice_get_local_ip(IRAPIDevice *self)
   return synce_info_get_local_ip(self->info);
 }
 
+/** @brief Obtain dbus object path
+ * 
+ * This function retrieves the dbus object path of the 
+ * device.
+ * 
+ * @param[in] self address of the device object
+ * @return dbus object path
+ */ 
 const char *
 IRAPIDevice_get_obj_path(IRAPIDevice *self)
 {
@@ -1847,6 +2011,15 @@ IRAPIDevice_get_obj_path(IRAPIDevice *self)
  *@{ 
  */
 
+/** @typedef struct _IRAPIEnumDevices IRAPIEnumDevices
+ * @brief An enumeration of devices
+ * 
+ * This is an opaque structure, used to enumerate connected
+ * devices.
+ * It's contents should be accessed via the IRAPIEnumDevices_*
+ * series of functions.
+ * 
+ */ 
 struct _IRAPIEnumDevices {
         GList *devices;
         unsigned count;
@@ -2020,6 +2193,15 @@ IRAPIEnumDevices_Skip(IRAPIEnumDevices *self, ULONG cElt)
  */
 
 
+/** @typedef struct _IRAPIDesktop IRAPIDesktop
+ * @brief Store of connected devices
+ * 
+ * This is an opaque structure, used to discover connected
+ * devices, obtained using IRAPIDesktop_Get().
+ * It's contents should be accessed via the IRAPIDesktop_*
+ * series of functions.
+ * 
+ */ 
 struct _IRAPIDesktop {
         int refcount;
 

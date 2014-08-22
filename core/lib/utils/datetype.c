@@ -7,9 +7,29 @@
 #define VAR_TIMEVALUEONLY	DATE_TIMEVALUEONLY
 #define VAR_DATEVALUEONLY	DATE_DATEVALUEONLY
 
+/** 
+ * @defgroup SynceDateTime Date and time manipulation
+ * @ingroup SynceUtils
+ * @brief Tools for converting dates and times between WinCE and host formats
+ *
+ * @{ 
+ */ 
+
 static BOOL TmToDATE( struct tm* pTm, DATE *pDateOut );
 static BOOL DateToTm( DATE dateIn, DWORD dwFlags, struct tm* pTm );
 
+/** @brief Convert from broken down tm to DATE
+ * 
+ * This function converts a date in broken down tm representation to
+ * Windows DATE.
+ * 
+ * Only years after 1900 are converted. The fields tm.tm_wday, tm.tm_yday
+ * and tm.tm_isdst are not used.
+ *
+ * @param[in] pTm pointer to the struct containing the date to convert
+ * @param[out] pDateOut pointer to the location to store the converted date
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool date_from_tm(struct tm* pTm, DATE *pDateOut)
 {
 	struct tm copy = *pTm;
@@ -17,6 +37,25 @@ bool date_from_tm(struct tm* pTm, DATE *pDateOut)
 	return TmToDATE(&copy, pDateOut);
 }
 
+/** @brief Convert from DATE to broken down tm
+ * 
+ * This function converts a date in Windows DATE representation to
+ * broken down tm representation.
+ * 
+ * It does not fill all the fields of the tm structure, only the following.
+ * tm_sec, tm_min, tm_hour, tm_year, tm_day, tm_mon.
+ *
+ * Whereas the tm.tm_year field usually holds the number of years since
+ * 1900, this function provides the complete year.
+ *
+ * Note this function does not support dates before the January 1, 1900
+ * or ( dateIn < 2.0 ).
+ *
+ * @param[in] dateIn the date to convert
+ * @param[in] dwFlags 0 for date and time, #DATE_TIMEVALUEONLY to omit the date, or #DATE_DATEVALUEONLY to omit the time
+ * @param[out] pTm pointer to the location to store the converted date
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool date_to_tm(DATE dateIn, DWORD dwFlags, struct tm* pTm)
 {
 	struct tm result;
@@ -335,5 +374,6 @@ static BOOL DateToTm( DATE dateIn, DWORD dwFlags, struct tm* pTm )
     return TRUE;
 }
 
+/** @} */
 
 

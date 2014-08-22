@@ -13,6 +13,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+/** 
+ * @defgroup SynceFiles Configuration directory and file management
+ * @ingroup SynceUtils
+ * @brief Manipulating the Synce configuration directory and files
+ *
+ * @{ 
+ */ 
+
 #define DIRECTORY_NAME                ".synce"
 #define DEFAULT_CONNECTION_FILENAME   "active_connection"
 #define SCRIPT_DIRECTORY              "scripts"
@@ -39,9 +47,17 @@ static bool make_sure_directory_exists(char* directory)
 	return true;
 }
 
-/**
- * Get path to config files
- */
+/** @brief Get path to configuration files
+ * 
+ * This function queries the directory used to store
+ * SynCE configuration files. By default this is the
+ * .synce directory in the user's home directory,
+ * but can be specified by the SYNCE_CONF_DIR
+ * environment variable.
+ * 
+ * @param[out] path location to store the pointer to the newly allocated string
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_get_directory(char** path)
 {
   char buffer[MAX_PATH];
@@ -78,9 +94,19 @@ bool synce_get_directory(char** path)
   return true;
 }
 
-/**
-  Set the file name used for active connection info
-*/
+/** @brief Set file name for active connection info
+ * 
+ * This function sets the location of the SynCE device
+ * connection information file. By default this is "active_connection"
+ * in the directory returned by synce_get_directory().
+ * 
+ * The filename cannot contain "..".
+ * 
+ * @deprecated This is only used with the legacy vdccm implementation of dccm.
+ * 
+ * @param[in] filename filename to use
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_set_connection_filename(const char* filename)
 {
   bool success = false;
@@ -101,17 +127,32 @@ bool synce_set_connection_filename(const char* filename)
   return success;
 }
 
-/*
-   Restore the default filename used for active connection info
- */
+/** @brief Restore the default file name for active connection info
+ * 
+ * This function restores the default location of the SynCE device
+ * connection information file. By default this is "active_connection"
+ * in the directory returned by synce_get_directory().
+ * 
+ * @deprecated This is only used with the legacy vdccm implementation of dccm.
+ * 
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_set_default_connection_filename()
 {
   return synce_set_connection_filename(DEFAULT_CONNECTION_FILENAME);
 }
 
-/**
- * Get file name for active connection info
- */
+/** @brief Get file name for active connection info
+ * 
+ * This function queries the location of the SynCE device
+ * connection information file. By default this is "active_connection"
+ * in the directory returned by synce_get_directory().
+ *
+ * @deprecated This is only used with the legacy vdccm implementation of dccm.
+ * 
+ * @param[out] filename location to store the pointer to the newly allocated string
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_get_connection_filename(char** filename)
 {
 	bool success = false;
@@ -137,6 +178,16 @@ exit:
 	return success;
 }
 
+/** @brief Get path to configuration subdirectory
+ * 
+ * This function provides the full path to the specified
+ * subdirectory of the SynCE configuration directory, as
+ * provided by synce_get_directory().
+ * 
+ * @param[in] name name of the required subdirectory, cannot contain "/"
+ * @param[out] path location to store the pointer to the newly allocated string
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_get_subdirectory(const char* name, char** directory)
 {
 	bool success = false;
@@ -169,9 +220,19 @@ exit:
 	return success;
 }
 
+/** @brief Get path to script subdirectory
+ * 
+ * This function provides the full path to the script
+ * subdirectory of the SynCE configuration directory, as
+ * provided by synce_get_directory().
+ * 
+ * @param[out] path location to store the pointer to the newly allocated string
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_get_script_directory(char** directory)
 {
 	return synce_get_subdirectory(SCRIPT_DIRECTORY, directory);
 }
 
 
+/** @} */

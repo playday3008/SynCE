@@ -2,11 +2,27 @@
 #include "synce.h"
 #include "synce_log.h"
 
+/** 
+ * @defgroup SynceDateTime Date and time manipulation
+ * @ingroup SynceUtils
+ * @brief Tools for converting dates and times between WinCE and host formats
+ *
+ * @{ 
+ */ 
+
 static void DOSFS_UnixTimeToFileTime( time_t unix_time, FILETIME *filetime,
                                DWORD remainder );
 static time_t DOSFS_FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder );
 
 
+/** @brief Convert to FILETIME from unix time
+ * 
+ * This function converts the date and time from a unix time_t representation
+ * to a Windows FILETIME value.
+ * 
+ * @param[in] unix_time the date and time value to convert
+ * @param[out] filetime the location to store the converted date and time
+ */ 
 void filetime_from_unix_time(time_t unix_time, FILETIME *filetime)
 {
 	if (0 == unix_time || -1 == unix_time)
@@ -18,6 +34,16 @@ void filetime_from_unix_time(time_t unix_time, FILETIME *filetime)
 		DOSFS_UnixTimeToFileTime(unix_time, filetime, 0);
 }
 
+/** @brief Convert from FILETIME to unix time
+ *
+ * @deprecated use time_fields_from_filetime() instead
+ * 
+ * This function converts the date and time from a Windows FILETIME value
+ * into unix time_t representation.
+ * 
+ * @param[in] filetime pointer to the date and time to convert
+ * @return the converted date and time
+ */ 
 time_t filetime_to_unix_time(const FILETIME *filetime)
 {
   synce_trace("This function is deprecated. Use time_fields_from_filetime() instead.");
@@ -261,3 +287,4 @@ static time_t DOSFS_FileTimeToUnixTime( const FILETIME *filetime, DWORD *remaind
 #endif
 }
 
+/** @} */

@@ -26,6 +26,14 @@
 #include "dmalloc.h"
 #endif
 
+/** 
+ * @defgroup SynceWstr Wide string (UCS2) handling
+ * @ingroup SynceUtils
+ * @brief Tools for manipulating and converting strings in wide (UCS2) format
+ *
+ * @{ 
+ */ 
+
 #define wstr_DEBUG 1
 
 #if wstr_DEBUG
@@ -116,26 +124,41 @@ static char* wstr_to_x(LPCWSTR inbuf, const char* code)
   return outbuf;
 }
 
-/**
- * Convert a string from UCS2 to iso8859-1
- */
+/** @brief Convert string from UCS2 to iso8859-1
+ * 
+ * This function converts a string from UCS2 encoding to 
+ * iso8859-1 (ascii).
+ * 
+ * @param[in] unicode UCS2 string to convert
+ * @return string in ascii encoding
+ */ 
 char* wstr_to_ascii(LPCWSTR unicode)
 {
 	return wstr_to_x(unicode, wstr_ASCII);
 }
 
-/*
- * Convert a string from UCS2 to UTF8
- */
+/** @brief Convert string from UCS2 to UTF8
+ * 
+ * This function converts a string from UCS2 encoding to 
+ * UTF8.
+ * 
+ * @param[in] unicode UCS2 string to convert
+ * @return string in UTF8 encoding
+ */ 
 char* wstr_to_utf8(LPCWSTR unicode)
 {
 	return wstr_to_x(unicode, wstr_UTF8);
 }
 
 #if HAVE_SETLOCALE && HAVE_NL_LANGINFO
-/*
- * Convert a string from UCS2 to current locale charset
- */
+/** @brief Convert string from UCS2 to current local charset
+ * 
+ * This function converts a string from UCS2 encoding to 
+ * the charset of the current locale.
+ * 
+ * @param[in] unicode UCS2 string to convert
+ * @return string in current locale encoding
+ */ 
 char* wstr_to_current(LPCWSTR unicode)
 {
   return wstr_to_x(unicode, get_current_codeset());
@@ -184,35 +207,54 @@ static LPWSTR wstr_from_x(const char* inbuf, const char* code)
 	return outbuf;
 }
 
-/**
- * Convert a string from iso8859-1 to UCS2
- */
+/** @brief Convert string from iso8859-1 to UCS2
+ * 
+ * This function converts a string from iso8859-1 (ascii)
+ * encoding to UCS2.
+ * 
+ * @param[in] inbuf ascii string to convert
+ * @return string in UCS2 encoding
+ */ 
 LPWSTR wstr_from_ascii(const char* inbuf)
 {
 	return wstr_from_x(inbuf, wstr_ASCII);
 }
 
-/**
- * Convert a string from UTF8 to UCS2
- */
+/** @brief Convert string from UTF8 to UCS2
+ * 
+ * This function converts a string from UTF8
+ * encoding to UCS2.
+ * 
+ * @param[in] inbuf UTF8 string to convert
+ * @return string in UCS2 encoding
+ */ 
 LPWSTR wstr_from_utf8(const char* inbuf)
 {
 	return wstr_from_x(inbuf, wstr_UTF8);
 }
 
 #if HAVE_SETLOCALE && HAVE_NL_LANGINFO
-/**
- * Convert a string from current locale charset to UCS2
- */
+/** @brief Convert string from current locale charset to UCS2
+ * 
+ * This function converts a string from the charset of the
+ * current locale to UCS2 encoding.
+ * 
+ * @param[in] inbuf string to convert
+ * @return string in UCS2 encoding
+ */ 
 LPWSTR wstr_from_current(const char* inbuf)
 {
   return wstr_from_x(inbuf, get_current_codeset());
 }
 #endif
 
-/**
- * Free a string returned by a conversion function
- */
+/** @brief Free a string returned by a conversion function
+ * 
+ * This function frees the memory allocated for a string
+ * returned by a conversion function.
+ * 
+ * @param[in] str string to free
+ */ 
 void wstr_free_string(void* str)
 {
 	if (str)
@@ -221,6 +263,14 @@ void wstr_free_string(void* str)
 
 /**
  * Return size of ascii string as unicode
+ */
+/** @brief Determine length of a UCS2 string
+ * 
+ * This function determines the length of a string in
+ * UCS2 encoding, as number of characters.
+ * 
+ * @param[in] unicode string in UCS2
+ * @return length of string in characters
  */
 size_t wstrlen(LPCWSTR unicode)
 {
@@ -234,8 +284,14 @@ size_t wstrlen(LPCWSTR unicode)
 	return length;
 }
 
-/**
- * Copy strings
+/** @brief Copy a UCS2 string
+ * 
+ * This function copies the UCS2 string. dest must be large enough
+ * to receive the string, no bounds checking is performed.
+ * 
+ * @param[out] dest buffer to receive the copy
+ * @param[in] src string to copy
+ * @return pointer to the destination string dest
  */
 LPWSTR wstrcpy(LPWSTR dest, LPCWSTR src)
 {
@@ -249,8 +305,16 @@ LPWSTR wstrcpy(LPWSTR dest, LPCWSTR src)
 	return dest;
 }
 
-/**
- * Append unicode strings, return success
+/** @brief Append UCS2 strings
+ * 
+ * This function appends the UCS2 string src to the
+ * UCS2 string dest. dest must be at least max_dest_length
+ * in size, in UCS2 characters. No bounds checking is performed.
+ * 
+ * @param[in,out] dest string to be appended to
+ * @param[in] src string to append
+ * @param[in] max_dest_length size of the dest buffer in UCS2 characters
+ * @return TRUE on success, FALSE on failure
  */
 bool wstr_append(LPWSTR dest, LPCWSTR src, size_t max_dest_length)
 {
@@ -287,8 +351,13 @@ bool wstr_append(LPWSTR dest, LPCWSTR src, size_t max_dest_length)
 	return true;
 }
 
-/**
- * Compare strings
+/** @brief Compares UCS2 strings
+ * 
+ * This function compares two UCS2 strings.
+ * 
+ * @param[in] a first string to compare
+ * @param[in] b second string to compare
+ * @return TRUE if the strings are identical, FALSE otherwise
  */
 bool wstr_equal(LPWSTR a, LPWSTR b)
 {
@@ -298,6 +367,14 @@ bool wstr_equal(LPWSTR a, LPWSTR b)
 	return *a == *b;
 }
 
+/** @brief Copy a UCS2 string
+ * 
+ * This function copies the given string, allocating memory to
+ * do so.
+ * 
+ * @param[in] string the string to copy
+ * @return pointer to the new string, or NULL on failure
+ */
 LPWSTR wstrdup(LPCWSTR string)
 {
 	LPWSTR result = NULL;
@@ -315,3 +392,5 @@ LPWSTR wstrdup(LPCWSTR string)
 
 	return result;
 }
+
+/** @} */

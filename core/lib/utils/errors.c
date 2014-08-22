@@ -6,6 +6,23 @@
 #include "synce.h"
 #include "synce_log.h"
 
+/** 
+ * @defgroup SynceMisc Error and password handling
+ * @ingroup SynceUtils
+ * @brief Functions for reporting errors, and handling device passwords
+ *
+ * @{ 
+ */ 
+
+/** @brief Return an HRESULT using the given error code
+ * 
+ * This function maps the provided error code into 
+ * an HRESULT, with a severity of SEVERITY_ERROR, and a
+ * facility of FACILITY_WIN32.
+ * 
+ * @param[in] x error code
+ * @return HRESULT for the given error code
+ */ 
 HRESULT
 HRESULT_FROM_WIN32(DWORD x)
 {
@@ -40,11 +57,27 @@ synce_strhresult(HRESULT hr)
 	return result_str;
 }
 
+/** @brief Return string describing the error in the given HRESULT
+ * 
+ * This function extracts the error code from the given
+ * HRESULT and returns a string describing the error code.
+ * 
+ * @param[in] hr HRESULT to describe
+ * @return description of the error
+ */ 
 const char* synce_strerror_from_hresult(HRESULT hr)
 {
   return synce_strerror(HRESULT_CODE(hr));
 }
 
+/** @brief Return string describing the given error code
+ * 
+ * This function returns a string describing the given
+ * Windows error code.
+ * 
+ * @param[in] error error code to describe
+ * @return description of the error
+ */ 
 const char* synce_strerror(DWORD error)
 {
 	char* result = NULL;
@@ -750,3 +783,5 @@ const char* synce_strerror(DWORD error)
 
 	return result;
 }
+
+/** @} */

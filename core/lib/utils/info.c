@@ -23,6 +23,30 @@
 #endif
 #endif
 
+/** 
+ * @defgroup SynceUtils Synce utility functions API
+ * @brief Low level functionality for communicating with a device and formatting data
+ *
+ */ 
+
+/** 
+ * @defgroup SynceInfo Hardware and OS information
+ * @ingroup SynceUtils
+ * @brief Obtaining basic information about a connected device
+ *
+ * @{ 
+ */ 
+
+/** @typedef struct _SynceInfo SynceInfo
+ * @brief Information about a connected device
+ * 
+ * This is an opaque structure containing information about
+ * a connected device, obtained using synce_info_new() and
+ * synce_info_new_by_field(), and destroyed with synce_info_destroy().
+ * It's contents should be accessed via the synce_info_get_*
+ * series of functions.
+ * 
+ */ 
 struct _SynceInfo
 {
   pid_t dccm_pid;
@@ -738,11 +762,35 @@ OUT:
 #endif /* ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT */
 
 
+/** @brief Get device information for a named device
+ * 
+ * This function obtains a new SynceInfo struct containing
+ * information about a connected device. If a device name is
+ * specified, that device is queried, otherwise the first
+ * device found is returned.
+ * 
+ * @param[in] device_name name of the device to query, or NULL for any device
+ * @return a new SynceInfo struct, or NULL on error or if no device is found
+ */ 
 SynceInfo* synce_info_new(const char* device_name)
 {
   return synce_info_new_by_field(INFO_NAME, device_name);
 }
 
+/** @brief Get device information for a specified device
+ * 
+ * This function obtains a new SynceInfo struct containing
+ * information about a connected device. The device can be
+ * specified by name, using INFO_NAME for the field parameter.
+ * INFO_OBJECT_PATH specifies the device should be identified by
+ * dbus object path, or full path to the connection file if
+ * the legacy vdccm is being used. If identification data is not
+ * specified, the first device found is returned.
+ * 
+ * @param[in] field INFO_NAME or INFO_OBJECT_PATH
+ * @param[in] data identification of the device to query, or NULL for any device
+ * @return a new SynceInfo struct, or NULL on error or if no device is found
+ */ 
 SynceInfo* synce_info_new_by_field(SynceInfoIdField field, const char* data)
 {
   SynceInfo* result = NULL;
@@ -770,6 +818,13 @@ SynceInfo* synce_info_new_by_field(SynceInfoIdField field, const char* data)
 }
 
 
+/** @brief Destroy a SynceInfo struct
+ * 
+ * This function frees the memory used by a previously obtained
+ * SynceInfo struct.
+ * 
+ * @param[in] info struct to destroy
+ */ 
 void synce_info_destroy(SynceInfo* info)
 {
   if (info)
@@ -786,6 +841,14 @@ void synce_info_destroy(SynceInfo* info)
   }
 }
 
+/** @brief Get device name from an info struct
+ * 
+ * This function obtains the device name from a previously
+ * obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the device name, owned by the info object
+ */ 
 const char *
 synce_info_get_name(SynceInfo *info)
 {
@@ -793,6 +856,16 @@ synce_info_get_name(SynceInfo *info)
   return info->name;
 }
 
+/** @brief Get device operation system version from an info struct
+ * 
+ * This function obtains the device operating system version
+ * from a previously obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @param[out] os_major location to store the os major version
+ * @param[out] os_minor location to store the os minor version
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool
 synce_info_get_os_version(SynceInfo *info, unsigned int *os_major, unsigned int *os_minor)
 {
@@ -805,6 +878,14 @@ synce_info_get_os_version(SynceInfo *info, unsigned int *os_major, unsigned int 
   return true;
 }
 
+/** @brief Get device build number from an info struct
+ * 
+ * This function obtains the device build number from a
+ * previously obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the build number
+ */ 
 unsigned int
 synce_info_get_build_number(SynceInfo *info)
 {
@@ -812,6 +893,14 @@ synce_info_get_build_number(SynceInfo *info)
   return info->build_number;
 }
 
+/** @brief Get device processor type from an info struct
+ * 
+ * This function obtains the processor type from a
+ * previously obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the processor type
+ */ 
 unsigned int
 synce_info_get_processor_type(SynceInfo *info)
 {
@@ -819,6 +908,14 @@ synce_info_get_processor_type(SynceInfo *info)
   return info->processor_type;
 }
 
+/** @brief Get operating system name from an info struct
+ * 
+ * This function obtains the operating system name from a previously
+ * obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the os name, owned by the info object
+ */ 
 const char *
 synce_info_get_os_name(SynceInfo *info)
 {
@@ -826,6 +923,14 @@ synce_info_get_os_name(SynceInfo *info)
   return info->os_name;
 }
 
+/** @brief Get model name from an info struct
+ * 
+ * This function obtains the device model name from a previously
+ * obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the model name, owned by the info object
+ */ 
 const char *
 synce_info_get_model(SynceInfo *info)
 {
@@ -833,6 +938,15 @@ synce_info_get_model(SynceInfo *info)
   return info->model;
 }
 
+/** @brief Get device IP address from an info struct
+ * 
+ * This function obtains the IP address of a device, in
+ * dotted quad notation, from a previously
+ * obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the device IP address, owned by the info object
+ */ 
 const char *
 synce_info_get_device_ip(SynceInfo *info)
 {
@@ -840,6 +954,18 @@ synce_info_get_device_ip(SynceInfo *info)
   return info->device_ip;
 }
 
+/** @brief Get local interface IP address from an info struct
+ * 
+ * This function obtains the IP address of the local end of the
+ * connection, in dotted quad notation, from a previously
+ * obtained SynceInfo struct.
+ * 
+ * This is not available when using legacy odccm or vdccm, NULL
+ * is returned.
+ *
+ * @param[in] info struct to query
+ * @return the local IP address, owned by the info object
+ */ 
 const char *
 synce_info_get_local_ip(SynceInfo *info)
 {
@@ -847,6 +973,18 @@ synce_info_get_local_ip(SynceInfo *info)
   return info->local_iface_ip;
 }
 
+/** @brief Get GUID from an info struct
+ * 
+ * This function obtains the device GUID name from a previously
+ * obtained SynceInfo struct.
+ * 
+ * Pre Windows Mobile 5 devices don't have a GUID, so this 
+ * generates an appropriately formatted GUID from other 
+ * identifying information from the device.
+ *
+ * @param[in] info struct to query
+ * @return the GUID, owned by the info object
+ */ 
 const char *
 synce_info_get_guid(SynceInfo *info)
 {
@@ -854,6 +992,14 @@ synce_info_get_guid(SynceInfo *info)
   return info->guid;
 }
 
+/** @brief Get first partnership id from an info struct
+ * 
+ * This function obtains the first partnership id from a
+ * previously obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the partnership id
+ */ 
 unsigned int
 synce_info_get_partner_id_1(SynceInfo *info)
 {
@@ -861,6 +1007,14 @@ synce_info_get_partner_id_1(SynceInfo *info)
   return info->partner_id_1;
 }
 
+/** @brief Get second partnership id from an info struct
+ * 
+ * This function obtains the second partnership id from a
+ * previously obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the partnership id
+ */ 
 unsigned int
 synce_info_get_partner_id_2(SynceInfo *info)
 {
@@ -868,6 +1022,15 @@ synce_info_get_partner_id_2(SynceInfo *info)
   return info->partner_id_2;
 }
 
+/** @brief Get object path from an info struct
+ * 
+ * This function obtains the dbus object path, or in the case
+ * of legacy vdccm the connection file name, from a previously
+ * obtained SynceInfo struct.
+ * 
+ * @param[in] info struct to query
+ * @return the object path, owned by the info object
+ */ 
 const char *
 synce_info_get_object_path(SynceInfo *info)
 {
@@ -875,6 +1038,18 @@ synce_info_get_object_path(SynceInfo *info)
   return info->object_path;
 }
 
+/** @brief Get dccm process id from an info struct
+ * 
+ * This function obtains the dccm process id from a
+ * previously obtained SynceInfo struct.
+ *
+ * @deprecated This is only relevant when using a legacy
+ * implementation of dccm, such as vdccm. In any other case
+ * zero will be returned.
+ * 
+ * @param[in] info struct to query
+ * @return the dccm pid, or zero
+ */ 
 pid_t
 synce_info_get_dccm_pid(SynceInfo *info)
 {
@@ -882,6 +1057,15 @@ synce_info_get_dccm_pid(SynceInfo *info)
   return info->dccm_pid;
 }
 
+/** @brief Get transport type from an info struct
+ * 
+ * This function obtains the transport type used by a device
+ * from a previously obtained SynceInfo struct. This will be
+ * udev, odccm, or vdccm.
+ * 
+ * @param[in] info struct to query
+ * @return the transport type, owned by the info object
+ */ 
 const char *
 synce_info_get_transport(SynceInfo *info)
 {
@@ -889,6 +1073,19 @@ synce_info_get_transport(SynceInfo *info)
   return info->transport;
 }
 
+/** @brief Get password from an info struct
+ * 
+ * This function obtains the password used to unlock
+ * a password protected device from a previously obtained
+ * SynceInfo struct..
+ * 
+ * @deprecated This is only valid when using a legacy
+ * implementation of dccm, such as vdccm. In any other case
+ * NULL will be returned.
+ *
+ * @param[in] info struct to query
+ * @return the password, owned by the info object
+ */ 
 const char *
 synce_info_get_password(SynceInfo *info)
 {
@@ -896,9 +1093,24 @@ synce_info_get_password(SynceInfo *info)
   return info->password;
 }
 
+/** @brief Get password key from an info struct
+ * 
+ * This function obtains the password key used to unlock
+ * a password protected device from a previously obtained
+ * SynceInfo struct.
+ * 
+ * @deprecated This is only valid when using a legacy
+ * implementation of dccm, such as vdccm. In any other case
+ * zero will be returned.
+ *
+ * @param[in] info struct to query
+ * @return the password key
+ */ 
 int
 synce_info_get_key(SynceInfo *info)
 {
   if (!info) return 0;
   return info->key;
 }
+
+/** @} */

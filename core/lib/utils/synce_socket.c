@@ -46,11 +46,25 @@ int inet_pton(int af, const char *src, void *dst);
 
 #define RAPI_SOCKET_LISTEN_QUEUE  1024
 
+/** 
+ * @defgroup SynceSocket Socket convenience functions
+ * @ingroup SynceUtils
+ * @brief A convenience class for socket operations
+ *
+ * @{ 
+ */ 
+
 struct _SynceSocket
 {
 	int fd;
 };
 
+/** @brief Create a client socket
+ * 
+ * This function creates a new SynceSocket object.
+ * 
+ * @return the new socket
+ */ 
 SynceSocket* synce_socket_new(/* TODO: some parameters here */)
 {
 	SynceSocket* socket = calloc(1, sizeof(SynceSocket));
@@ -63,6 +77,13 @@ SynceSocket* synce_socket_new(/* TODO: some parameters here */)
 	return socket;
 }
 
+/** @brief Release a client socket
+ * 
+ * This function closes the object if it is open,
+ * and free's the memory.
+ * 
+ * @param[in] socket the socket to free
+ */ 
 void synce_socket_free(SynceSocket* socket)
 {
 	if (socket)
@@ -72,11 +93,28 @@ void synce_socket_free(SynceSocket* socket)
 	}
 }
 
+/** @brief Obtain the descriptor from a socket
+ * 
+ * This function returns the file descriptor from a
+ * socket.
+ * 
+ * @param[in] socket the socket
+ * @return the file descriptor
+ */ 
 int synce_socket_get_descriptor(SynceSocket* socket)
 {
   return socket->fd;
 }
 
+/** @brief Use the given descriptor for the socket object
+ * 
+ * This function releases any active file descriptor
+ * for the socket, and replaces it with the supplied
+ * descriptor.
+ * 
+ * @param[in] socket the socket
+ * @param[in] fd the file descriptor to use
+ */ 
 void synce_socket_take_descriptor(SynceSocket* socket, int fd)
 {
   if (socket->fd != SYNCE_SOCKET_INVALID_DESCRIPTOR)
@@ -125,6 +163,18 @@ fail:
     return success;
 }
 
+/** @brief Connect a socket to remote service
+ * 
+ * This function connects the given socket to the supplied
+ * host and port.
+ *
+ * If the socket is already open it is first closed.
+ * 
+ * @param[in] syncesock the socket
+ * @param[in] host host address in dotted quad format
+ * @param[in] port port number to connect to
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_connect(SynceSocket* syncesock, const char* host, uint16_t port)
 {
 	struct sockaddr_in servaddr;
@@ -152,6 +202,18 @@ fail:
 	return false;
 }
 
+/** @brief Connect a socket via vdccm proxy
+ * 
+ * This function connects the given socket via the vdccm
+ * proxying functionality. Vdccm is a legacy implementation
+ * of dccm, and this function should therefore not be used.
+ *
+ * If the socket is already open it is first closed.
+ * 
+ * @param[in] syncesock the socket
+ * @param[in] remoteIpAddress IP address of the remote device
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_connect_proxy(SynceSocket* syncesock, const char* remoteIpAddress)
 {
     synce_socket_close(syncesock);
@@ -189,6 +251,18 @@ fail:
     return false;
 }
 
+/** @brief Open a socket to listen for incoming connections
+ * 
+ * This function binds the given socket to the supplied
+ * host address and port to listen for incoming connections.
+ *
+ * If host is not given, all addresses are bound.
+ * 
+ * @param[in] syncesock the socket
+ * @param[in] host host address in dotted quad format
+ * @param[in] port port number to connect to
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_listen(SynceSocket* socket, const char* host, uint16_t port)
 {
 	struct sockaddr_in servaddr;
@@ -234,6 +308,14 @@ fail:
 	return false;
 }
 
+/** @brief Accept an incoming connection
+ * 
+ * This function accepts an incoming connection from a listening socket.
+ *
+ * @param[in] server the listening socket
+ * @param[out] address address of a location to store the client address, or NULL
+ * @return new socket connection, or NULL on failure
+ */ 
 SynceSocket* synce_socket_accept(SynceSocket* server, struct sockaddr_in* address)
 {
 	struct sockaddr_in cliaddr;
@@ -282,6 +364,13 @@ exit:
 	return client;
 }
 
+/** @brief Close a socket connection
+ * 
+ * This function closes a socket, if it is open.
+ *
+ * @param[in] socket socket to close
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_close(SynceSocket* socket)
 {
 	if (!socket)
@@ -299,6 +388,15 @@ bool synce_socket_close(SynceSocket* socket)
 	return false;
 }
 
+/** @brief Write to an open socket
+ * 
+ * This function writes the given data to an open socket.
+ *
+ * @param[in] socket socket to write to
+ * @param[in] data data to be written
+ * @param[in] size number of bytes to be written from data
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_write(SynceSocket* socket, const void* data, size_t size)
 {
 	ssize_t bytes_left = size;
@@ -343,6 +441,15 @@ bool synce_socket_write(SynceSocket* socket, const void* data, size_t size)
 	return 0 == bytes_left;
 }
 
+/** @brief Read from an open socket
+ * 
+ * This function reads data from an open socket.
+ *
+ * @param[in] socket socket to read from
+ * @param[in] data location to store the data
+ * @param[in] size number of bytes to read
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_read(SynceSocket* socket, void* data, size_t size)
 {
 	ssize_t bytes_needed = size;
@@ -425,9 +532,19 @@ static SocketEvents from_poll_events(short poll_events)
 	return events;
 }
 
+/** @brief Wait for an event on a socket
+ * 
+ * This function waits for particular events to occur
+ * on a socket, and reports the event types encountered.
+ *
+ * @param[in] socket socket to check
+ * @param[in] timeoutInSeconds time to wait in seconds, 0 to report immediately, or a negative value to wait until an event is detected
+ * @param[in,out] events the events to check for; on return is set to the events detected
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_wait(SynceSocket* socket, int timeoutInSeconds, short* events)
 {
-	/**
+	/*
 	 * This can easily be replaced by select() if needed on some platform
 	 */
 	bool success = false;
@@ -501,6 +618,15 @@ exit:
 
 #endif /* HAVE_POLL */
 
+/** @brief Check amount available for reading on a socket
+ * 
+ * This function checks for the number of bytes available for
+ * reading on a socket.
+ *
+ * @param[in] socket socket to check
+ * @param[out] count bytes available to read
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_socket_available(SynceSocket* socket, unsigned* count)
 {
 #ifdef FIONREAD
@@ -517,3 +643,4 @@ bool synce_socket_available(SynceSocket* socket, unsigned* count)
 #endif
 }
 
+/** @} */

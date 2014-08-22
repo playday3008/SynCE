@@ -4,6 +4,14 @@
 #include "synce_socket.h"
 #include <string.h>
 
+/** 
+ * @defgroup SynceMisc Error and password handling
+ * @ingroup SynceUtils
+ * @brief Functions for reporting errors, and handling device passwords
+ *
+ * @{ 
+ */ 
+
 /**
  * Free an encoded password returned from synce_password_encode()
  */
@@ -12,9 +20,17 @@ static void synce_password_free(unsigned char *encodedPassword)
 	wstr_free_string(encodedPassword);
 }
 
-/**
- * Encode a password with a key
- */
+/** @brief Encode a password with a key
+ * 
+ * This function encodes the given password with the
+ * given key, ready to send to a locked device.
+ * 
+ * @param[in] asciiPassword the password to encode
+ * @param[in] key the key to use for encoding
+ * @param[out] location to store the encoded password
+ * @param[out] size of the encoded password
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_password_encode(
 		const char *asciiPassword,
 		unsigned char key,
@@ -50,9 +66,17 @@ error:
 	return false;
 }
 
-/**
- * Encode and send password on a socket
- */
+/** @brief Encode and send password on a socket
+ * 
+ * This function encodes the given password with the
+ * given key, and sends the result on the specified
+ * connected socket.
+ * 
+ * @param[in] socket client socket to send the password over
+ * @param[in] asciiPassword the password to encode
+ * @param[in] key the key to use for encoding
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_password_send(
 		SynceSocket* socket,
 		const char* asciiPassword,
@@ -89,6 +113,19 @@ exit:
 	return success;
 }
 
+/** @brief Receive response to a sent password
+ * 
+ * This function reads the response from a locked device
+ * after a password has been sent.
+ * 
+ * The reply is 2 bytes long, if this is called with a 1 byte bool
+ * then the other byte must subsequently be read and discarded.
+ *
+ * @param[in] socket client socket to receive teh response
+ * @param[in] size size of the passwordCorrect parameter
+ * @param[in] passwordCorrect whether the password was accepted
+ * @return TRUE on success, FALSE on failure
+ */ 
 bool synce_password_recv_reply(
 		SynceSocket* socket,
 		size_t size,
@@ -132,3 +169,4 @@ exit:
 	return success;
 }
 
+/** @} */

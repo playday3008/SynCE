@@ -6,6 +6,14 @@
  */
 #include "synce.h"
 
+/** 
+ * @defgroup SynceDateTime Date and time manipulation
+ * @ingroup SynceUtils
+ * @brief Tools for converting dates and times between WinCE and host formats
+ *
+ * @{ 
+ */ 
+
 static VOID RtlTimeToTimeFields(
     const LARGE_INTEGER *liTime,
     PTIME_FIELDS TimeFields);
@@ -14,9 +22,17 @@ static BOOLEAN RtlTimeFieldsToTime(
     const TIME_FIELDS* tfTimeFields,
     PLARGE_INTEGER Time);
 
-/**
+/*
  * Wrapper for RtlTimeToTimeFields
  */
+/** @brief Convert from FILETIME to TIME_FIELDS
+ * 
+ * This function converts the date and time from a FILETIME value
+ * into broken down TIME_FIELDS representation.
+ * 
+ * @param[in] filetime pointer to the struct containing the date and time to convert
+ * @param[out] timeFields pointer to the location to store the converted date and time
+ */ 
 void time_fields_from_filetime(const FILETIME* filetime, TIME_FIELDS* timeFields)
 {
   LARGE_INTEGER tmp;
@@ -27,9 +43,18 @@ void time_fields_from_filetime(const FILETIME* filetime, TIME_FIELDS* timeFields
   RtlTimeToTimeFields(&tmp, timeFields);
 }
 
-/**
+/*
  * Wrapper for RtlTimeFieldsToTime
  */
+/** @brief Convert to FILETIME from TIME_FIELDS
+ * 
+ * This function converts the date and time from a broken down TIME_FIELDS representation
+ * into a FILETIME value.
+ * 
+ * @param[in] timeFields pointer to the date and time to convert
+ * @param[out] filetime pointer to the location to store the converted date and time
+ * @return FALSE on encountering an invalid value, or TRUE if successful
+ */ 
 bool time_fields_to_filetime(const TIME_FIELDS* timeFields, FILETIME* filetime)
 {
   bool result;
@@ -209,4 +234,4 @@ static BOOLEAN RtlTimeFieldsToTime(
   return TRUE;
 }
 
-
+/** @} */
