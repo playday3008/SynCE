@@ -1,6 +1,8 @@
 2016-10-05  Mark Ellis  <mark@mpellis.org.uk>
 
 	* update deprecated Glib and Gtk items
+	* GtkStatusIcon is deprecated, if AppIndicator is available then
+	  do not build with GtkStatusIcon
 
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 

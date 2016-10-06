@@ -71,7 +71,6 @@ G_DEFINE_TYPE (SynceTrayIcon, synce_trayicon, G_TYPE_OBJECT)
 typedef struct _SynceTrayIconPrivate SynceTrayIconPrivate;
 struct _SynceTrayIconPrivate {
 
-  GtkStatusIcon *status_icon;
   GSettings *settings;
   gulong settings_watch_id;
 #if ENABLE_UDEV_SUPPORT
@@ -88,6 +87,8 @@ struct _SynceTrayIconPrivate {
   NotifyNotification *notification;
 #if HAVE_APP_INDICATOR
   AppIndicator *app_indicator;
+#else
+  GtkStatusIcon *status_icon;
 #endif
   gboolean show_disconnected;
 
@@ -121,6 +122,7 @@ devices_connected(SynceTrayIcon *self)
   return FALSE;
 }
 
+#if !HAVE_APP_INDICATOR
 static void
 set_status_tooltip(SynceTrayIcon *self, GtkTooltip *tooltip)
 {
@@ -184,6 +186,7 @@ query_tooltip_cb(GtkWidget *widget, gint x, gint y, gboolean keyboard_mode, GtkT
   /* show the tooltip */
   return TRUE;
 }
+#endif
 
 static void
 trayicon_update_menu(SynceTrayIcon *self);
@@ -200,6 +203,7 @@ update_status(gpointer data)
    */
   trayicon_update_menu(self);
 
+#if !HAVE_APP_INDICATOR
   if (devices_connected(self))
     gtk_status_icon_set_visible(priv->status_icon, TRUE);
   else
@@ -209,9 +213,7 @@ update_status(gpointer data)
     gtk_status_icon_set_from_icon_name(priv->status_icon, SYNCE_STOCK_CONNECTED);
   else
     gtk_status_icon_set_from_icon_name(priv->status_icon, SYNCE_STOCK_DISCONNECTED);
-
-
-#if HAVE_APP_INDICATOR
+#else
   if (!devices_connected(self)) {
     if (!(priv->show_disconnected))
       app_indicator_set_status(priv->app_indicator, APP_INDICATOR_STATUS_PASSIVE);
@@ -241,7 +243,7 @@ event_notification(SynceTrayIcon *self, const gchar *summary, const gchar *body)
   }
 
     /* libnotify 0.7.0 and later has no support for attaching to widgets */
-#if NOTIFY_CHECK_VERSION(0,7,0)
+#if NOTIFY_CHECK_VERSION(0,7,0) || HAVE_APP_INDICATOR
   priv->notification = notify_notification_new (summary, body, NULL);
   notify_notification_show (priv->notification, NULL);
 #else
@@ -1270,6 +1272,7 @@ trayicon_update_menu(SynceTrayIcon *self)
 #endif
 }
 
+#if !HAVE_APP_INDICATOR
 static void
 trayicon_activate_cb(GtkStatusIcon *status_icon, gpointer user_data)
 {
@@ -1291,6 +1294,7 @@ trayicon_popup_menu_cb(GtkStatusIcon *status_icon, guint button, guint activate_
                  gtk_status_icon_position_menu, status_icon,
                  button, activate_time);
 }
+#endif
 
 static void
 prefs_changed_cb (GSettings *settings,
@@ -1425,7 +1429,6 @@ synce_trayicon_init(SynceTrayIcon *self)
    * determine how we display status and menu, and initialise
    */
 
-  priv->status_icon = gtk_status_icon_new();
   gboolean app_ind_connected = FALSE;
 
 #if HAVE_APP_INDICATOR
@@ -1443,14 +1446,17 @@ synce_trayicon_init(SynceTrayIcon *self)
   else
     g_debug("%s: application indicator not connected", G_STRFUNC);
 
-#endif
+#else
 
+  priv->status_icon = gtk_status_icon_new();
   g_signal_connect(G_OBJECT(priv->status_icon), "activate", G_CALLBACK(trayicon_activate_cb), self);
   g_signal_connect(G_OBJECT(priv->status_icon), "popup-menu", G_CALLBACK(trayicon_popup_menu_cb), self);
 
   /* tooltip */
   gtk_status_icon_set_has_tooltip(priv->status_icon, TRUE);
   g_signal_connect(G_OBJECT(priv->status_icon), "query-tooltip", G_CALLBACK(query_tooltip_cb), self);
+
+#endif
 
   /* module initialisation */
   module_load_all();
@@ -1475,10 +1481,10 @@ synce_trayicon_dispose (GObject *obj)
 
   /* unref other objects */
 
-  g_object_unref(priv->status_icon);
-
 #if HAVE_APP_INDICATOR
   g_object_unref(priv->app_indicator);
+#else
+  g_object_unref(priv->status_icon);
 #endif
 
   if (priv->menu) {
