@@ -2337,7 +2337,7 @@ busy_window_new(const gchar *title, const gchar *message, GtkWidget **progressba
   hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
   gtk_container_add(GTK_CONTAINER(window), hbox);
 
-  image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
+  image = gtk_image_new_from_icon_name("dialog-information", GTK_ICON_SIZE_DIALOG);
   gtk_container_add(GTK_CONTAINER(hbox), image);
 
   vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 10);
@@ -2496,8 +2496,8 @@ on_app_add_button_clicked(GtkButton *button, gpointer user_data)
   installdialog = gtk_file_chooser_dialog_new (_("Select installation file"),
 					       NULL,
 					       GTK_FILE_CHOOSER_ACTION_OPEN,
-					       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-					       GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+					       _("_Cancel"), GTK_RESPONSE_CANCEL,
+					       _("_Open"), GTK_RESPONSE_ACCEPT,
 					       NULL);
   response = gtk_dialog_run (GTK_DIALOG (installdialog));
   filepath = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(installdialog));

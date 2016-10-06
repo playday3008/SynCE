@@ -889,7 +889,9 @@ menu_explore (GtkWidget *menu_item, SynceTrayIcon *self)
   gboolean vol_found = FALSE;
 
   GtkWidget *device_menu = gtk_widget_get_parent(menu_item);
-  name = gtk_menu_get_title(GTK_MENU(device_menu));
+  GtkWidget *device_menu_item = gtk_menu_get_attach_widget(GTK_MENU(device_menu));
+
+  name = gtk_menu_item_get_label(GTK_MENU_ITEM(device_menu_item));
   uri = g_strdup_printf("synce://%s/", name);
 
   GVolumeMonitor *volmon = g_volume_monitor_get();
@@ -1003,7 +1005,9 @@ menu_device_info (GtkWidget *menu_item, SynceTrayIcon *self)
   WmDeviceInfo *device_info = NULL;
 
   GtkWidget *device_menu = gtk_widget_get_parent(menu_item);
-  name = gtk_menu_get_title(GTK_MENU(device_menu));
+  GtkWidget *device_menu_item = gtk_menu_get_attach_widget(GTK_MENU(device_menu));
+
+  name = gtk_menu_item_get_label(GTK_MENU_ITEM(device_menu_item));
 
   if (!(device = wm_device_manager_find_by_name(priv->device_list, name))) {
           g_debug("%s: cannot display device info for unfound device '%s'", G_STRFUNC, name);
@@ -1049,7 +1053,9 @@ menu_disconnect(GtkWidget *menu_item, SynceTrayIcon *self)
   const gchar *name = NULL;
 
   GtkWidget *device_menu = gtk_widget_get_parent(menu_item);
-  name = gtk_menu_get_title(GTK_MENU(device_menu));
+  GtkWidget *device_menu_item = gtk_menu_get_attach_widget(GTK_MENU(device_menu));
+
+  name = gtk_menu_item_get_label(GTK_MENU_ITEM(device_menu_item));
 
   g_debug("%s: Asked to disconnect %s by user", G_STRFUNC, name);
 
@@ -1124,7 +1130,6 @@ trayicon_update_menu(SynceTrayIcon *self)
 		  gtk_widget_show(GTK_WIDGET(entry));
 
                   device_menu = gtk_menu_new();
-                  gtk_menu_set_title(GTK_MENU(device_menu), device_names_iter->data);
                   gtk_menu_item_set_submenu(GTK_MENU_ITEM(entry), device_menu);
 
                   entry = gtk_menu_item_new_with_label(_("Unlock"));
@@ -1178,7 +1183,6 @@ trayicon_update_menu(SynceTrayIcon *self)
 		  gtk_widget_show(GTK_WIDGET(entry));
 
                   device_menu = gtk_menu_new();
-                  gtk_menu_set_title(GTK_MENU(device_menu), device_names_iter->data);
                   gtk_menu_item_set_submenu(GTK_MENU_ITEM(entry), device_menu);
 
                   entry = gtk_menu_item_new_with_label(_("Explore with Filemanager"));
@@ -1193,7 +1197,7 @@ trayicon_update_menu(SynceTrayIcon *self)
 
 #if ENABLE_VDCCM_SUPPORT
                   if (g_settings_get_boolean(priv->settings, "enable-vdccm")) {
-                          entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_DISCONNECT, NULL);
+                          entry = gtk_menu_item_new_with_mnemonic ("_Disconnect", NULL);
                           g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_disconnect), self);
                           gtk_menu_shell_append(GTK_MENU_SHELL(device_menu), entry);
 			  gtk_widget_show(GTK_WIDGET(entry));
@@ -1240,17 +1244,17 @@ trayicon_update_menu(SynceTrayIcon *self)
   }
 #endif
 
-  entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_PREFERENCES, NULL);
+  entry = gtk_menu_item_new_with_mnemonic ("_Preferences");
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_preferences), self);
   gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
   gtk_widget_show(GTK_WIDGET(entry));
 
-  entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_ABOUT, NULL);
+  entry = gtk_menu_item_new_with_mnemonic ("_About");
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_about), self);
   gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
   gtk_widget_show(GTK_WIDGET(entry));
 
-  entry = gtk_image_menu_item_new_from_stock (GTK_STOCK_QUIT, NULL);
+  entry = gtk_menu_item_new_with_mnemonic ("_Quit");
   g_signal_connect(G_OBJECT(entry), "activate", G_CALLBACK(menu_exit), self);
   gtk_menu_shell_append(GTK_MENU_SHELL(priv->menu), entry);
   gtk_widget_show(GTK_WIDGET(entry));
