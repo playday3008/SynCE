@@ -233,8 +233,9 @@ server_socket_readable_cb(G_GNUC_UNUSED GSocketService *source,
   cmsg->cmsg_level = SOL_SOCKET;
   cmsg->cmsg_type = SCM_RIGHTS;
   cmsg->cmsg_len = CMSG_LEN (sizeof (device_fd));
-  *((gint *) CMSG_DATA (cmsg)) = device_fd;
 
+  memmove(CMSG_DATA(cmsg), &device_fd, sizeof(device_fd));
+  
   iov.iov_base = &dummy_byte;
   iov.iov_len = sizeof (dummy_byte);
 

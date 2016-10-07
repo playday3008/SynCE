@@ -6,6 +6,8 @@
 	  permissions when passing rapi file descriptor
 	* declare some inline functions in config.c to be static to
 	  prevent some undefined ref errors
+	* copy client file descriptor to/from socket message buffer
+	  rather than direct assignment, per strict aliasing
 
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 

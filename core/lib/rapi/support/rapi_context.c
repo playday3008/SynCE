@@ -280,11 +280,17 @@ get_socket_from_dccm(const gchar *unix_path)
 
   cmsg = CMSG_FIRSTHDR (&msg);
   if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS) {
-    g_warning("%s: failed to extract file descriptor", G_STRFUNC);
+    g_warning("%s: failed to extract file descriptor, no message or incorrect type", G_STRFUNC);
     goto ERROR;
   }
 
-  dev_fd = *((int *) CMSG_DATA(cmsg));
+  if (cmsg->cmsg_len < sizeof(dev_fd)) {
+    g_warning("%s: failed to extract file descriptor, invalid message length: %Zd < %zd", G_STRFUNC, cmsg->cmsg_len, sizeof(dev_fd));
+    goto ERROR;
+  }
+
+  memmove(&dev_fd, CMSG_DATA(cmsg), sizeof(dev_fd));
+
   goto OUT;
 
 ERROR:
