@@ -1,3 +1,8 @@
+2016-10-07  Mark Ellis  <mark@mpellis.org.uk>
+
+	* improve initialisation and error handling when passing a
+	  rapi file descriptor from dccm to client
+
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.17 release

@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <errno.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
@@ -201,10 +202,10 @@ server_socket_readable_cb(G_GNUC_UNUSED GSocketService *source,
 {
   SynceConnectionBroker *self = user_data;
   SynceConnectionBrokerPrivate *priv = SYNCE_CONNECTION_BROKER_GET_PRIVATE (self);
-  gint device_fd, client_fd;
-  ssize_t ret;
+  gint device_fd = -1, client_fd = -1;
+  ssize_t ret = 0;
   struct msghdr msg = { 0, };
-  struct cmsghdr *cmsg;
+  struct cmsghdr *cmsg = NULL;
   gchar cmsg_buf[CMSG_SPACE (sizeof (device_fd))];
   struct iovec iov;
   guchar dummy_byte = 0x7f;
@@ -238,10 +239,11 @@ server_socket_readable_cb(G_GNUC_UNUSED GSocketService *source,
   iov.iov_len = sizeof (dummy_byte);
 
   ret = sendmsg (client_fd, &msg, MSG_NOSIGNAL);
-  if (ret != 1)
-    {
-      g_warning ("%s: sendmsg returned %zd", G_STRFUNC, ret);
-    }
+  if (ret != 1) {
+    g_warning("%s: failed to send device file descriptor, sendmsg() returned %zd", G_STRFUNC, ret);
+    if (ret < 0)
+      g_warning("%s: error while sending device file descriptor: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+  }
 
   g_signal_emit (self, signals[DONE], 0);
 

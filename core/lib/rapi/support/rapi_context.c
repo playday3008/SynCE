@@ -244,15 +244,24 @@ get_socket_from_dccm(const gchar *unix_path)
   char cmsg_buf[512];
   char data_buf[512];
 
-  fd = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (fd < 0)
+  if ((strlen(unix_path) + 1) > sizeof(sa.sun_path)) {
+    g_warning("%s: socket path too long: %s: %zd > %zd", G_STRFUNC, unix_path, strlen(unix_path) + 1, sizeof(sa.sun_path));
     goto ERROR;
+  }
+
+  fd = socket(AF_UNIX, SOCK_STREAM, 0);
+  if (fd < 0) {
+    g_warning("%s: failed to create socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+    goto ERROR;
+  }
 
   sa.sun_family = AF_UNIX;
   strcpy(sa.sun_path, unix_path);
 
-  if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0)
+  if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+    g_warning("%s: failed to connect socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
     goto ERROR;
+  }
 
   msg.msg_control = cmsg_buf;
   msg.msg_controllen = sizeof(cmsg_buf);
@@ -264,12 +273,16 @@ get_socket_from_dccm(const gchar *unix_path)
   iov.iov_len = sizeof(data_buf);
 
   ret = recvmsg(fd, &msg, 0);
-  if (ret < 0)
+  if (ret < 0) {
+    g_warning("%s: failed to receive file descriptor: %d: %s", G_STRFUNC, errno, g_strerror(errno));
     goto ERROR;
+  }
 
   cmsg = CMSG_FIRSTHDR (&msg);
-  if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS)
+  if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS) {
+    g_warning("%s: failed to extract file descriptor", G_STRFUNC);
     goto ERROR;
+  }
 
   dev_fd = *((int *) CMSG_DATA(cmsg));
   goto OUT;
