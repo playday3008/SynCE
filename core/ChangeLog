@@ -4,6 +4,8 @@
   	  rapi file descriptor from dccm to client
 	* tidy some variable initialisation warnings, check socket
 	  permissions when passing rapi file descriptor
+	* declare some inline functions in config.c to be static to
+	  prevent some undefined ref errors
 
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 

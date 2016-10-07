@@ -125,11 +125,11 @@ struct configFile *readConfigFile (char *filename)
 	return _cfgParseConfigFile (cfg);
 }
 
-inline int isKeyValSep (char c) {
+static inline int isKeyValSep (char c) {
 	return (c==':' || c=='=');
 }
 
-inline int isCommentStart (char c) {
+static inline int isCommentStart (char c) {
 	return (c=='#');
 }
 
