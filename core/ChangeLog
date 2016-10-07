@@ -1,7 +1,9 @@
 2016-10-07  Mark Ellis  <mark@mpellis.org.uk>
 
 	* improve initialisation and error handling when passing a
-	  rapi file descriptor from dccm to client
+  	  rapi file descriptor from dccm to client
+	* tidy some variable initialisation warnings, check socket
+	  permissions when passing rapi file descriptor
 
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 

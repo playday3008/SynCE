@@ -473,10 +473,11 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
 #endif
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
   GError *error = NULL;
-  SynceConnectionBroker *broker;
+  SynceConnectionBroker *broker = NULL;
   GSocketConnection *rapi_conn = NULL;
   guchar *buf = NULL;
   gsize buf_size = 0;
+  guint *req_id_local = NULL;
 
   if (priv->state != CTRL_STATE_CONNECTED) {
     if (priv->pw_flags & SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE) {
@@ -512,7 +513,7 @@ synce_device_legacy_request_connection_impl (SynceDevice *self, DBusGMethodInvoc
    * Create a local copy of the global req_id variable to avoid
    * the chances of race conditions
    */
-  guint *req_id_local = (guint *) g_malloc (sizeof (guint));
+  req_id_local = (guint *) g_malloc (sizeof (guint));
   *req_id_local = ++(priv->req_id) ;
 
   broker = g_object_new (SYNCE_TYPE_CONNECTION_BROKER,

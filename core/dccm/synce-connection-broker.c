@@ -290,8 +290,10 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
   synce_get_dbus_sender_uid(dbus_g_method_get_sender (priv->ctx), &uid);
 #endif
 
-  chmod (priv->filename, S_IRUSR | S_IWUSR);
-  chown (priv->filename, uid, -1);
+  if (chmod(priv->filename, S_IRUSR | S_IWUSR) < 0)
+    g_warning("%s: failed to set permissions on socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+  if (chown(priv->filename, uid, -1) < 0)
+    g_warning("%s: failed to set ownership on socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
 
   g_socket_service_start(priv->server);
 
