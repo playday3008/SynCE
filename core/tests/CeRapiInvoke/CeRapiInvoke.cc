@@ -194,6 +194,11 @@ static bool test_last_error()
       NULL, NULL,
       NULL,
       0);
+  if (SUCCEEDED(hr))
+  {
+    cerr << "CeRapiInvoke succeeded to call non-existant method?!" << endl;
+    return false;
+  }
   if (CeRapiGetLastError() != last_error)
   {
     cerr << "LastError: expected=0x" << hex << last_error <<
