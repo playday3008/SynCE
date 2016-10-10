@@ -11,6 +11,3 @@ libsupport_la_CFLAGS = -I$(top_srcdir)/lib/utils \
 			-I$(top_srcdir)/lib/rapi \
 			@GLIB_CFLAGS@
 
-if !USE_GDBUS
-libsupport_la_CFLAGS += @DBUS_CFLAGS@
-endif

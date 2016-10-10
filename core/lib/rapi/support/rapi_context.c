@@ -13,14 +13,8 @@
 #include <errno.h>
 
 #if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
-#if USE_GDBUS
 #include <glib-object.h>
 #include <gio/gio.h>
-#else
-#define DBUS_API_SUBJECT_TO_CHANGE 1
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#endif
 #include "synce_gerrors.h"
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -331,8 +325,6 @@ synce_glib_init(void)
 }
 
 
-#if USE_GDBUS
-
 static HRESULT
 get_connection_from_udev_or_odccm(SynceInfo *info, int *sockfd)
 {
@@ -461,127 +453,6 @@ OUT:
   return result;
 }
 
-#else /* USE_GDBUS */
-
-static HRESULT
-get_connection_from_udev_or_odccm(SynceInfo *info, int *sockfd)
-{
-  GError *error = NULL;
-  DBusGConnection *bus = NULL;
-  DBusGProxy *dbus_proxy = NULL;
-  DBusGProxy *dev_proxy = NULL;
-  gboolean dccm_running = FALSE;
-  gchar *unix_path = NULL;
-  gint fd = -1;
-  const gchar *service = NULL;
-  const gchar *dev_iface = NULL;
-  const gchar *dccm_name = NULL;
-  HRESULT result = E_FAIL;
-
-  /* Ensure that e.g. SYNCE_DCCM_ERROR is registered using g_dbus_error_register_error() */
-  synce_glib_init();
-
-#if ENABLE_ODCCM_SUPPORT
-  const gchar *transport = synce_info_get_transport(info);
-  if (strcmp(transport, "odccm") == 0) {
-    service = ODCCM_SERVICE;
-    dev_iface = ODCCM_DEV_IFACE;
-    dccm_name = "odccm";
-  } else 
-#endif
-  {
-    service = DCCM_SERVICE;
-    dev_iface = DCCM_DEV_IFACE;
-    dccm_name = "dccm";
-  }
-
-#if !GLIB_CHECK_VERSION (2, 36, 0)
-  g_type_init();
-#endif
-
-  bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-  if (bus == NULL)
-  {
-    synce_warning("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-    goto ERROR;
-  }
-
-  dbus_proxy = dbus_g_proxy_new_for_name (bus,
-                                          DBUS_SERVICE,
-                                          DBUS_PATH,
-                                          DBUS_IFACE);
-  if (dbus_proxy == NULL) {
-    synce_warning("%s: Failed to get dbus proxy object", G_STRFUNC);
-    goto ERROR;
-  }
-
-  if (!(dbus_g_proxy_call(dbus_proxy, "NameHasOwner",
-                          &error,
-                          G_TYPE_STRING, service,
-                          G_TYPE_INVALID,
-                          G_TYPE_BOOLEAN, &dccm_running,
-                          G_TYPE_INVALID))) {
-    synce_warning("%s: Error checking owner of service %s: %s", G_STRFUNC, service, error->message);
-    g_object_unref(dbus_proxy);
-    goto ERROR;
-  }
-
-  g_object_unref(dbus_proxy);
-  if (!dccm_running) {
-    synce_info("%s is not running, ignoring", dccm_name);
-    goto ERROR;
-  }
-
-  dev_proxy = dbus_g_proxy_new_for_name(bus, service,
-                                        synce_info_get_object_path(info),
-                                        dev_iface);
-  if (dev_proxy == NULL) {
-    synce_warning("%s: Failed to get proxy for device '%s'", G_STRFUNC, synce_info_get_object_path(info));
-    goto ERROR;
-  }
-
-  if (!dbus_g_proxy_call(dev_proxy, "RequestConnection", &error,
-                         G_TYPE_INVALID,
-                         G_TYPE_STRING, &unix_path,
-                         G_TYPE_INVALID))
-  {
-    synce_warning("%s: Failed to get a connection for %s: %s", G_STRFUNC, synce_info_get_name(info), error->message);
-
-    /* INVALID_PASSWORD isn't perfect, but seems to be the best we have */
-    if (dbus_g_error_has_name(error, "org.synce.dccm.Error.DeviceLocked"))
-      result = HRESULT_FROM_WIN32(ERROR_INVALID_PASSWORD);
-
-    g_object_unref(dev_proxy);
-    goto ERROR;
-  }
-
-  g_object_unref(dev_proxy);
-
-  fd = get_socket_from_dccm(unix_path);
-  g_free(unix_path);
-
-  if (fd < 0)
-  {
-    synce_warning("%s: Failed to get file-descriptor from %s for %s", G_STRFUNC, dccm_name, synce_info_get_name(info));
-    goto ERROR;
-  }
-
-  result = S_OK;
-  goto OUT;
-
-ERROR:
-  if (error != NULL)
-    g_error_free(error);
-
-OUT:
-
-  if (bus != NULL)
-    dbus_g_connection_unref (bus);
-
-  *sockfd = fd;
-  return result;
-}
-#endif /* USE_GDBUS */
 #endif /* ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT */
 
 

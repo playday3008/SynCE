@@ -11,9 +11,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <glib-object.h>
-#if !USE_GDBUS
-#include <dbus/dbus-glib.h>
-#endif
+#include <gio/gio.h>
 
 #include "synce-device-manager.h"
 
@@ -35,8 +33,6 @@ static GOptionEntry options[] =
     { "foreground", 'f', 0, G_OPTION_ARG_NONE, &log_to_foreground, "Do not log to system log", NULL },
     { NULL }
   };
-
-#if USE_GDBUS
 
 SynceDeviceManager *device_manager = NULL;
 
@@ -85,7 +81,6 @@ name_lost_handler(GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, 
   return;
 }
 
-#endif
 
 gint
 main(gint argc,
@@ -93,12 +88,6 @@ main(gint argc,
 {
   GMainLoop *mainloop;
   GError *error = NULL;
-#if !USE_GDBUS
-  DBusGConnection *main_bus;
-  DBusGProxy *main_bus_proxy = NULL;
-  gchar *bus_name = NULL;
-  SynceDeviceManager *device_manager = NULL;
-#endif
   guint req_name_result;
 
 #if !GLIB_CHECK_VERSION (2, 36, 0)
@@ -138,8 +127,6 @@ main(gint argc,
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
-#if USE_GDBUS
-
   req_name_result = g_bus_own_name(G_BUS_TYPE_SYSTEM,
 				   BUS_NAME,
 				   G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -149,63 +136,10 @@ main(gint argc,
 				   mainloop,
 				   NULL);
 
-#else
-  if (!(main_bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error))) {
-    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    return EXIT_FAILURE;
-  }
-
-  main_bus_proxy = dbus_g_proxy_new_for_name(main_bus, "org.freedesktop.DBus",
-					     "/org/freedesktop/DBus",
-					     "org.freedesktop.DBus");
-  if (main_bus_proxy == NULL) {
-    g_critical("Failed to get proxy to dbus");
-    return EXIT_FAILURE;
-  }
-
-  bus_name = g_strdup(BUS_NAME);
-
-  if (!dbus_g_proxy_call(main_bus_proxy, "RequestName", &error,
-			 G_TYPE_STRING, bus_name,
-			 G_TYPE_UINT, DBUS_NAME_FLAG_DO_NOT_QUEUE,
-			 G_TYPE_INVALID,
-			 G_TYPE_UINT, &req_name_result,
-			 G_TYPE_INVALID))
-    {
-      g_critical("Failed to get bus name %s: %s", bus_name, error->message);
-      g_free(bus_name);
-      return EXIT_FAILURE;
-    }
-
-  device_manager = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER, NULL, &error, NULL);
-  if (!device_manager) {
-    g_critical("Failed to create device manager: %s", error->message);
-    g_error_free(error);
-    return EXIT_FAILURE;
-  }
-#endif
-
   g_main_loop_run (mainloop);
 
-#if USE_GDBUS
   g_bus_unown_name(req_name_result);
-#else
-  if (!dbus_g_proxy_call(main_bus_proxy, "ReleaseName", &error,
-			 G_TYPE_STRING, bus_name,
-			 G_TYPE_INVALID,
-			 G_TYPE_UINT, &req_name_result,
-			 G_TYPE_INVALID))
-    {
-      g_critical("Failed to cleanly release bus name %s: %s", bus_name, error->message);
-      g_free(bus_name);
-      return EXIT_FAILURE;
-    }
-  g_free(bus_name);
-  g_object_unref(main_bus_proxy);
 
-  dbus_g_connection_unref(main_bus);
-#endif
   g_debug("%s: exiting normally", G_STRFUNC);
 
   if (!log_to_foreground)

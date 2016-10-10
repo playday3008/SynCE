@@ -5,9 +5,6 @@
 #include <string.h>
 #include <glib-object.h>
 #include <gio/gio.h>
-#if !USE_GDBUS
-#include <dbus/dbus-glib.h>
-#endif
 #include <synce.h>
 
 #include "synce-device.h"
@@ -397,11 +394,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	  {
 	    synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
 	  }
-#if USE_GDBUS
 	g_dbus_method_invocation_return_value (priv->pw_ctx, g_variant_new ("(b)", result != 0));
-#else
-	dbus_g_method_return (priv->pw_ctx, result != 0);
-#endif
 	priv->pw_ctx = NULL;
 
       } else {
@@ -455,16 +448,10 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
   g_object_unref(self);
 }
 
-#if USE_GDBUS
 gboolean
 synce_device_rndis_request_connection_impl (G_GNUC_UNUSED SynceDbusDevice *interface, GDBusMethodInvocation *ctx, gpointer userdata)
 {
   SynceDeviceRndis *self = SYNCE_DEVICE_RNDIS (userdata);
-#else
-void
-synce_device_rndis_request_connection_impl (SynceDevice *self, DBusGMethodInvocation *ctx)
-{
-#endif
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE(self);
   GError *error = NULL;
   SynceConnectionBroker *broker;
@@ -521,16 +508,11 @@ synce_device_rndis_request_connection_impl (SynceDevice *self, DBusGMethodInvoca
 
  OUT:
   if (error != NULL)
-#if USE_GDBUS
     {
       g_dbus_method_invocation_return_gerror(ctx, error);
       g_error_free(error);
     }
   return TRUE;
-#else
-    dbus_g_method_return_error (ctx, error);
-  return;
-#endif
 }
 
 static void

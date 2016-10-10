@@ -16,12 +16,6 @@ typedef enum
 GQuark synce_dccm_error_quark (void);
 #define SYNCE_DCCM_ERROR synce_dccm_error_quark ()
 
-
-#if !USE_GDBUS
-GType synce_dccm_error_get_type (void);
-#define SYNCE_DCCM_TYPE_ERROR (synce_dccm_error_get_type ())
-#endif
-
 G_END_DECLS
 
 #endif /* SYNCE_ERRORS_H */

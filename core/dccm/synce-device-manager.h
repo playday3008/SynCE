@@ -40,10 +40,6 @@ GType synce_device_manager_get_type (void);
 #define SYNCE_IS_DEVICE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), SYNCE_TYPE_DEVICE_MANAGER))
 #define SYNCE_DEVICE_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), SYNCE_TYPE_DEVICE_MANAGER, SynceDeviceManagerClass))
 
-#if !USE_GDBUS
-gboolean synce_device_manager_get_connected_devices (SynceDeviceManager *self, GPtrArray **ret, GError **error);
-#endif
-
 G_END_DECLS
 
 #endif /* SYNCE_DEVICE_MANAGER_H */

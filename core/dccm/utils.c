@@ -11,14 +11,10 @@
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
 #include <synce.h>
-#if !USE_GDBUS
-#include <dbus/dbus-glib.h>
-#endif
 #include <glib.h>
 #include <gio/gio.h>
 #include "utils.h"
 
-#if USE_GDBUS
 static GDBusProxy *
 synce_get_dbus_g_bus_proxy()
 {
@@ -43,49 +39,16 @@ synce_get_dbus_g_bus_proxy()
   }
   return bus_proxy;
 }
-#else
-static DBusGProxy *
-synce_get_dbus_g_bus_proxy()
-{
-  static DBusGProxy *bus_proxy = NULL;
-
-  if (bus_proxy == NULL) {
-    GError *error = NULL;
-    DBusGConnection *bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-    if (bus == NULL) {
-      g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
-      g_error_free(error);
-      return NULL;
-    }
-
-    bus_proxy = dbus_g_proxy_new_for_name(bus,
-					  "org.freedesktop.DBus",
-					  "/org/freedesktop/DBus",
-					  "org.freedesktop.DBus");
-    if (bus_proxy == NULL)
-      g_critical("%s: Failed to get proxy to DBus", G_STRFUNC);
-
-    dbus_g_connection_unref(bus);
-  }
-  return bus_proxy;
-}
-#endif
 
 void
 synce_get_dbus_sender_uid(const gchar *sender, guint *uid)
 {
   GError *error = NULL;
-#if USE_GDBUS
   GDBusProxy *dbus_proxy = synce_get_dbus_g_bus_proxy();
-#else
-  DBusGProxy *dbus_proxy = synce_get_dbus_g_bus_proxy();
-#endif
   if (!dbus_proxy) {
     *uid = 0;
     return;
   }
-
-#if USE_GDBUS
 
   GVariant *result =  g_dbus_proxy_call_sync(dbus_proxy,
 					     "GetConnectionUnixUser",
@@ -102,19 +65,6 @@ synce_get_dbus_sender_uid(const gchar *sender, guint *uid)
     g_variant_unref(result);
   }
 
-#else
-  if (!dbus_g_proxy_call(dbus_proxy,
-			 "GetConnectionUnixUser",
-			 &error,
-			 G_TYPE_STRING, sender,
-			 G_TYPE_INVALID,
-			 G_TYPE_UINT, uid,
-			 G_TYPE_INVALID))
-    {
-      g_critical ("Failed to get dbus sender uid: %s", error->message);
-      *uid = 0;
-    }
-#endif
   return;
 }
 

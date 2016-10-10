@@ -17,10 +17,6 @@ librapi_la_LIBADD = $(top_builddir)/lib/rapi/support/libsupport.la \
 	$(top_builddir)/lib/rapi/backend_ops_1/librapiops1.la \
 	$(top_builddir)/lib/rapi/backend_ops_2/librapiops2.la
 
-if !USE_GDBUS
-librapi_la_CFLAGS += @DBUS_CFLAGS@
-endif
-
 include_HEADERS = rapi.h \
 		rapitypes.h \
 		rapi2.h \

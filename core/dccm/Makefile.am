@@ -6,22 +6,13 @@ libexec_PROGRAMS = dccm synce-serial-chat
 BUILT_SOURCES = synce-device-signals-marshal.h \
 		synce-device-signals-marshal.c \
 		synce-device-manager-control-signals-marshal.h \
-		synce-device-manager-control-signals-marshal.c
-
-if USE_GDBUS
-BUILT_SOURCES += \
+		synce-device-manager-control-signals-marshal.c \
 		synce-device-dbus.h \
 		synce-device-dbus.c \
 		synce-device-manager-control-dbus.h \
 		synce-device-manager-control-dbus.c \
 		synce-device-manager-dbus.c \
 		synce-device-manager-dbus.h
-else
-BUILT_SOURCES += \
-		synce-device-glue.h \
-		synce-device-manager-control-glue.h \
-		synce-device-manager-glue.h
-endif
 
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -48,11 +39,6 @@ dccm_LDADD = \
 	$(GLIB_LIBS) \
 	$(GUDEV_LIBS)
 
-if !USE_GDBUS
-dccm_CPPFLAGS += $(DBUS_CFLAGS) $(DBUSGLIB_CFLAGS)
-dccm_LDADD += $(DBUS_LIBS) $(DBUSGLIB_LIBS)
-endif
-
 synce_serial_chat_SOURCES = synce-serial-chat.c
 
 EXTRA_DIST = synce-device-signals-marshal.list \
@@ -63,9 +49,6 @@ EXTRA_DIST = synce-device-signals-marshal.list \
 		synce-unlock
 
 bin_SCRIPTS = synce-unlock
-
-%-glue.h: %.xml
-	dbus-binding-tool --mode=glib-server --output=$@ --prefix=$(subst -,_,$*) $<
 
 %-signals-marshal.h: %-signals-marshal.list
 	glib-genmarshal --header --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.h

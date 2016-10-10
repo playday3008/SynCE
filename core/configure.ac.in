@@ -71,25 +71,10 @@ dnl Checks for libraries.
 AC_LIB_RPATH
 
 dnl Check for GLib
-PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4, gio-2.0 >= 2.22, gio-unix-2.0 >= 2.22])
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.7, gobject-2.0 >= 2.4, gio-2.0 >= 2.26, gio-unix-2.0 >= 2.22])
 
 dnl Check for D-Bus, we need dbus-1 for config file locations
-dnl irrespective of which dbus library we use
-PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60], dbus_found=yes, dbus_found=no)
-PKG_CHECK_MODULES(DBUSGLIB, [dbus-glib-1 >= 0.74], dbusglib_found=yes, dbusglib_found=no)
-
-dnl Check if GLib version is high enough for GDBus
-AC_MSG_CHECKING([whether to use GDBus])
-PKG_CHECK_EXISTS([gio-2.0 >= 2.26], have_gdbus=yes, have_gdbus=no)
-if test "$have_gdbus" = "yes"; then
-   use_gdbus=1;
-   AC_MSG_RESULT([yes])
-else
-   use_gdbus=0;
-   AC_MSG_RESULT([no])
-fi
-AC_DEFINE_UNQUOTED(USE_GDBUS, $use_gdbus, [Define to 1 if you want to use GDBus support.])
-AM_CONDITIONAL(USE_GDBUS, test "x$use_gdbus" = "x1")
+PKG_CHECK_MODULES(DBUS, [dbus-1 >= 0.60])
 
 dnl
 dnl whether to build documentation
@@ -140,19 +125,9 @@ AC_ARG_ENABLE(odccm-support,
               enable_odccm_support=$enableval, enable_odccm_support=no)
 
 if ! test "$enable_odccm_support" = "no"; then
-  dnl do we have dbus ?
-  if test "$use_gdbus" = "no" -a "$dbusglib_found" = "no"; then
-    if test "$enable_odccm_support" = "auto"; then
-      AC_MSG_NOTICE([D-Bus Glib not found, building without odccm support])
-      enable_odccm_support=no
-    else
-      AC_MSG_ERROR([odccm support requested but D-Bus Glib could not be found])
-    fi
-  else
-    AC_MSG_NOTICE([Building with odccm support])
-    AC_DEFINE(ENABLE_ODCCM_SUPPORT, 1, [Define if building with odccm support])
-    enable_odccm_support=yes
-  fi
+  AC_MSG_NOTICE([Building with odccm support])
+  AC_DEFINE(ENABLE_ODCCM_SUPPORT, 1, [Define if building with odccm support])
+  enable_odccm_support=yes
 else
   AC_MSG_NOTICE([Building without odccm support])
 fi
@@ -169,27 +144,9 @@ AC_ARG_ENABLE(udev-support,
               enable_udev_support=$enableval, enable_udev_support=yes)
 
 if ! test "$enable_udev_support" = "no"; then
-  dnl do we have dbus library support ?
-  if test "$use_gdbus" = "no" -a "$dbusglib_found" = "no"; then
-    if test "$enable_udev_support" = "auto"; then
-      AC_MSG_NOTICE([D-Bus Glib not found, building without udev support])
-      enable_udev_support=no
-    else
-      AC_MSG_ERROR([udev support requested but D-Bus Glib could not be found])
-    fi
-  dnl do we have dbus ?
-  elif test "$dbus_found" = "no"; then
-    if test "$enable_udev_support" = "auto"; then
-      AC_MSG_NOTICE([D-Bus not found, building without udev support])
-      enable_udev_support=no
-    else
-      AC_MSG_ERROR([udev support requested but D-Bus could not be found])
-    fi
-  else
-    AC_MSG_NOTICE([Building with udev support])
-    AC_DEFINE(ENABLE_UDEV_SUPPORT, 1, [Define if building with udev support])
-    enable_udev_support=yes
-  fi
+  AC_MSG_NOTICE([Building with udev support])
+  AC_DEFINE(ENABLE_UDEV_SUPPORT, 1, [Define if building with udev support])
+  enable_udev_support=yes
 else
   AC_MSG_NOTICE([Building without udev support])
 fi

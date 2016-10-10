@@ -14,12 +14,7 @@
 
 #include "synce-connection-broker.h"
 
-#if USE_GDBUS
 #include "synce-device-dbus.h"
-#else
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#endif
 
 #include "utils.h"
 
@@ -52,11 +47,7 @@ struct _SynceConnectionBrokerPrivate
   gboolean dispose_has_run;
 
   guint id;
-#if USE_GDBUS
   GDBusMethodInvocation *ctx;
-#else
-  DBusGMethodInvocation *ctx;
-#endif
   GSocketConnection *conn;
   gchar *filename;
   GSocketService *server;
@@ -285,11 +276,7 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
 
   g_signal_connect(priv->server, "incoming", G_CALLBACK(server_socket_readable_cb), self);
 
-#if USE_GDBUS
   synce_get_dbus_sender_uid(g_dbus_method_invocation_get_sender (priv->ctx), &uid);
-#else
-  synce_get_dbus_sender_uid(dbus_g_method_get_sender (priv->ctx), &uid);
-#endif
 
   if (chmod(priv->filename, S_IRUSR | S_IWUSR) < 0)
     g_warning("%s: failed to set permissions on socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
@@ -298,12 +285,8 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
 
   g_socket_service_start(priv->server);
 
-#if USE_GDBUS
   /* we don't need the object for the first argument, it doesn't go anywhere */
   synce_dbus_device_complete_request_connection(NULL, priv->ctx, priv->filename);
-#else
-  dbus_g_method_return (priv->ctx, priv->filename);
-#endif
   priv->ctx = NULL;
 
   return;
@@ -314,12 +297,8 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
 
   error = g_error_new (G_FILE_ERROR, G_FILE_ERROR_FAILED,
 		       "Failed to create socket to pass connection");
-#if USE_GDBUS
   g_dbus_method_invocation_return_gerror(priv->ctx, error);
   g_error_free(error);
-#else
-  dbus_g_method_return_error (priv->ctx, error);
-#endif
   priv->ctx = NULL;
   g_free(priv->filename);
   priv->filename = NULL;

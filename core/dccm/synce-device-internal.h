@@ -3,9 +3,6 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
-#if !USE_GDBUS
-#include <dbus/dbus-glib.h>
-#endif
 
 #include "synce-connection-broker.h"
 
@@ -62,12 +59,8 @@ struct _SynceDevicePrivate
   /* the dbus object path */
   gchar *obj_path;
 
-#if USE_GDBUS
   SynceDbusDevice *interface;
   GDBusMethodInvocation *pw_ctx;
-#else
-  DBusGMethodInvocation *pw_ctx;
-#endif
 
   GHashTable *requests;
   guint req_id;
@@ -78,13 +71,8 @@ struct _SynceDevicePrivate
 
 /* header information */
 
-#if USE_GDBUS
 gboolean synce_device_provide_password (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, const gchar *password, gpointer userdata);
 gboolean synce_device_request_connection (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata);
-#else
-void synce_device_provide_password (SynceDevice *self, const gchar *password, DBusGMethodInvocation *ctx);
-void synce_device_request_connection (SynceDevice *self, DBusGMethodInvocation *ctx);
-#endif
 void synce_device_change_password_flags (SynceDevice *self, SynceDevicePasswordFlags new_flag);
 void synce_device_conn_broker_done_cb (SynceConnectionBroker *broker, gpointer user_data);
 void synce_device_dbus_init(SynceDevice *self);

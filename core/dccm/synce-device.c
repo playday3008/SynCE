@@ -11,13 +11,7 @@
 #include "synce-device.h"
 #include "synce-device-internal.h"
 #include "synce-device-signals-marshal.h"
-
-#if USE_GDBUS
 #include "synce-device-dbus.h"
-#else
-#include "synce-device-glue.h"
-#endif
-
 #include "synce_gerrors.h"
 
 static void     synce_device_initable_iface_init (GInitableIface  *iface);
@@ -57,8 +51,6 @@ enum
 
 /* method overrides */
 
-#if USE_GDBUS
-
 gboolean
 synce_device_request_connection (SynceDbusDevice *interface, GDBusMethodInvocation *invocation, gpointer userdata)
 {
@@ -74,20 +66,6 @@ synce_device_provide_password (SynceDbusDevice *interface, GDBusMethodInvocation
   return (SYNCE_DEVICE_GET_CLASS(self)->synce_device_provide_password (interface, invocation, password, userdata));
 }
 
-#else
-void
-synce_device_request_connection (SynceDevice *self, DBusGMethodInvocation *ctx)
-{
-  SYNCE_DEVICE_GET_CLASS(self)->synce_device_request_connection (self, ctx);
-}
-
-void
-synce_device_provide_password (SynceDevice *self, const gchar *password, DBusGMethodInvocation *ctx)
-{
-  SYNCE_DEVICE_GET_CLASS(self)->synce_device_provide_password (self, password, ctx);
-}
-#endif
-
 void
 synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_data)
 {
@@ -98,7 +76,6 @@ synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_da
 /* standard functions */
 
 
-#if USE_GDBUS
 static gboolean
 synce_device_provide_password_impl (G_GNUC_UNUSED SynceDbusDevice *interface,
 				    GDBusMethodInvocation *ctx,
@@ -106,21 +83,10 @@ synce_device_provide_password_impl (G_GNUC_UNUSED SynceDbusDevice *interface,
 				    gpointer userdata)
 {
   SynceDevice *self = SYNCE_DEVICE (userdata);
-#else /* USE_GDBUS */
-static void
-synce_device_provide_password_impl (SynceDevice *self,
-				    const gchar *password,
-				    DBusGMethodInvocation *ctx)
-{
-#endif
 
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE(self);
 
-#if USE_GDBUS
   g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), TRUE);
-#else
-  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
-#endif
 
   GError *error = NULL;
   guchar *buf;
@@ -165,18 +131,11 @@ synce_device_provide_password_impl (SynceDevice *self,
  OUT:
   if (buf) wstr_free_string(buf);
   if (error != NULL)
-#if USE_GDBUS
     {
       g_dbus_method_invocation_return_gerror(ctx, error);
       g_error_free(error);
     }
   return TRUE;
-#else
-  {
-    dbus_g_method_return_error (ctx, error);
-  }
-  return;
-#endif
 }
 
 
@@ -213,8 +172,6 @@ get_password_flag_text(SynceDevicePasswordFlags flag)
   return prop_str;
 }
 
-
-#if USE_GDBUS
 
 static gboolean
 synce_device_get_name(SynceDbusDevice *interface,
@@ -350,132 +307,6 @@ synce_device_get_password_flags(SynceDbusDevice *interface,
   return TRUE;
 }
 
-#else /* USE_GDBUS */
-gboolean
-synce_device_get_name(SynceDevice *self,
-		      gchar **name,
-		      GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *name = g_strdup (priv->name);
-  return TRUE;
-}
-
-gboolean
-synce_device_get_platform_name(SynceDevice *self,
-			       gchar **platform_name,
-			       GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *platform_name = g_strdup (priv->platform_name);
-  return TRUE;
-}
-
-gboolean
-synce_device_get_model_name(SynceDevice *self,
-			    gchar **model_name,
-			    GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *model_name = g_strdup (priv->model_name);
-  return TRUE;
-}
-
-gboolean
-synce_device_get_os_version (SynceDevice *self,
-                             guint *os_major, guint *os_minor,
-                             GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *os_major = priv->os_major;
-  *os_minor = priv->os_minor;
-  return TRUE;
-}
-
-gboolean
-synce_device_get_version(SynceDevice *self,
-			 guint *version,
-			 GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *version = priv->version;
-  return TRUE;
-}
-
-gboolean
-synce_device_get_cpu_type(SynceDevice *self,
-			  guint *cpu_type,
-			  GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *cpu_type = priv->cpu_type;
-  return TRUE;
-}
-
-gboolean
-synce_device_get_ip_address(SynceDevice *self,
-			    gchar **ip_address,
-			    GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *ip_address = g_strdup (priv->ip_address);
-  return TRUE;
-}
-
-gboolean
-synce_device_get_iface_address(SynceDevice *self,
-			       gchar **iface_address,
-			       GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *iface_address = g_strdup (priv->iface_address);
-  return TRUE;
-}
-
-gboolean
-synce_device_get_guid(SynceDevice *self,
-		      gchar **guid,
-		      GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *guid = g_strdup (priv->guid);
-  return TRUE;
-}
-
-gboolean
-synce_device_get_current_partner_id(SynceDevice *self,
-				    guint *cur_partner_id,
-				    GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  *cur_partner_id = priv->cur_partner_id;
-  return TRUE;
-}
-
-gboolean
-synce_device_get_password_flags(SynceDevice *self,
-				gchar **pw_flag,
-				GError **error)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
-  const gchar *pw_text = NULL;
-  pw_text = get_password_flag_text(priv->pw_flags);
-  *pw_flag = g_strdup (pw_text);
-  return TRUE;
-}
-#endif /* USE_GDBUS */
-
 
 void
 synce_device_dbus_init(SynceDevice *self)
@@ -486,11 +317,7 @@ synce_device_dbus_init(SynceDevice *self)
   GError *error = NULL;
   gchar *safe_path = NULL;
   gchar *obj_path = NULL;
-#if USE_GDBUS
   GDBusConnection *system_bus = NULL;
-#else
-  DBusGConnection *system_bus = NULL;
-#endif
   const gchar safe_chars[] = {
       "abcdefghijklmnopqrstuvwxyz"
       "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -503,9 +330,6 @@ synce_device_dbus_init(SynceDevice *self)
   g_free (safe_path);
 
   g_message ("%s: registering object path '%s'", G_STRFUNC, obj_path);
-
-
-#if USE_GDBUS
 
   priv->interface = synce_dbus_device_skeleton_new();
   g_signal_connect(priv->interface,
@@ -592,22 +416,6 @@ synce_device_dbus_init(SynceDevice *self)
   }
   g_object_unref(system_bus);
 
-#else
-  system_bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-  if (system_bus == NULL) {
-    g_critical("Failed to connect to system bus: %s", error->message);
-    g_error_free(error);
-    g_free(obj_path);
-    return;
-  }
-
-  dbus_g_connection_register_g_object(system_bus,
-				      obj_path,
-				      G_OBJECT(self));
-
-  dbus_g_connection_unref(system_bus);
-#endif
-
   /* we set this through the property to emit notify::object-path */
   g_object_set (self, "object-path", obj_path, NULL);
   g_debug("%s: obj_path set to %s", G_STRFUNC, priv->obj_path);
@@ -622,30 +430,11 @@ synce_device_dbus_uninit(SynceDevice *self)
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
   g_return_if_fail(priv->inited && !(priv->dispose_has_run));
 
-#if !USE_GDBUS
-  GError *error = NULL;
-  DBusGConnection *system_bus = NULL;
-#endif
-
   g_message ("%s: unregistering object path '%s'", G_STRFUNC, priv->obj_path);
 
-#if USE_GDBUS
   g_dbus_interface_skeleton_unexport(G_DBUS_INTERFACE_SKELETON(priv->interface));
   g_object_unref(priv->interface);
   priv->interface = NULL;
-
-#else
-  system_bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-  if (system_bus == NULL) {
-    g_critical("Failed to connect to system bus: %s", error->message);
-    g_error_free(error);
-    return;
-  }
-
-  dbus_g_connection_unregister_g_object(system_bus, G_OBJECT(self));
-
-  dbus_g_connection_unref(system_bus);
-#endif
 
   return;
 }
@@ -662,9 +451,7 @@ synce_device_change_password_flags (SynceDevice *self,
   g_object_set (self, "password-flags", new_flag, NULL);
   prop_str = get_password_flag_text(new_flag);
   g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_PASSWORD_FLAGS_CHANGED], 0, prop_str);
-#if USE_GDBUS
   synce_dbus_device_emit_password_flags_changed(priv->interface, prop_str);
-#endif
 
   return;
 }
@@ -729,10 +516,7 @@ synce_device_init (SynceDevice *self)
   priv->pw_ctx = NULL;
 
   priv->obj_path = NULL;
-
-#if USE_GDBUS
   priv->interface = NULL;
-#endif
 
   return;
 }
@@ -766,27 +550,11 @@ synce_device_dispose (GObject *obj)
 
   priv->dispose_has_run = TRUE;
 
-#if USE_GDBUS
   if (priv->interface) {
     g_dbus_interface_skeleton_unexport(G_DBUS_INTERFACE_SKELETON(priv->interface));
     g_object_unref(priv->interface);
     priv->interface = NULL;
   }
-#else
-  GError *error = NULL;
-  DBusGConnection *system_bus = NULL;
-
-  system_bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
-  if (system_bus == NULL) {
-    g_critical("Failed to connect to system bus: %s", error->message);
-    g_error_free(error);
-    return;
-  }
-
-  dbus_g_connection_unregister_g_object(system_bus, G_OBJECT(self));
-
-  dbus_g_connection_unref(system_bus);
-#endif
 
   g_io_stream_close(G_IO_STREAM(priv->conn), NULL, NULL);
   g_object_unref(priv->conn);
@@ -1133,11 +901,6 @@ synce_device_class_init (SynceDeviceClass *klass)
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
-
-#if !USE_GDBUS
-  dbus_g_object_type_install_info (G_TYPE_FROM_CLASS (klass),
-                                   &dbus_glib_synce_device_object_info);
-#endif
 }
 
 
