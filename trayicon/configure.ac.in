@@ -48,10 +48,29 @@ fi
 AC_DEFINE_UNQUOTED(USE_GDBUS, $use_gdbus, [Define to 1 if you want to use GDBus support.])
 AM_CONDITIONAL(USE_GDBUS, test "x$use_gdbus" = "x1")
 
-dnl Check for Gnome Keyring
-PKG_CHECK_MODULES(GNOME_KEYRING, gnome-keyring-1)
-AC_SUBST(GNOME_KEYRING_CFLAGS)
-AC_SUBST(GNOME_KEYRING_LIBS)
+dnl Use libsecret if available, or fall back to Gnome Keyring
+use_libsecret=0
+AC_MSG_NOTICE([Checking for a password storage library])
+PKG_CHECK_MODULES(LIBSECRET, [libsecret-1 >= 0.17], have_libsecret=yes, have_libsecret=no)
+if test "$have_libsecret" = "yes"; then
+   use_libsecret=1;
+   AC_MSG_NOTICE([using libsecret for password storage])
+   AC_SUBST(LIBSECRET_CFLAGS)
+   AC_SUBST(LIBSECRET_LIBS)
+else
+   PKG_CHECK_MODULES(GNOME_KEYRING, gnome-keyring-1, have_gkeyring=yes, have_gkeyring=no)
+   if test "$have_gkeyring" = "yes"; then
+      use_libsecret=0;
+      AC_MSG_NOTICE([using gnome-keyring for password storage])
+      AC_SUBST(GNOME_KEYRING_CFLAGS)
+      AC_SUBST(GNOME_KEYRING_LIBS)
+   else
+      AC_MSG_ERROR([either libsecret or gnome-keyring are required])
+   fi
+fi
+AC_DEFINE_UNQUOTED(USE_LIBSECRET, $use_libsecret, [Define to 1 if you want to use libsecret.])
+AM_CONDITIONAL(USE_LIBSECRET, test "x$use_libsecret" = "x1")
+
 
 PKG_CHECK_MODULES([NOTIFY], [libnotify >= 0.3.0])
 

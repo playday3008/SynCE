@@ -55,7 +55,6 @@ EXTRA_DIST = dccm-client-signals-marshal.list \
 synce_trayicon_CPPFLAGS = \
 	$(GLIB2_CFLAGS) \
 	$(GTK3_CFLAGS) \
-	$(GNOME_KEYRING_CFLAGS) \
 	$(LIBSYNCE_CFLAGS) \
 	$(LIBRRA_CFLAGS) \
 	$(GTOP_CFLAGS) \
@@ -68,7 +67,6 @@ synce_trayicon_CPPFLAGS = \
 synce_trayicon_LDADD = \
 	$(GLIB2_LIBS) \
 	$(GTK3_LIBS) \
-	$(GNOME_KEYRING_LIBS) \
 	$(LIBSYNCE_LIBS) \
 	$(LIBRRA_LIBS) \
 	$(GTOP_LIBS) \
@@ -80,6 +78,14 @@ synce_trayicon_LDADD = \
 if !USE_GDBUS
 synce_trayicon_CPPFLAGS += $(DBUS_CFLAGS)
 synce_trayicon_LDADD += $(DBUS_LIBS)
+endif
+
+if USE_LIBSECRET
+synce_trayicon_CPPFLAGS += $(LIBSECRET_CFLAGS)
+synce_trayicon_LDADD += $(LIBSECRET_LIBS)
+else
+synce_trayicon_CPPFLAGS += $(GNOME_KEYRING_CFLAGS)
+synce_trayicon_LDADD += $(GNOME_KEYRING_LIBS)
 endif
 
 noinst_HEADERS = synce-trayicon-module.h

@@ -285,7 +285,9 @@ trayicon_supply_password(SynceTrayIcon *self)
         gint response;
         gchar *pdaname = NULL;
         gchar *notify_string = NULL;
+#if !USE_LIBSECRET
         GnomeKeyringResult keyring_ret;
+#endif
         WmDevice *device = NULL;
         gchar *dccm_type = NULL;
         GtkListStore *store = NULL;
@@ -377,8 +379,14 @@ trayicon_supply_password(SynceTrayIcon *self)
         }
 
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(password_dialog_save_pw))) {
+#if USE_LIBSECRET
+                if (!keyring_set_key(pdaname, password, &error)) {
+                        notify_string = g_strdup_printf("Unable to save password for device \"%s\" in your keyring: %s", pdaname, error->message);
+			g_clear_error(&error);
+#else
                 if ((keyring_ret = keyring_set_key(pdaname, password)) != GNOME_KEYRING_RESULT_OK) {
                         notify_string = g_strdup_printf("Unable to save password for device \"%s\" in your keyring: %s", pdaname, gnome_keyring_result_to_message(keyring_ret));
+#endif
                         event_notification(self, "Save password failed", notify_string);
                         g_free(notify_string);
                 }
@@ -421,13 +429,24 @@ static void
 password_rejected_cb(DccmClient *comms_client, gchar *pdaname, gpointer user_data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
+#if !USE_LIBSECRET
   GnomeKeyringResult keyring_ret;
+#else
+  GError *error = NULL;
+#endif
   gchar *notify_string = NULL;
 
   g_debug("%s: removing password from keyring", G_STRFUNC);
-  
+
+#if !USE_LIBSECRET
   if ((keyring_ret = keyring_delete_key(pdaname)))
     g_warning("%s: failed to remove incorrect password from keyring: %d: %s", G_STRFUNC, keyring_ret, gnome_keyring_result_to_message(keyring_ret));
+#else
+  if (!keyring_delete_key(pdaname, &error)) {
+    g_warning("%s: failed to remove incorrect password from keyring: %s", G_STRFUNC, error->message);
+    g_clear_error(&error);
+  }
+#endif
 
   notify_string = g_strdup_printf("Password for device \"%s\" was rejected", pdaname);
   event_notification(self, "Incorrect password", notify_string);
@@ -440,15 +459,27 @@ password_required_cb(DccmClient *comms_client, const gchar *pdaname, gpointer us
   SynceTrayIcon *self = SYNCE_TRAYICON(user_data);
 
   gchar *password = NULL;
+#if !USE_LIBSECRET
   GnomeKeyringResult keyring_ret;
+#else
+  GError *error = NULL;  
+#endif
   gchar *notify_string = NULL;
 
+#if !USE_LIBSECRET
   if ((keyring_ret = keyring_get_key(pdaname, &password)) == GNOME_KEYRING_RESULT_OK) {
+#else
+  if ((password = keyring_get_key(pdaname, &error))) {
+#endif
           dccm_client_provide_password(comms_client, pdaname, password);
           g_free(password);
           return;
   }
 
+#if USE_LIBSECRET
+  g_clear_error(&error);
+#endif
+  
   notify_string = g_strdup_printf("A password is required for device \"%s\", click here to provide a password", pdaname);
   event_notification(self, "Password required", notify_string);
   g_free(notify_string);

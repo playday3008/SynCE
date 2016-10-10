@@ -30,6 +30,28 @@ IN THE SOFTWARE.
 #include "keyring.h"
 
 
+#if USE_LIBSECRET
+
+
+const SecretSchema *
+synce_get_schema (void)
+{
+  static const SecretSchema the_schema = {
+    "org.synce.Password",
+    SECRET_SCHEMA_NONE,
+    {
+      {  "device", SECRET_SCHEMA_ATTRIBUTE_STRING },
+      {  NULL, 0 },
+    }
+  };
+  return &the_schema;
+}
+
+#endif
+
+
+#if !USE_LIBSECRET
+
 GnomeKeyringResult
 keyring_get_key(const gchar *name, gchar **key)
 {
@@ -123,3 +145,68 @@ keyring_set_key(const gchar *name, const gchar *key)
   return ret;
 }
 
+#else
+
+
+gchar *
+keyring_get_key(const gchar *name, GError **error)
+{
+  gchar *password = NULL;
+
+  password = secret_password_lookup_sync(SYNCE_SCHEMA,
+					 NULL,
+					 error,
+					 "device", name,
+					 NULL);
+
+  if ((!password) && (*error != NULL))
+    g_warning("%s: failed to retrieve password from keyring: %s", G_STRFUNC, (*error)->message);
+
+  return password;  
+}
+
+
+gboolean
+keyring_delete_key(const gchar *name, GError **error)
+{
+  gboolean result = FALSE;
+
+  result = secret_password_clear_sync(SYNCE_SCHEMA,
+				      NULL,
+				      error,
+				      "device", name,
+				      NULL);
+				      
+  if (!result)
+    g_warning("%s: failed to delete password from keyring: %s", G_STRFUNC, (*error)->message);
+
+  return result;
+}
+
+
+gboolean
+keyring_set_key(const gchar *name, const gchar *key, GError **error)
+{
+
+  gboolean result = FALSE;
+  gchar *display_name = NULL;
+
+  display_name = g_strdup_printf (_("Passphrase for SynCE Mobile Device %s"), name);
+
+  result = secret_password_store_sync(SYNCE_SCHEMA,
+    SECRET_COLLECTION_DEFAULT,
+    display_name,
+    key,
+    NULL,
+    error,
+    "device", name,
+    NULL);
+
+  g_free(display_name);
+  if (!result)
+    g_warning("%s: failed to store password in keyring: %s", G_STRFUNC, (*error)->message);
+
+  return result;
+}
+
+#endif

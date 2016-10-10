@@ -20,6 +20,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 */
 
+#if USE_LIBSECRET
+
+#include <libsecret/secret.h>
+
+const SecretSchema * synce_get_schema (void) G_GNUC_CONST;
+#define SYNCE_SCHEMA  synce_get_schema ()
+
+gchar *
+keyring_get_key(const gchar *name, GError **error);
+
+gboolean
+keyring_delete_key(const gchar *name, GError **error);
+
+gboolean
+keyring_set_key(const gchar *name, const gchar *key, GError **error);
+
+#else
+
 #include <gnome-keyring.h>
 
 GnomeKeyringResult
@@ -31,3 +49,4 @@ keyring_delete_key(const gchar *name);
 GnomeKeyringResult
 keyring_set_key(const gchar *name, const gchar *key);
 
+#endif
