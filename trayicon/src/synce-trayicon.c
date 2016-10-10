@@ -1362,7 +1362,7 @@ static void
 app_ind_connection_changed_cb(AppIndicator *appind, gboolean connected, gpointer data)
 {
   SynceTrayIcon *self = SYNCE_TRAYICON(data);
-  SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
+  G_GNUC_UNUSED SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
 
   if (connected)
     g_debug("%s: application indicator connection changed - now connected", G_STRFUNC);
