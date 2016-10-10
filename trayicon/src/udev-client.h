@@ -42,13 +42,7 @@ GType udev_client_get_type (void);
 #define UDEV_CLIENT_TYPE (udev_client_get_type())
 #define UDEV_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UDEV_CLIENT_TYPE, UdevClient))
 #define UDEV_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_CAST ((c), UDEV_CLIENT_TYPE, UdevClientClass))
-
-#ifdef G_TYPE_CHECK_TYPE
-#define IS_UDEV_CLIENT(obj) (G_TYPE_CHECK_TYPE ((obj), UDEV_CLIENT_TYPE))
-#else
 #define IS_UDEV_CLIENT(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UDEV_CLIENT_TYPE))
-#endif
-
 #define IS_UDEV_CLIENT_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), UDEV_CLIENT_TYPE))
 #define UDEV_CLIENT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UDEV_CLIENT_TYPE, UdevClientClass))
 

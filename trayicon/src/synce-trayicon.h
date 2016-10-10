@@ -42,13 +42,7 @@ GType synce_trayicon_get_type (void);
 #define SYNCE_TRAYICON_TYPE (synce_trayicon_get_type())
 #define SYNCE_TRAYICON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), SYNCE_TRAYICON_TYPE, SynceTrayIcon))
 #define SYNCE_TRAYICON_CLASS(c) (G_TYPE_CHECK_CLASS_CAST ((c), SYNCE_TRAYICON_TYPE, SynceTrayIconClass))
-
-#ifdef G_TYPE_CHECK_TYPE
-#define IS_SYNCE_TRAYICON(obj) (G_TYPE_CHECK_TYPE ((obj), SYNCE_TRAYICON_TYPE))
-#else
 #define IS_SYNCE_TRAYICON(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), SYNCE_TRAYICON_TYPE))
-#endif
-
 #define IS_SYNCE_TRAYICON_CLASS(c) (G_TYPE_CHECK_CLASS_TYPE ((c), SYNCE_TRAYICON_TYPE))
 #define SYNCE_TRAYICON_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), SYNCE_TRAYICON_TYPE, SynceTrayIconClass))
 
