@@ -6,9 +6,6 @@
 #if !USE_GDBUS
 #include <dbus/dbus-glib.h>
 #endif
-#if HAVE_GUDEV
-#include <gudev/gudev.h>
-#endif
 
 #include "synce-connection-broker.h"
 
@@ -64,9 +61,6 @@ struct _SynceDevicePrivate
 
   /* the dbus object path */
   gchar *obj_path;
-#if HAVE_GUDEV
-  GUdevClient *gudev_client;
-#endif
 
 #if USE_GDBUS
   SynceDbusDevice *interface;

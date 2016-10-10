@@ -6,10 +6,6 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#if HAVE_GUDEV
-#include <gudev/gudev.h>
-#endif
-
 #include <synce.h>
 
 #include "synce-device.h"
@@ -32,8 +28,6 @@ static gboolean synce_device_initable_init       (GInitable       *initable,
 G_DEFINE_TYPE_WITH_CODE (SynceDevice, synce_device, G_TYPE_OBJECT,
 			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_initable_iface_init))
 
-
-const gchar *udev_subsystems[] = { NULL };
 
 /* properties */
 enum
@@ -219,32 +213,6 @@ get_password_flag_text(SynceDevicePasswordFlags flag)
   return prop_str;
 }
 
-
-#ifdef HAVE_GUDEV
-
-static void
-gudev_uevent_callback(G_GNUC_UNUSED GUdevClient *client,
-		      gchar *action,
-		      GUdevDevice *device,
-		      gpointer user_data)
-{
-  g_debug("%s: received uevent %s for device %s", G_STRFUNC, action, g_udev_device_get_sysfs_path(device));
-
-  SynceDevice *self = SYNCE_DEVICE (user_data);
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
-
-  if ((g_str_has_suffix(g_udev_device_get_sysfs_path(device), priv->device_path) == FALSE) || (strcmp("remove", action) != 0)) 
-    return;
-
-  g_debug("%s: received uevent remove for our device", G_STRFUNC);
-
-  synce_device_dbus_uninit(self);
-  g_signal_emit(self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_DISCONNECTED], 0);
-
-  return;
-}
-#endif
 
 #if USE_GDBUS
 
@@ -762,10 +730,6 @@ synce_device_init (SynceDevice *self)
 
   priv->obj_path = NULL;
 
-#if HAVE_GUDEV
-  priv->gudev_client = NULL;
-#endif
-
 #if USE_GDBUS
   priv->interface = NULL;
 #endif
@@ -785,23 +749,6 @@ synce_device_initable_init (GInitable *initable, GCancellable *cancellable, GErr
 			 "Cancellable initialization not supported");
     return FALSE;
   }
-
-#if HAVE_GUDEV
-  g_debug("%s: connecting to udev", G_STRFUNC);
-  if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
-    g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
-    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-			 "Failed to initialize connection to udev");
-    return FALSE;
-  }
-
-  if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
-    g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
-    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-			 "Failed to initialize connection to udev");
-    return FALSE;
-  }
-#endif
 
   priv->inited = TRUE;
 
@@ -823,15 +770,26 @@ synce_device_dispose (GObject *obj)
   if (priv->interface) {
     g_dbus_interface_skeleton_unexport(G_DBUS_INTERFACE_SKELETON(priv->interface));
     g_object_unref(priv->interface);
+    priv->interface = NULL;
   }
+#else
+  GError *error = NULL;
+  DBusGConnection *system_bus = NULL;
+
+  system_bus = dbus_g_bus_get (DBUS_BUS_SYSTEM, &error);
+  if (system_bus == NULL) {
+    g_critical("Failed to connect to system bus: %s", error->message);
+    g_error_free(error);
+    return;
+  }
+
+  dbus_g_connection_unregister_g_object(system_bus, G_OBJECT(self));
+
+  dbus_g_connection_unref(system_bus);
 #endif
 
   g_io_stream_close(G_IO_STREAM(priv->conn), NULL, NULL);
   g_object_unref(priv->conn);
-
-#if HAVE_GUDEV
-  g_object_unref(priv->gudev_client);
-#endif
 
   g_hash_table_destroy (priv->requests);
 

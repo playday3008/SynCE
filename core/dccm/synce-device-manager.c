@@ -8,6 +8,10 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#if HAVE_GUDEV
+#include <gudev/gudev.h>
+#endif
+
 #include "synce-device-manager.h"
 #if USE_GDBUS
 #include "synce-device-manager-dbus.h"
@@ -25,6 +29,8 @@ static void     synce_device_manager_initable_iface_init (GInitableIface  *iface
 static gboolean synce_device_manager_initable_init       (GInitable       *initable,
 							  GCancellable    *cancellable,
 							  GError          **error);
+
+const gchar *udev_subsystems[] = { NULL };
 
 G_DEFINE_TYPE_WITH_CODE (SynceDeviceManager, synce_device_manager, G_TYPE_OBJECT,
 			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_initable_iface_init))
@@ -54,6 +60,9 @@ struct _SynceDeviceManagerPrivate
   gulong control_connect_id;
   gulong control_disconnect_id;
   guint iface_check_id;
+#if HAVE_GUDEV
+  GUdevClient *gudev_client;
+#endif
 #if USE_GDBUS
   SynceDbusDeviceManager *interface;
 #endif
@@ -81,6 +90,73 @@ synce_device_manager_device_entry_free(DeviceEntry *entry)
   return;
 }
 
+static void
+synce_device_manager_remove_device(SynceDeviceManager *self, const gchar *device_path)
+{
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  GSList *device_entry_iter = priv->devices;
+  while (device_entry_iter != NULL) {
+
+    if (g_str_has_suffix(device_path, ((DeviceEntry*)device_entry_iter->data)->device_path) == TRUE) 
+      break;
+
+    device_entry_iter = g_slist_next(device_entry_iter);
+  }
+
+  if (!device_entry_iter) {
+    g_debug("%s: disconnect signal received for a non-managed device: %s", G_STRFUNC, device_path);
+    return;
+  }
+
+  g_message("%s: received disconnect for one of our devices: %s", G_STRFUNC, device_path);
+
+  DeviceEntry *deventry = device_entry_iter->data;
+  priv->devices = g_slist_delete_link(priv->devices, device_entry_iter);
+
+  if (deventry->device && SYNCE_IS_DEVICE(deventry->device)) {
+    gchar *obj_path = NULL;
+    g_object_get(deventry->device, "object-path", &obj_path, NULL);
+    g_message("%s: emitting disconnect for object path %s", G_STRFUNC, obj_path);
+    g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, obj_path);
+#if USE_GDBUS
+    synce_dbus_device_manager_emit_device_disconnected(priv->interface, obj_path);
+#endif
+    g_free(obj_path);
+  } else {
+    g_message("%s: removing uninitialised device: %s", G_STRFUNC, device_path);
+  }
+  synce_device_manager_device_entry_free(deventry);
+
+  return;
+}
+
+#if HAVE_GUDEV
+
+static void
+gudev_uevent_callback(G_GNUC_UNUSED GUdevClient *client,
+		      gchar *action,
+		      GUdevDevice *device,
+		      gpointer user_data)
+{
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER (user_data);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+
+  const gchar *dev_path = NULL;
+
+  g_debug("%s: received uevent %s for device %s", G_STRFUNC, action, g_udev_device_get_sysfs_path(device));
+
+  if (strcmp("remove", action) != 0)
+    return;
+
+  dev_path = g_udev_device_get_sysfs_path(device);
+
+  synce_device_manager_remove_device(self, dev_path);
+
+  return;
+}
+#endif
 
 static void
 synce_device_manager_device_sends_disconnected_cb(SynceDevice *device,
@@ -108,7 +184,7 @@ synce_device_manager_device_sends_disconnected_cb(SynceDevice *device,
 
   gchar *obj_path = NULL;
   g_object_get(device, "object-path", &obj_path, NULL);
-  g_debug("%s: emitting disconnect for object path %s", G_STRFUNC, obj_path);
+  g_message("%s: emitting disconnect for object path %s", G_STRFUNC, obj_path);
   g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, obj_path);
 #if USE_GDBUS
   synce_dbus_device_manager_emit_device_disconnected(priv->interface, obj_path);
@@ -405,27 +481,7 @@ synce_device_manager_device_disconnected_cb(G_GNUC_UNUSED SynceDeviceManagerCont
 #if HAVE_GUDEV
   g_debug("%s: ignored, listening through libgudev", G_STRFUNC);
 #else
-  GSList *device_entry_iter = priv->devices;
-  while (device_entry_iter != NULL) {
-
-    if (strcmp(device_path, ((DeviceEntry*)device_entry_iter->data)->device_path) == 0) {
-      break;
-    }
-
-    device_entry_iter = g_slist_next(device_entry_iter);
-  }
-
-  if (!device_entry_iter) {
-    g_critical("%s: disconnect signal received for a non-recognised device", G_STRFUNC);
-    return;
-  }
-
-  DeviceEntry *deventry = device_entry_iter->data;
-  priv->devices = g_slist_delete_link(priv->devices, device_entry_iter);
-
-  g_debug("%s: emitting disconnect for object path %s", G_STRFUNC, device_path);
-  g_signal_emit (self, SYNCE_DEVICE_MANAGER_GET_CLASS(SYNCE_DEVICE_MANAGER(self))->signals[SYNCE_DEVICE_MANAGER_DEVICE_DISCONNECTED], 0, device_path);
-  synce_device_manager_device_entry_free(deventry);
+  synce_device_manager_remove_device(self, device_path);
 #endif
 
   return;
@@ -548,6 +604,9 @@ synce_device_manager_init (SynceDeviceManager *self)
   priv->control_connect_id = 0;
   priv->control_disconnect_id = 0;
   priv->iface_check_id = 0;
+#if HAVE_GUDEV
+  priv->gudev_client = NULL;
+#endif
 
   return;
 }
@@ -564,6 +623,23 @@ synce_device_manager_initable_init (GInitable *initable, GCancellable *cancellab
 			 "Cancellable initialization not supported");
     return FALSE;
   }
+
+#if HAVE_GUDEV
+  g_debug("%s: connecting to udev", G_STRFUNC);
+  if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
+    g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+			 "Failed to initialize connection to udev");
+    return FALSE;
+  }
+
+  if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
+    g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
+    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+			 "Failed to initialize connection to udev");
+    return FALSE;
+  }
+#endif
 
 #if USE_GDBUS
   priv->interface = synce_dbus_device_manager_skeleton_new();
@@ -621,6 +697,10 @@ synce_device_manager_dispose (GObject *obj)
     return;
 
   priv->dispose_has_run = TRUE;
+
+#if HAVE_GUDEV
+  g_object_unref(priv->gudev_client);
+#endif
 
 #if USE_GDBUS
   if (priv->interface) {
