@@ -3,6 +3,7 @@
 	* consolidate udev device disconnect process into device manager,
 	  rather than the device object, since it is possible to receive
 	  a disconnect on a device that does not have a full device object
+	* add a documentation page explaining the device connection process
 
 2016-10-07  Mark Ellis  <mark@mpellis.org.uk>
 

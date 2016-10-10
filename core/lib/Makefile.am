@@ -13,4 +13,4 @@ endif
 
 SUBDIRS = utils rapi
 
-EXTRA_DIST = mainpage.md
+EXTRA_DIST = mainpage.md architecture.md
