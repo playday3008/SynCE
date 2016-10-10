@@ -11,13 +11,8 @@ AM_CPPFLAGS  = \
 
 BUILT_SOURCES = \
 	dccm-client-signals-marshal.h \
-	dccm-client-signals-marshal.c
-
-if USE_GDBUS
-BUILT_SOURCES += sync-engine-dbus.h sync-engine-dbus.c
-else
-BUILT_SOURCES += sync-engine-glue.h
-endif
+	dccm-client-signals-marshal.c \
+	sync-engine-dbus.h sync-engine-dbus.c
 
 CLEANFILES = $(BUILT_SOURCES)
 
@@ -75,11 +70,6 @@ synce_trayicon_LDADD = \
 	$(XML_LIBS) \
 	$(APP_INDICATOR_LIBS)
 
-if !USE_GDBUS
-synce_trayicon_CPPFLAGS += $(DBUS_CFLAGS)
-synce_trayicon_LDADD += $(DBUS_LIBS)
-endif
-
 if USE_LIBSECRET
 synce_trayicon_CPPFLAGS += $(LIBSECRET_CFLAGS)
 synce_trayicon_LDADD += $(LIBSECRET_LIBS)
@@ -96,9 +86,6 @@ noinst_HEADERS = synce-trayicon-module.h
 
 %-signals-marshal.c: %-signals-marshal.list
 	glib-genmarshal --body --prefix=$(subst -,_,$*)_marshal $< > $*-signals-marshal.c
-
-%-glue.h: %.xml
-	dbus-binding-tool --mode=glib-client --ignore-unsupported --output=$@ --prefix=$(subst -,_,$*) $<
 
 %-dbus.c %-dbus.h: %.xml
 	gdbus-codegen --interface-prefix org.synce.dccm. --generate-c-code $*-dbus --c-namespace SynceDbus $<

@@ -25,12 +25,7 @@ IN THE SOFTWARE.
 #endif
 
 #include <glib-object.h>
-#if USE_GDBUS
 #include <gio/gio.h>
-#else
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#endif
 #include <synce.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -47,14 +42,8 @@ G_DEFINE_TYPE_EXTENDED (UdevClient, udev_client, G_TYPE_OBJECT, 0, G_IMPLEMENT_I
 
 typedef struct _UdevClientPrivate UdevClientPrivate;
 struct _UdevClientPrivate {
-#if USE_GDBUS
   GDBusProxy *dbus_proxy;
   GDBusProxy *dev_mgr_proxy;
-#else /* USE_GDBUS */
-  DBusGConnection *dbus_connection;
-  DBusGProxy *dbus_proxy;
-  DBusGProxy *dev_mgr_proxy;
-#endif /* USE_GDBUS */
   gboolean online;
 
   GPtrArray *dev_proxies;
@@ -76,16 +65,11 @@ struct _UdevClientPrivate {
 typedef struct _proxy_store proxy_store;
 struct _proxy_store{
   gchar *pdaname;
-#if USE_GDBUS
   GDBusProxy *proxy;
-#else
-  DBusGProxy *proxy;
-#endif
 };
 
 /* methods */
 
-#if USE_GDBUS
 
 static void
 on_dev_proxy_signal (GDBusProxy *proxy,
@@ -114,41 +98,13 @@ on_dev_proxy_signal (GDBusProxy *proxy,
   obj_path = g_dbus_proxy_get_object_path(proxy);
 
   g_variant_get(parameters, "(s)", &pw_status);
-#else
-static void 
-password_flags_changed_cb(DBusGProxy *proxy,
-                          gchar *pw_status,
-                          gpointer user_data)
-{
-  if (!user_data) {
-    g_warning("%s: Invalid object passed", G_STRFUNC);
-    return;
-  }
-
-  UdevClient *self = UDEV_CLIENT(user_data);
-  UdevClientPrivate *priv = UDEV_CLIENT_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    return;
-  }
-
-  const gchar *obj_path;
-
-  obj_path = dbus_g_proxy_get_path(proxy);
-
-#endif /* USE_GDBUS */
 
   gchar *pdaname = NULL;
   guint i;
 
   i = 0;
   while (i < priv->dev_proxies->len) {
-#if USE_GDBUS
     if (!(g_ascii_strcasecmp(obj_path, g_dbus_proxy_get_object_path(((proxy_store *)g_ptr_array_index(priv->dev_proxies, i))->proxy)))) {
-#else
-    if (!(g_ascii_strcasecmp(obj_path, dbus_g_proxy_get_path(((proxy_store *)g_ptr_array_index(priv->dev_proxies, i))->proxy)))) {
-#endif
       pdaname = (((proxy_store *)g_ptr_array_index(priv->dev_proxies, i))->pdaname);
       break;
     }
@@ -157,9 +113,7 @@ password_flags_changed_cb(DBusGProxy *proxy,
 
   if (!pdaname) {
     g_warning("%s: Received password flags changed for unfound device: %s", G_STRFUNC, obj_path);
-#if USE_GBUS
     g_free(pw_status);
-#endif
     return;
   }
 
@@ -172,9 +126,7 @@ password_flags_changed_cb(DBusGProxy *proxy,
   if ((strcmp(pw_status, "unlocked") == 0) || (strcmp(pw_status, "unset") == 0))
     g_signal_emit(self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_UNLOCKED], 0, pdaname);
 
-#if USE_GBUS
   g_free(pw_status);
-#endif
   return;
 }
 
@@ -192,12 +144,8 @@ udev_add_device(UdevClient *self,
 		gchar *obj_path)
 {
   GError *error = NULL;
-#if USE_GDBUS
   GDBusProxy *new_proxy;
   GVariant *res = NULL;
-#else
-  DBusGProxy *new_proxy;
-#endif
   WmDevice *device = NULL;
 
   if (!self) {
@@ -211,17 +159,10 @@ udev_add_device(UdevClient *self,
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-#if USE_GDBUS
   if (!priv->dbus_proxy) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return;
   }
-#else
-  if (!priv->dbus_connection) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
-    return;
-  }
-#endif
 
   gchar *password_flags;
   gint os_major, os_minor,
@@ -230,8 +171,6 @@ udev_add_device(UdevClient *self,
     *model, *transport;
 
   g_debug("%s: Received connect from dccm: %s", G_STRFUNC, obj_path);
-
-#if USE_GDBUS
 
   new_proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
                                             G_DBUS_PROXY_FLAGS_NONE,
@@ -317,74 +256,6 @@ udev_add_device(UdevClient *self,
   g_variant_get (res, "(s)", &model);
   g_variant_unref (res);
 
-#else /* USE_GDBUS */
-
-  if (!(new_proxy = dbus_g_proxy_new_for_name (priv->dbus_connection,
-					       DCCM_SERVICE,
-					       obj_path,
-					       DCCM_DEV_IFACE))) {
-    g_critical("%s: Error getting proxy for device path %s", G_STRFUNC, obj_path);
-    goto error_exit;
-  }
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetName",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_STRING, &(name),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device name from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetIpAddress",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_STRING, &(ip),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device ip from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetCpuType",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_UINT, &(processor_type),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device processor type from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetOsVersion",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_UINT, &(os_major),
-			  G_TYPE_UINT, &(os_minor),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device os version from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetCurrentPartnerId",
-			  &error,G_TYPE_INVALID,
-			  G_TYPE_UINT, &(partner_id_1),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device partner id from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetPlatformName",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_STRING, &(os_name),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device platform name from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetModelName",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_STRING, &(model),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device model name from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-#endif /* USE_GDBUS */
 
   transport = g_strdup("udev");
 
@@ -416,7 +287,6 @@ udev_add_device(UdevClient *self,
     goto error_exit;
   }
 
-#if USE_GDBUS
   g_signal_connect (new_proxy,
                     "g-signal",
                     G_CALLBACK (on_dev_proxy_signal),
@@ -437,23 +307,6 @@ udev_add_device(UdevClient *self,
 
   g_variant_get (res, "(s)", &password_flags);
   g_variant_unref (res);
-
-#else /* USE_GDBUS */
-
-  dbus_g_proxy_add_signal (new_proxy, "PasswordFlagsChanged",
-			   G_TYPE_STRING, G_TYPE_INVALID);
-  dbus_g_proxy_connect_signal (new_proxy, "PasswordFlagsChanged",
-			       G_CALLBACK(password_flags_changed_cb), self, NULL);
-
-  if (!(dbus_g_proxy_call(new_proxy, "GetPasswordFlags",
-			  &error, G_TYPE_INVALID,
-			  G_TYPE_STRING, &(password_flags),
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting password flags from dccm: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-
-#endif /* USE_GDBUS */
 
   g_object_get(device, "name", &name, NULL);
   proxy_store *p_store = g_malloc0(sizeof(proxy_store));
@@ -490,7 +343,6 @@ exit:
   return;
 }
 
-#if USE_GDBUS
 
 static void
 on_devmgr_proxy_signal (GDBusProxy *proxy,
@@ -555,68 +407,6 @@ on_devmgr_proxy_signal (GDBusProxy *proxy,
   return;
 }
 
-#else /* USE_GDBUS */
-
-static void
-udev_device_connected_cb(DBusGProxy *proxy,
-			 gchar *obj_path,
-			 gpointer user_data)
-{
-  UdevClient *self = UDEV_CLIENT(user_data);
-  udev_add_device(self, obj_path);
-}
-
-void
-udev_device_disconnected_cb(DBusGProxy *proxy,
-			    gchar *obj_path,
-			    gpointer user_data)
-{
-  UdevClient *self = UDEV_CLIENT(user_data);
-
-  if (!self) {
-    g_warning("%s: Invalid object passed", G_STRFUNC);
-    return;
-  }
-
-  UdevClientPrivate *priv = UDEV_CLIENT_GET_PRIVATE (self);
-
-  if (priv->disposed) {
-    g_warning("%s: Disposed object passed", G_STRFUNC);
-    return;
-  }
-  if (!priv->dbus_connection) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
-    return;
-  }
-
-  gchar *pdaname = NULL;
-  proxy_store *p_store = NULL;
-  guint i;
-
-  i = 0;
-  while (i < priv->dev_proxies->len) {
-    if (!(g_ascii_strcasecmp(obj_path, dbus_g_proxy_get_path(((proxy_store *)g_ptr_array_index(priv->dev_proxies, i))->proxy)))) {
-      p_store = (proxy_store *)g_ptr_array_index(priv->dev_proxies, i);
-      pdaname = p_store->pdaname;
-      break;
-    }
-    i++;
-  }
-
-  if (!pdaname) {
-    g_warning("%s: Received disconnect from dccm from unfound device: %s", G_STRFUNC, obj_path);
-    return;
-  }
-
-  g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[DEVICE_DISCONNECTED], 0, pdaname);
-
-  free_proxy_store(p_store);
-  g_ptr_array_remove_index_fast(priv->dev_proxies, i);
-
-  return;
-}
-
-#endif /* USE_GDBUS */
 
 void
 udev_client_provide_password_impl(UdevClient *self, const gchar *pdaname, const gchar *password)
@@ -624,13 +414,8 @@ udev_client_provide_password_impl(UdevClient *self, const gchar *pdaname, const 
   GError *error = NULL;
   gboolean password_accepted = FALSE;
   guint i;
-#if USE_GDBUS
   GVariant *ret = NULL;
   GDBusProxy *proxy = NULL;
-#else
-  gboolean result;
-  DBusGProxy *proxy = NULL;
-#endif
 
   if (!self) {
     g_warning("%s: Invalid object passed", G_STRFUNC);
@@ -643,17 +428,10 @@ udev_client_provide_password_impl(UdevClient *self, const gchar *pdaname, const 
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-#if USE_GDBUS
   if (!priv->dbus_proxy) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return;
   }
-#else
-  if (!priv->dbus_connection) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
-    return;
-  }
-#endif
 
   i = 0;
   while (i < priv->dev_proxies->len) {
@@ -668,8 +446,6 @@ udev_client_provide_password_impl(UdevClient *self, const gchar *pdaname, const 
     g_warning("%s: Password provided for unfound device: %s", G_STRFUNC, pdaname);
     return;
   }
-
-#if USE_GDBUS
 
   ret = g_dbus_proxy_call_sync (proxy,
                                 "ProvidePassword",
@@ -686,24 +462,6 @@ udev_client_provide_password_impl(UdevClient *self, const gchar *pdaname, const 
 
   g_variant_get (ret, "(b)", &password_accepted);
   g_variant_unref (ret);
-
-#else /* USE_GDBUS */
-
-  result = dbus_g_proxy_call(proxy,
-			     "ProvidePassword",
-			     &error,
-			     G_TYPE_STRING, password,
-			     G_TYPE_INVALID,
-			     G_TYPE_BOOLEAN, &password_accepted,
-			     G_TYPE_INVALID);
-
-  if (result == FALSE) {
-    g_critical("%s: Error sending password to dccm for %s: %s", G_STRFUNC, pdaname, error->message);
-    g_error_free(error);
-    goto exit;
-  }
-
-#endif
 
   if (!(password_accepted)) {
     g_debug("%s: Password rejected for %s", G_STRFUNC, pdaname);
@@ -733,17 +491,10 @@ udev_client_request_disconnect_impl(UdevClient *self, const gchar *pdaname)
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return result;
   }
-#if USE_GDBUS
   if (!priv->dbus_proxy) {
     g_warning("%s: Uninitialised object passed", G_STRFUNC);
     return result;
   }
-#else
-  if (!priv->dbus_connection) {
-    g_warning("%s: Uninitialised object passed", G_STRFUNC);
-    return result;
-  }
-#endif
 
   g_debug("%s: dccm doesn't support a disconnect command", G_STRFUNC);
 
@@ -764,22 +515,10 @@ udev_disconnect(UdevClient *self)
     return;
   }
 
-#if USE_GDBUS
   g_signal_handlers_disconnect_by_func(priv->dev_mgr_proxy, on_devmgr_proxy_signal, self);
 
   g_object_unref(priv->dev_mgr_proxy);
   priv->dev_mgr_proxy = NULL;
-
-#else /* USE_GDBUS */
-  dbus_g_proxy_disconnect_signal (priv->dev_mgr_proxy, "DeviceConnected",
-				  G_CALLBACK(udev_device_connected_cb), self);
-
-  dbus_g_proxy_disconnect_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
-				  G_CALLBACK(udev_device_disconnected_cb), self);
-
-  g_object_unref(priv->dev_mgr_proxy);
-  priv->dev_mgr_proxy = NULL;
-#endif /* USE_GDBUS */
 
   for (i = 0; i < priv->dev_proxies->len; i++) {
     p_store = (proxy_store *)g_ptr_array_index(priv->dev_proxies, i);
@@ -790,12 +529,8 @@ udev_disconnect(UdevClient *self)
 static void
 udev_connect(UdevClient *self)
 {
-#if USE_GDBUS
   GVariant *ret = NULL;
   gchar **dev_list = NULL;
-#else
-  GPtrArray* dev_list = NULL;
-#endif
   guint i;
   gchar *obj_path = NULL;
   GError *error = NULL;
@@ -806,8 +541,6 @@ udev_connect(UdevClient *self)
     g_warning("%s: Disposed object passed", G_STRFUNC);
     return;
   }
-
-#if USE_GDBUS
 
   priv->dev_mgr_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
                                                        G_DBUS_PROXY_FLAGS_NONE,
@@ -853,54 +586,8 @@ udev_connect(UdevClient *self)
     udev_add_device(self, obj_path);
   }
   g_strfreev(dev_list);
-
-#else /* USE_GDBUS */
-  priv->dev_mgr_proxy = dbus_g_proxy_new_for_name (priv->dbus_connection,
-                                     DCCM_SERVICE,
-                                     DCCM_MGR_PATH,
-                                     DCCM_MGR_IFACE);
-  if (priv->dev_mgr_proxy == NULL) {
-      g_critical("%s: Failed to create proxy to device manager", G_STRFUNC);
-      priv->online = FALSE;
-      return;
-  }
-
-  dbus_g_proxy_add_signal (priv->dev_mgr_proxy, "DeviceConnected",
-			   G_TYPE_STRING, G_TYPE_INVALID);
-
-  dbus_g_proxy_add_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
-			   G_TYPE_STRING, G_TYPE_INVALID);
-
-  dbus_g_proxy_connect_signal (priv->dev_mgr_proxy, "DeviceConnected",
-			       G_CALLBACK(udev_device_connected_cb), self, NULL);
-
-  dbus_g_proxy_connect_signal (priv->dev_mgr_proxy, "DeviceDisconnected",
-			       G_CALLBACK(udev_device_disconnected_cb), self, NULL);
-
-  /* currently connected devices */
-
-  if (!(dbus_g_proxy_call(priv->dev_mgr_proxy, "GetConnectedDevices",
-			  &error, G_TYPE_INVALID,
-			  dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH),
-			  &dev_list,
-			  G_TYPE_INVALID))) {
-    g_critical("%s: Error getting device list from dccm: %s", G_STRFUNC, error->message);
-    g_error_free(error);
-    return;
-  }
-  for (i = 0; i < dev_list->len; i++) {
-    obj_path = (gchar *)g_ptr_array_index(dev_list, i);
-    g_debug("%s: adding device: %s", G_STRFUNC, obj_path);
-    udev_add_device(self, obj_path);
-    g_free(obj_path);
-  }
-  g_ptr_array_free(dev_list, TRUE);
-
-#endif /* USE_GDBUS */
-
 }
 
-#if USE_GDBUS
 
 static void
 on_dbus_proxy_signal (GDBusProxy *proxy,
@@ -957,53 +644,6 @@ on_dbus_proxy_signal (GDBusProxy *proxy,
         }
 }
 
-#else /* USE_GDBUS */
-static void
-udev_status_changed_cb(DBusGProxy *proxy,
-		       gchar *name,
-		       gchar *old_owner,
-		       gchar *new_owner,
-		       gpointer user_data)
-{
-        UdevClient *self = UDEV_CLIENT(user_data);
-        if (!self) {
-                g_warning("%s: Invalid object passed", G_STRFUNC);
-                return;
-        }
-        UdevClientPrivate *priv = UDEV_CLIENT_GET_PRIVATE (self);
-
-        if (priv->disposed) {
-                g_warning("%s: Disposed object passed", G_STRFUNC);
-                return;
-        }
-
-        if (strcmp(name, DCCM_SERVICE) != 0)
-                return;
-
-        /* If this parameter is empty, dccm just came online */
-
-        if (strcmp(old_owner, "") == 0) {
-                priv->online = TRUE;
-                g_debug("%s: dccm came online", G_STRFUNC);
-                udev_connect(self);
-
-                g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STARTING], 0);
-                return;
-        }
-
-        /* If this parameter is empty, dccm just went offline */
-
-        if (strcmp(new_owner, "") == 0) {
-                priv->online = FALSE;
-                g_debug("%s: dccm went offline", G_STRFUNC);
-                udev_disconnect(self);
-
-                g_signal_emit (self, DCCM_CLIENT_GET_INTERFACE (self)->signals[SERVICE_STOPPING], 0);
-                return;
-        }
-}
-
-#endif /* USE_GDBUS */
 
 gboolean
 udev_client_uninit_comms_impl(UdevClient *self)
@@ -1022,20 +662,10 @@ udev_client_uninit_comms_impl(UdevClient *self)
   if (priv->dev_mgr_proxy)
           udev_disconnect(self);
 
-#if USE_GDBUS
   g_signal_handlers_disconnect_by_func(priv->dbus_proxy, on_dbus_proxy_signal, self);
-#else
-  dbus_g_proxy_disconnect_signal (priv->dbus_proxy, "NameOwnerChanged",
-                                  G_CALLBACK(udev_status_changed_cb), NULL);
-#endif
 
   g_object_unref(priv->dbus_proxy);
   priv->dbus_proxy = NULL;
-
-#if !USE_GDBUS
-  dbus_g_connection_unref(priv->dbus_connection);
-  priv->dbus_connection = NULL;
-#endif
 
   return TRUE;
 }
@@ -1058,7 +688,6 @@ udev_client_init_comms_impl(UdevClient *self)
     return result;
   }
 
-#if USE_GDBUS
   if (priv->dbus_proxy) {
     g_warning("%s: Initialised object passed", G_STRFUNC);
     return result;
@@ -1099,44 +728,6 @@ udev_client_init_comms_impl(UdevClient *self)
   g_variant_get (ret, "(b)", &has_owner);
   g_variant_unref (ret);
 
-#else /* USE_GDBUS */
-  if (priv->dbus_connection) {
-    g_warning("%s: Initialised object passed", G_STRFUNC);
-    return result;
-  }
-
-  priv->dbus_connection = dbus_g_bus_get (DBUS_BUS_SYSTEM,
-                               &error);
-  if (priv->dbus_connection == NULL)
-    {
-      g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
-      g_error_free (error);
-      return result;
-    }
-
-  priv->dbus_proxy = dbus_g_proxy_new_for_name (priv->dbus_connection,
-                                                DBUS_SERVICE,
-                                                DBUS_PATH,
-                                                DBUS_IFACE);
-
-  dbus_g_proxy_add_signal (priv->dbus_proxy, "NameOwnerChanged",
-			   G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
-
-  dbus_g_proxy_connect_signal (priv->dbus_proxy, "NameOwnerChanged",
-			       G_CALLBACK(udev_status_changed_cb), self, NULL);
-
-  if (!(dbus_g_proxy_call(priv->dbus_proxy, "NameHasOwner",
-			  &error,
-                          G_TYPE_STRING, DCCM_SERVICE,
-                          G_TYPE_INVALID,
-			  G_TYPE_BOOLEAN, &has_owner,
-			  G_TYPE_INVALID))) {
-          g_critical("%s: Error checking owner of %s: %s", G_STRFUNC, DCCM_SERVICE, error->message);
-          g_error_free(error);
-          return TRUE;
-  }
-#endif /* USE_GDBUS */
-
   if (has_owner) {
           priv->online = TRUE;
           udev_connect(self);
@@ -1154,9 +745,6 @@ udev_client_init(UdevClient *self)
 {
   UdevClientPrivate *priv = UDEV_CLIENT_GET_PRIVATE (self);
 
-#if !USE_GDBUS
-  priv->dbus_connection = NULL;
-#endif
   priv->dbus_proxy = NULL;
   priv->dev_mgr_proxy = NULL;
   priv->dev_proxies = g_ptr_array_new();
@@ -1172,11 +760,7 @@ udev_client_dispose (GObject *obj)
   if (priv->disposed) {
     return;
   }
-#if !USE_GDBUS
-  if (priv->dbus_connection)
-#else
   if (priv->dbus_proxy)
-#endif
     dccm_client_uninit_comms(DCCM_CLIENT(self));
 
   priv->disposed = TRUE;
@@ -1206,13 +790,6 @@ udev_client_class_init (UdevClientClass *klass)
 
   g_type_class_add_private (klass, sizeof (UdevClientPrivate));
 
-#if !USE_GDBUS
-  dbus_g_object_register_marshaller (dccm_client_marshal_VOID__UINT_UINT,
-				     G_TYPE_NONE,
-				     G_TYPE_UINT,
-				     G_TYPE_UINT,
-				     G_TYPE_INVALID);
-#endif
 }
 
 static void

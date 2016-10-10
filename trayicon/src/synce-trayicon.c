@@ -32,9 +32,6 @@ IN THE SOFTWARE.
 #include <glib/gi18n.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
-#if !USE_GDBUS
-#include <dbus/dbus-glib.h>
-#endif
 #include <synce.h>
 #include <libnotify/notify.h>
 
@@ -747,10 +744,6 @@ init_client_comms(SynceTrayIcon *self)
 {
         SynceTrayIconPrivate *priv = SYNCE_TRAYICON_GET_PRIVATE (self);
         DccmClient *comms_client = NULL;
-
-#if !USE_GDBUS
-        dbus_g_thread_init();
-#endif
 
 #if ENABLE_UDEV_SUPPORT
         comms_client = DCCM_CLIENT(g_object_new(UDEV_CLIENT_TYPE, NULL));

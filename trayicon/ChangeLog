@@ -2,6 +2,8 @@
 
 	* use libsecret if available, replacing the deprecated
 	  gnome-keyring
+	* drop the ability to fall back to dbus-glib if the build cannot
+	  find GDBus, and simply require the GIO with dbus support
 
 2016-10-05  Mark Ellis  <mark@mpellis.org.uk>
 

@@ -31,14 +31,8 @@ IN THE SOFTWARE.
 #include <rra/matchmaker.h>
 #include <libunshield.h>
 
-#if USE_GDBUS
 #include <gio/gio.h>
 #include "sync-engine-dbus.h"
-#else
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib.h>
-#include "sync-engine-glue.h"
-#endif
 
 #include "device-info.h"
 #include "synce_app_man.h"
@@ -356,33 +350,6 @@ partners_create_sync_item_selected_cb (GtkCellRendererToggle *cell_renderer,
     }
 }
 
-#if !USE_GDBUS
-static GVariant *
-sync_items_hash_to_gvariant(GHashTable *sync_items_hash)
-{
-  GVariant *sync_items = NULL;
-  GVariantBuilder *listbuilder = NULL;
-  GHashTableIter iter;
-  gpointer key = NULL, value = NULL;
-
-  listbuilder = g_variant_builder_new(G_VARIANT_TYPE("a{us}"));
-
-  g_debug("%s: number of sync item types = %u", G_STRFUNC, g_hash_table_size(sync_items_hash));
-  g_hash_table_iter_init(&iter, sync_items_hash);
-  while (g_hash_table_iter_next(&iter, &key, &value))
-  {
-    g_debug("%s: sync item %u: %s", G_STRFUNC, GPOINTER_TO_UINT(key), (gchar*)value);
-
-    g_variant_builder_add (listbuilder, "{us}", GPOINTER_TO_UINT(key), (gchar*)value);
-
-  }
-  sync_items = g_variant_builder_end(listbuilder);
-  g_variant_builder_unref(listbuilder);
-
-  return g_variant_ref_sink(sync_items);
-}
-#endif
-
 static void
 partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
 {
@@ -397,15 +364,9 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
     return;
   }
 
-#if USE_GDBUS
   SynceDbusOrgSynceSyncEngine *sync_engine_proxy = NULL;
   GVariantBuilder *varbuilder = NULL;
   GVariant *val = NULL;
-#else
-  DBusGConnection *dbus_connection = NULL;
-  DBusGProxy *sync_engine_proxy = NULL;
-  GHashTable *sync_items_tmp = NULL;
-#endif
   GArray *sync_items_required = NULL;
   GVariant *sync_items = NULL;
   GVariantIter item_iter;
@@ -448,8 +409,6 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
 
   g_debug("%s: create button_clicked", G_STRFUNC);
 
-#if USE_GDBUS
-
   sync_engine_proxy = synce_dbus_org_synce_sync_engine_proxy_new_for_bus_sync(
     G_BUS_TYPE_SESSION,
     G_DBUS_PROXY_FLAGS_NONE,
@@ -458,67 +417,27 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
     NULL, /* GCancellable */
     &error);
 
-#else
-
-  dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
-  if (dbus_connection == NULL) {
-    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
-
-    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
-						      GTK_DIALOG_DESTROY_WITH_PARENT,
-						      GTK_MESSAGE_WARNING,
-						      GTK_BUTTONS_OK,
-						      "Creation of a new partnership was unsuccessful: %s",
-						      error->message);
-
-    gtk_dialog_run(GTK_DIALOG(failed_dialog));
-    gtk_widget_destroy (failed_dialog);
-
-    g_error_free (error);
-    goto exit;
-  }
-
-  sync_engine_proxy = dbus_g_proxy_new_for_name (dbus_connection,
-						 "org.synce.SyncEngine",
-						 "/org/synce/SyncEngine",
-						 "org.synce.SyncEngine");
-#endif
-
   if (sync_engine_proxy == NULL) {
-#if USE_GDBUS
     g_critical("%s: Failed to create proxy to sync engine: %s", G_STRFUNC, error->message);
-#else
-    g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
-#endif
     GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
 						      GTK_DIALOG_DESTROY_WITH_PARENT,
 						      GTK_MESSAGE_WARNING,
 						      GTK_BUTTONS_OK,
-#if USE_GDBUS
 						      "Creation of a new partnership was unsuccessful: Failed to connect to SyncEngine: %s",
                                                       error->message
-#else
-						      "Creation of a new partnership was unsuccessful: Failed to connect to SyncEngine"
-#endif
       );
     gtk_dialog_run(GTK_DIALOG(failed_dialog));
     gtk_widget_destroy (failed_dialog);
-#if USE_GDBUS
     g_error_free(error);
-#endif
     goto exit;
   }
 
 
-#if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_item_types_sync (
     sync_engine_proxy,
     &sync_items,
     NULL,
     &error);
-#else
-  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items_tmp, &error);
-#endif
 
   if (!result) {
     g_critical("%s: Error creating partnership via sync-engine: %s", G_STRFUNC, error->message);
@@ -536,11 +455,6 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
     g_error_free(error);
     goto exit;
   }
-
-#if !USE_GDBUS
-  sync_items = sync_items_hash_to_gvariant(sync_items_tmp);
-  g_hash_table_destroy(sync_items);
-#endif
 
   store = gtk_list_store_new (SYNCITEM_N_COLUMNS,
 			      G_TYPE_INT,     /* index */
@@ -622,7 +536,6 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
     g_debug("%s:     sync_items %d: %d", G_STRFUNC, i, g_array_index(sync_items_required, guint, i));
   }
 
-#if USE_GDBUS
   varbuilder = g_variant_builder_new(G_VARIANT_TYPE("au"));
 
   for (i = 0; i < sync_items_required->len; i++) {
@@ -640,9 +553,6 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
     NULL,
     &error);
 
-#else
-  result = org_synce_syncengine_create_partnership(sync_engine_proxy, name, sync_items_required, &id, &error);
-#endif
 
   if (!result) {
     g_critical("%s: Error creating partnership via sync-engine: %s", G_STRFUNC, error->message);
@@ -664,91 +574,11 @@ partners_create_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   partners_setup_view_store_synceng(self);
 exit:
   if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
-#if !USE_GDBUS
-  if (dbus_connection) dbus_g_connection_unref(dbus_connection);
-#endif
   if (create_pship_dialog) gtk_widget_destroy(create_pship_dialog);
 
   g_free(name);
 }
 
-#if !USE_GDBUS
-static GVariant *
-partnerships_gvalue_to_gvariant(GPtrArray *partnership_list)
-{
-  GValueArray *partnership = NULL;
-  guint partnership_id;
-  const gchar *partnership_guid = NULL;
-  const gchar *partnership_name = NULL;
-  const gchar *hostname = NULL;
-  const gchar *device_name = NULL;
-  guint partnership_type;
-  GArray *sync_items_active = NULL;
-
-  GVariantBuilder *pshiplistbuilder = NULL;
-  GVariantBuilder *pshipbuilder = NULL;
-  GVariantBuilder *syncitembuilder = NULL;
-  GVariant *pshiplist = NULL;
-  GVariant *pship = NULL;
-  GVariant *syncitems = NULL;
-
-  pshiplistbuilder = g_variant_builder_new(G_VARIANT_TYPE("a(ussssuau)"));
-
-  g_debug("%s: number of partnerships = %u", G_STRFUNC, partnership_list->len);
-  guint index = 0;
-  while(index < partnership_list->len)
-    {
-      partnership = g_ptr_array_index(partnership_list, index);
-
-      partnership_id = g_value_get_uint(g_value_array_get_nth (partnership, 0));
-      partnership_guid = g_value_get_string(g_value_array_get_nth (partnership, 1));
-      partnership_name = g_value_get_string(g_value_array_get_nth (partnership, 2));
-      hostname = g_value_get_string(g_value_array_get_nth (partnership, 3));
-      device_name = g_value_get_string(g_value_array_get_nth (partnership, 4));
-      partnership_type = g_value_get_uint(g_value_array_get_nth (partnership, 5));
-      sync_items_active = g_value_get_boxed(g_value_array_get_nth (partnership, 6));
-
-      g_debug("%s: partnership id %u, GUID %s, name %s, hostname %s, devicename %s, storetype %d",
-              G_STRFUNC, partnership_id, partnership_guid, partnership_name, hostname, device_name, partnership_type);
-
-      pshipbuilder = g_variant_builder_new(G_VARIANT_TYPE("(ussssuau)"));
-
-      g_variant_builder_add(pshipbuilder, "u", partnership_id);
-      g_variant_builder_add(pshipbuilder, "s", partnership_guid);
-      g_variant_builder_add(pshipbuilder, "s", partnership_name);
-      g_variant_builder_add(pshipbuilder, "s", hostname);
-      g_variant_builder_add(pshipbuilder, "s", device_name);
-      g_variant_builder_add(pshipbuilder, "u", partnership_type);
-
-      syncitembuilder = g_variant_builder_new(G_VARIANT_TYPE("au"));
-      guint active_item;
-      guint i;
-      g_debug("%s: number of sync items in partnership: %u", G_STRFUNC, sync_items_active->len);
-      for (i = 0; i < sync_items_active->len; i++) {
-        active_item = g_array_index(sync_items_active, guint, i);
-        g_debug("%s: sync item %u", G_STRFUNC, active_item);
-        g_variant_builder_add(syncitembuilder, "u", active_item);
-      }
-
-      syncitems = g_variant_builder_end(syncitembuilder);
-      g_variant_builder_unref(syncitembuilder);
-
-      g_variant_builder_add_value(pshipbuilder, syncitems);
-
-      pship = g_variant_builder_end(pshipbuilder);
-      g_variant_builder_unref(pshipbuilder);
-
-      g_variant_builder_add_value(pshiplistbuilder, pship);
-
-      index++;
-    }
-
-  pshiplist = g_variant_builder_end(pshiplistbuilder);
-  g_variant_builder_unref(pshiplistbuilder);
-
-  return g_variant_ref_sink(pshiplist);
-}
-#endif
 
 static GList *
 get_sync_item_keys(GVariant *sync_items)
@@ -806,22 +636,13 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
   }
 
   GError *error = NULL;
-#if USE_GDBUS
   SynceDbusOrgSynceSyncEngine *sync_engine_proxy = NULL;
-#else
-  DBusGConnection *dbus_connection = NULL;
-  DBusGProxy *sync_engine_proxy = NULL;
-#endif
   gboolean result = FALSE;
 
   GVariant* partnership_list = NULL;
   GVariant *partnership = NULL;
   GVariant *sync_items = NULL;
   GVariantIter partnershipiter;
-#if !USE_GDBUS
-  GPtrArray* partnership_list_tmp = NULL;
-  GHashTable *sync_items_tmp = NULL;
-#endif
   gboolean show_extra_warning;
   GArray *orphaned_items = NULL;
   GVariant *sync_items_active = NULL;
@@ -830,7 +651,6 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
   GList *item_keys = NULL, *tmp_list = NULL;
   guint *sync_item_key = NULL;
 
-#if USE_GDBUS
   sync_engine_proxy = synce_dbus_org_synce_sync_engine_proxy_new_for_bus_sync(
     G_BUS_TYPE_SESSION,
     G_DBUS_PROXY_FLAGS_NONE,
@@ -838,65 +658,27 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
     SYNC_ENGINE_PATH,
     NULL, /* GCancellable */
     &error);
-#else
-  dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
-  if (dbus_connection == NULL) {
-    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
-
-    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
-						      GTK_DIALOG_DESTROY_WITH_PARENT,
-						      GTK_MESSAGE_WARNING,
-						      GTK_BUTTONS_OK,
-						      "Deletion of partnership was unsuccessful: %s",
-						      error->message);
-
-    gtk_dialog_run(GTK_DIALOG(failed_dialog));
-    gtk_widget_destroy (failed_dialog);
-
-    g_error_free (error);
-    goto exit;
-  }
-
-  sync_engine_proxy = dbus_g_proxy_new_for_name (dbus_connection,
-						 "org.synce.SyncEngine",
-						 "/org/synce/SyncEngine",
-						 "org.synce.SyncEngine");
-#endif
 
   if (sync_engine_proxy == NULL) {
-#if USE_GDBUS
     g_critical("%s: Failed to create proxy to sync engine: %s", G_STRFUNC, error->message);
-#else
-    g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
-#endif
     GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
 						      GTK_DIALOG_DESTROY_WITH_PARENT,
 						      GTK_MESSAGE_WARNING,
 						      GTK_BUTTONS_OK,
-#if USE_GDBUS
 						      "Deletion of partnership was unsuccessful: Failed to connect to SyncEngine: %s",
                                                       error->message
-#else
-						      "Deletion of partnership was unsuccessful: Failed to connect to SyncEngine"
-#endif
       );
     gtk_dialog_run(GTK_DIALOG(failed_dialog));
     gtk_widget_destroy (failed_dialog);
-#if USE_GDBUS
     g_error_free(error);
-#endif
     goto exit;
   }
 
-#if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_partnerships_sync (
     sync_engine_proxy,
     &partnership_list,
     NULL,
     &error);
-#else
-  result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list_tmp, &error);
-#endif
 
   if (!result) {
     g_critical("%s: Error getting partnership list from sync-engine: %s", G_STRFUNC, error->message);
@@ -915,29 +697,12 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
     goto exit;
   }
 
-#if! USE_GDBUS
-  partnership_list = partnerships_gvalue_to_gvariant(partnership_list_tmp);
 
-  guint index = 0;
-  GValueArray *partnership_tmp = NULL;
-  while(index < partnership_list_tmp->len) {
-    partnership_tmp = g_ptr_array_index(partnership_list_tmp, index);
-    g_value_array_free(partnership_tmp);
-
-    index++;
-  }
-  g_ptr_array_free(partnership_list_tmp, TRUE);
-#endif
-
-#if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_item_types_sync (
     sync_engine_proxy,
     &sync_items,
     NULL,
     &error);
-#else
-  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items_tmp, &error);
-#endif
 
   if (!result) {
     g_critical("%s: Error fetching sync item list: %s", G_STRFUNC, error->message);
@@ -955,11 +720,6 @@ check_delete_orphans(WmDeviceInfo *self, guint id, gchar *guid)
     g_error_free(error);
     goto exit;
   }
-
-#if !USE_GDBUS
-  sync_items = sync_items_hash_to_gvariant(sync_items_tmp);
-  g_hash_table_destroy(sync_items_tmp);
-#endif
 
   item_keys = get_sync_item_keys(sync_items);
 
@@ -1090,9 +850,6 @@ exit:
     g_variant_unref (sync_items);
 
   if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
-#if !USE_GDBUS
-  if (dbus_connection) dbus_g_connection_unref(dbus_connection);
-#endif
 
   return result;
 }
@@ -1121,12 +878,7 @@ partners_remove_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   GtkWidget *partners_list_view = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_list"));
   GtkTreeSelection *selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (partners_list_view));
   GError *error = NULL;
-#if USE_GDBUS
   SynceDbusOrgSynceSyncEngine *sync_engine_proxy = NULL;
-#else
-  DBusGConnection *dbus_connection = NULL;
-  DBusGProxy *sync_engine_proxy = NULL;
-#endif
 
   g_debug("%s: remove button_clicked", G_STRFUNC);
 
@@ -1179,7 +931,6 @@ partners_remove_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
       break;
     }
 
-#if USE_GDBUS
   sync_engine_proxy = synce_dbus_org_synce_sync_engine_proxy_new_for_bus_sync(
     G_BUS_TYPE_SESSION,
     G_DBUS_PROXY_FLAGS_NONE,
@@ -1187,53 +938,19 @@ partners_remove_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
     SYNC_ENGINE_PATH,
     NULL, /* GCancellable */
     &error);
-#else
 
-  dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
-  if (dbus_connection == NULL) {
-    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
-
-    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
-						      GTK_DIALOG_DESTROY_WITH_PARENT,
-						      GTK_MESSAGE_WARNING,
-						      GTK_BUTTONS_OK,
-						      "Deletion of partnership was unsuccessful: %s",
-						      error->message);
-
-    gtk_dialog_run(GTK_DIALOG(failed_dialog));
-    gtk_widget_destroy (failed_dialog);
-
-    g_error_free (error);
-    goto exit;
-  }
-
-  sync_engine_proxy = dbus_g_proxy_new_for_name (dbus_connection,
-						 "org.synce.SyncEngine",
-						 "/org/synce/SyncEngine",
-						 "org.synce.SyncEngine");
-#endif
   if (sync_engine_proxy == NULL) {
-#if USE_GDBUS
     g_critical("%s: Failed to create proxy to sync engine: %s", G_STRFUNC, error->message);
-#else
-    g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
-#endif
     GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(device_info_dialog),
 						      GTK_DIALOG_DESTROY_WITH_PARENT,
 						      GTK_MESSAGE_WARNING,
 						      GTK_BUTTONS_OK,
-#if USE_GDBUS
 						      "Deletion of partnership was unsuccessful: Failed to connect to SyncEngine: %s",
                                                       error->message
-#else
-						      "Deletion of partnership was unsuccessful: Failed to connect to SyncEngine"
-#endif
       );
     gtk_dialog_run(GTK_DIALOG(failed_dialog));
     gtk_widget_destroy (failed_dialog);
-#if USE_GDBUS
     g_error_free(error);
-#endif
     goto exit;
   }
 
@@ -1252,14 +969,11 @@ partners_remove_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
       goto exit;
   }
 
-#if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_delete_partnership_sync (
     sync_engine_proxy,
     id, guid,
     NULL, &error);
-#else
-  result = org_synce_syncengine_delete_partnership(sync_engine_proxy, id, guid, &error);
-#endif
+
   if (!result) {
     g_critical("%s: Error deleting partnership via sync-engine: %s", G_STRFUNC, error->message);
 
@@ -1280,9 +994,6 @@ partners_remove_button_clicked_synceng_cb (GtkWidget *widget, gpointer data)
   partners_setup_view_store_synceng(self);
 exit:
   if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
-#if !USE_GDBUS
-  if (dbus_connection) dbus_g_connection_unref(dbus_connection);
-#endif
   g_free(guid);
   g_free (name);
 }
@@ -1356,14 +1067,7 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   GVariantIter partnershipiter;
   GError *error = NULL;
   GtkTreeStore *store = NULL;
-#if USE_GDBUS
   SynceDbusOrgSynceSyncEngine *sync_engine_proxy = NULL;
-#else
-  GValueArray *partnership_list_tmp = NULL;
-  GHashTable *sync_items_tmp = NULL;
-  DBusGConnection *dbus_connection = NULL;
-  DBusGProxy *sync_engine_proxy = NULL;
-#endif
   GVariant *partnership = NULL;
   GVariant *sync_items = NULL;
   GList *item_keys = NULL;
@@ -1376,7 +1080,6 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
   GtkWidget *partners_remove_button = GTK_WIDGET(gtk_builder_get_object(priv->builder, "partners_remove_button"));
   gtk_widget_set_sensitive(partners_remove_button, FALSE);
 
-#if USE_GDBUS
   sync_engine_proxy = synce_dbus_org_synce_sync_engine_proxy_new_for_bus_sync(
     G_BUS_TYPE_SESSION,
     G_DBUS_PROXY_FLAGS_NONE,
@@ -1385,65 +1088,28 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
     NULL, /* GCancellable */
     &error);
 
-#else
-  dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &error);
-  if (dbus_connection == NULL) {
-    g_critical("%s: Failed to open connection to bus: %s", G_STRFUNC, error->message);
-
-    GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
-						      GTK_DIALOG_DESTROY_WITH_PARENT,
-						      GTK_MESSAGE_WARNING,
-						      GTK_BUTTONS_OK,
-						      "Failed to retrieve partnership information: %s",
-						      error->message);
-
-    gtk_dialog_run(GTK_DIALOG(failed_dialog));
-    gtk_widget_destroy (failed_dialog);
-
-    g_error_free (error);
-    goto exit;
-  }
-
-  sync_engine_proxy = dbus_g_proxy_new_for_name (dbus_connection,
-						 "org.synce.SyncEngine",
-						 "/org/synce/SyncEngine",
-						 "org.synce.SyncEngine");
-#endif
 
   if (sync_engine_proxy == NULL) {
-#if USE_GDBUS
     g_critical("%s: Failed to create proxy to sync engine: %s", G_STRFUNC, error->message);
-#else
-    g_critical("%s: Failed to create proxy to sync engine", G_STRFUNC);
-#endif
     GtkWidget *failed_dialog = gtk_message_dialog_new(GTK_WINDOW(priv->dialog),
 						      GTK_DIALOG_DESTROY_WITH_PARENT,
 						      GTK_MESSAGE_WARNING,
 						      GTK_BUTTONS_OK,
-#if USE_GDBUS
 						      "Failed to retrieve partnership information: Failed to connect to SyncEngine: %s",
                                                       error->message
-#else
-						      "Failed to retrieve partnership information: Failed to connect to SyncEngine"
-#endif
       );
     gtk_dialog_run(GTK_DIALOG(failed_dialog));
     gtk_widget_destroy (failed_dialog);
-#if USE_GDBUS
     g_error_free(error);
-#endif
     goto exit;
   }
 
-#if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_item_types_sync (
     sync_engine_proxy,
     &sync_items,
     NULL,
     &error);
-#else
-  result = org_synce_syncengine_get_item_types(sync_engine_proxy, &sync_items_tmp, &error);
-#endif
+
   if (!result) {
     g_critical("%s: Error fetching sync item list: %s", G_STRFUNC, error->message);
 
@@ -1461,20 +1127,12 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
     goto exit;
   }
 
-#if !USE_GDBUS
-  sync_items = sync_items_hash_to_gvariant(sync_items_tmp);
-  g_hash_table_destroy(sync_items_tmp);
-#endif
-
-#if USE_GDBUS
   result = synce_dbus_org_synce_sync_engine_call_get_partnerships_sync (
     sync_engine_proxy,
     &partnership_list,
     NULL,
     &error);
-#else
-  result = org_synce_syncengine_get_partnerships (sync_engine_proxy, &partnership_list_tmp, &error);
-#endif
+
   if (!result) {
     g_critical("%s: Error getting partnership list from sync-engine: %s", G_STRFUNC, error->message);
 
@@ -1492,19 +1150,6 @@ partners_setup_view_store_synceng(WmDeviceInfo *self)
     goto exit;
   }
 
-#if! USE_GDBUS
-  partnership_list = partnerships_gvalue_to_gvariant(partnership_list_tmp);
-
-  guint index = 0;
-  GValueArray *partnership_tmp = NULL;
-  while(index < partnership_list_tmp->len) {
-    partnership_tmp = g_ptr_array_index(partnership_list_tmp, index);
-    g_value_array_free(partnership_tmp);
-
-    index++;
-  }
-  g_ptr_array_free(partnership_list_tmp, TRUE);
-#endif
 
   store = gtk_tree_store_new (SYNCENG_N_COLUMNS,
 			      G_TYPE_BOOLEAN, /* active for sync items */
@@ -1635,9 +1280,6 @@ exit:
   if (sync_items) g_variant_unref (sync_items);
 
   if (sync_engine_proxy) g_object_unref(sync_engine_proxy);
-#if !USE_GDBUS
-  if (dbus_connection) dbus_g_connection_unref(dbus_connection);
-#endif
 
   return;
 }
