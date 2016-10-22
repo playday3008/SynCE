@@ -324,6 +324,11 @@ synce_device_dbus_init(SynceDevice *self)
       "0123456789_"
   };
 
+  gchar *guid = NULL, *name = NULL, *platform_name = NULL, *model_name = NULL,
+    *ip_addr = NULL, *iface_addr = NULL;
+  guint os_major, os_minor, version, cpu_type, cur_partner_id;
+  SynceDevicePasswordFlags pw_flags;
+  
   safe_path = g_strdup (priv->device_path);
   g_strcanon (safe_path, safe_chars, '_');
   obj_path = g_strdup_printf (DEVICE_BASE_OBJECT_PATH "/%s", safe_path);
@@ -332,6 +337,44 @@ synce_device_dbus_init(SynceDevice *self)
   g_message ("%s: registering object path '%s'", G_STRFUNC, obj_path);
 
   priv->interface = synce_dbus_device_skeleton_new();
+
+  g_object_get(self,
+	       "guid", &guid,
+	       "os-major", &os_major,
+	       "os-minor", &os_minor,
+	       "name", &name,
+	       "version", &version,
+	       "cpu-type", &cpu_type,
+	       "current-partner-id", &cur_partner_id,
+	       "platform-name", &platform_name,
+	       "model-name", &model_name,
+	       "password-flags", &pw_flags,
+	       "ip-address", &ip_addr,
+	       "iface-address", &iface_addr,
+	       NULL);
+
+  g_object_set(priv->interface,
+	       "guid", guid,
+	       "os-major-version", os_major,
+	       "os-minor-version", os_minor,
+	       "name", name,
+	       "version", version,
+	       "cpu-type", cpu_type,
+	       "current-partner-id", cur_partner_id,
+	       "platform-name", platform_name,
+	       "model-name", model_name,
+	       "ip-address", ip_addr,
+	       "iface-address", iface_addr,
+	       NULL);
+  synce_dbus_device_set_password_flags (priv->interface, get_password_flag_text(pw_flags));
+
+  g_free(guid);
+  g_free(name);
+  g_free(platform_name);
+  g_free(model_name);
+  g_free(ip_addr);
+  g_free(iface_addr);
+
   g_signal_connect(priv->interface,
 		   "handle-get-name",
 		   G_CALLBACK (synce_device_get_name),
@@ -451,6 +494,7 @@ synce_device_change_password_flags (SynceDevice *self,
   g_object_set (self, "password-flags", new_flag, NULL);
   prop_str = get_password_flag_text(new_flag);
   g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_PASSWORD_FLAGS_CHANGED], 0, prop_str);
+  synce_dbus_device_set_password_flags (priv->interface, prop_str);
   synce_dbus_device_emit_password_flags_changed(priv->interface, prop_str);
 
   return;

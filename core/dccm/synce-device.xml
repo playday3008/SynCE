@@ -37,6 +37,19 @@
       <arg direction="out" name="cur_partner_id" type="u"/>
     </method>
 
+    <property name="Name" type="s" access="read"/>
+    <property name="PlatformName" type="s" access="read"/>
+    <property name="ModelName" type="s" access="read"/>
+    <property name="OsMajorVersion" type="u" access="read"/>
+    <property name="OsMinorVersion" type="u" access="read"/>
+    <property name="Version" type="u" access="read"/>
+    <property name="CpuType" type="u" access="read"/>
+    <property name="IpAddress" type="s" access="read"/>
+    <property name="IfaceAddress" type="s" access="read"/>
+    <property name="Guid" type="s" access="read"/>
+    <property name="PasswordFlags" type="s" access="read"/>
+    <property name="CurrentPartnerId" type="u" access="read"/>
+
     <method name="ProvidePassword">
       <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
       <arg direction="in" name="password" type="s"/>
