@@ -40,6 +40,18 @@ GType synce_device_manager_get_type (void);
 #define SYNCE_IS_DEVICE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), SYNCE_TYPE_DEVICE_MANAGER))
 #define SYNCE_DEVICE_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), SYNCE_TYPE_DEVICE_MANAGER, SynceDeviceManagerClass))
 
+SynceDeviceManager *
+synce_device_manager_new (GCancellable *cancellable, GError **error);
+
+void
+synce_device_manager_new_async (GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer user_data);
+
+SynceDeviceManager *
+synce_device_manager_new_finish (GAsyncResult *res,
+				 GError **error);
+
 G_END_DECLS
 
 #endif /* SYNCE_DEVICE_MANAGER_H */

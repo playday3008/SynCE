@@ -27,7 +27,6 @@ typedef enum {
 typedef struct _SynceDevicePrivate SynceDevicePrivate;
 struct _SynceDevicePrivate
 {
-  gboolean inited;
   gboolean dispose_has_run;
 
   GSocketConnection *conn;

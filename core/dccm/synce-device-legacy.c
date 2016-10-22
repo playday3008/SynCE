@@ -492,10 +492,7 @@ synce_device_legacy_request_connection_impl (G_GNUC_UNUSED SynceDbusDevice *inte
   req_id_local = (guint *) g_malloc (sizeof (guint));
   *req_id_local = ++(priv->req_id) ;
 
-  broker = g_object_new (SYNCE_TYPE_CONNECTION_BROKER,
-                         "id", *req_id_local,
-                         "context", ctx,
-                         NULL);
+  broker = synce_connection_broker_new (*req_id_local, ctx);
 
   g_hash_table_insert (priv->requests, req_id_local, broker);
 
@@ -650,4 +647,9 @@ synce_device_legacy_class_init (SynceDeviceLegacyClass *klass)
   synce_device_class->synce_device_provide_password = synce_device_legacy_provide_password_impl;
 }
 
+SynceDeviceLegacy *
+synce_device_legacy_new (GSocketConnection *connection, const gchar *device_path)
+{
+  return SYNCE_DEVICE_LEGACY(g_object_new(SYNCE_TYPE_DEVICE_LEGACY, "connection", connection, "device-path", device_path, NULL));
+}
 

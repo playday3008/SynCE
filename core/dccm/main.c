@@ -37,22 +37,32 @@ static GOptionEntry options[] =
 SynceDeviceManager *device_manager = NULL;
 
 static void
-bus_acquired_handler(G_GNUC_UNUSED GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, gpointer user_data)
+device_manager_ready(GObject *source_object,
+		     GAsyncResult *res,
+		     gpointer user_data)
 {
   GMainLoop *mainloop = (GMainLoop*)user_data;
   GError *error = NULL;
 
-  /* have a bus, set up device_manager */
+  device_manager = synce_device_manager_new_finish(res, &error);
 
-  g_debug("%s: bus acquired, creating device manager", G_STRFUNC);
-
-  device_manager = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER, NULL, &error, NULL);
   if (!device_manager) {
     g_critical("Failed to create device manager: %s", error->message);
     g_error_free(error);
     g_main_loop_quit(mainloop);
     return;
   }
+}
+
+static void
+bus_acquired_handler(G_GNUC_UNUSED GDBusConnection *connection, G_GNUC_UNUSED const gchar *name, gpointer user_data)
+{
+  /* have a bus, set up device_manager */
+
+  g_debug("%s: bus acquired, creating device manager", G_STRFUNC);
+
+  synce_device_manager_new_async(NULL, device_manager_ready, user_data);
+  return;
 }
 
 static void

@@ -14,13 +14,7 @@
 #include "synce-device-dbus.h"
 #include "synce_gerrors.h"
 
-static void     synce_device_initable_iface_init (GInitableIface  *iface);
-static gboolean synce_device_initable_init       (GInitable       *initable,
-						  GCancellable    *cancellable,
-						  GError          **error);
-
-G_DEFINE_TYPE_WITH_CODE (SynceDevice, synce_device, G_TYPE_OBJECT,
-			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_initable_iface_init))
+G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
 
 
 /* properties */
@@ -86,7 +80,7 @@ synce_device_provide_password_impl (G_GNUC_UNUSED SynceDbusDevice *interface,
 
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE(self);
 
-  g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), TRUE);
+  g_return_val_if_fail(!(priv->dispose_has_run), TRUE);
 
   GError *error = NULL;
   guchar *buf;
@@ -312,7 +306,7 @@ void
 synce_device_dbus_init(SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+  g_return_if_fail(!(priv->dispose_has_run));
 
   GError *error = NULL;
   gchar *safe_path = NULL;
@@ -471,7 +465,7 @@ void
 synce_device_dbus_uninit(SynceDevice *self)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+  g_return_if_fail(!(priv->dispose_has_run));
 
   g_message ("%s: unregistering object path '%s'", G_STRFUNC, priv->obj_path);
 
@@ -487,7 +481,7 @@ synce_device_change_password_flags (SynceDevice *self,
 				    SynceDevicePasswordFlags new_flag)
 {
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+  g_return_if_fail(!(priv->dispose_has_run));
 
   const gchar *prop_str = NULL;
 
@@ -506,7 +500,7 @@ synce_device_conn_broker_done_cb (SynceConnectionBroker *broker,
 {
   SynceDevice *self = SYNCE_DEVICE (user_data);
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_if_fail(priv->inited && !(priv->dispose_has_run));
+  g_return_if_fail(!(priv->dispose_has_run));
   guint id;
 
   g_object_get (broker, "id", &id, NULL);
@@ -517,11 +511,6 @@ synce_device_conn_broker_done_cb (SynceConnectionBroker *broker,
 
 /* class functions */
 
-static void
-synce_device_initable_iface_init (GInitableIface *iface)
-{
-  iface->init = synce_device_initable_init;
-}
 
 static void
 synce_device_init (SynceDevice *self)
@@ -529,7 +518,6 @@ synce_device_init (SynceDevice *self)
   SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
 
   priv->dispose_has_run = FALSE;
-  priv->inited = FALSE;
 
   priv->state = CTRL_STATE_HANDSHAKE;
   priv->pw_flags = SYNCE_DEVICE_PASSWORD_FLAG_UNSET;
@@ -565,23 +553,6 @@ synce_device_init (SynceDevice *self)
   return;
 }
 
-static gboolean
-synce_device_initable_init (GInitable *initable, GCancellable *cancellable, GError **error)
-{
-  g_return_val_if_fail (SYNCE_IS_DEVICE(initable), FALSE);
-  SynceDevice *self = SYNCE_DEVICE(initable);
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-
-  if (cancellable != NULL) {
-    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-			 "Cancellable initialization not supported");
-    return FALSE;
-  }
-
-  priv->inited = TRUE;
-
-  return TRUE;
-}
 
 static void
 synce_device_dispose (GObject *obj)

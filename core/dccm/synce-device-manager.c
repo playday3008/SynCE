@@ -24,11 +24,17 @@ static void     synce_device_manager_initable_iface_init (GInitableIface  *iface
 static gboolean synce_device_manager_initable_init       (GInitable       *initable,
 							  GCancellable    *cancellable,
 							  GError          **error);
+static void     synce_device_manager_async_initable_iface_init (GAsyncInitableIface  *iface);
+static void     synce_device_manager_init_async (GAsyncInitable *initable, int io_priority, GCancellable *cancellable, GAsyncReadyCallback callback, gpointer user_data);
+static gboolean synce_device_manager_init_finish (GAsyncInitable      *initable,
+						  GAsyncResult        *res,
+						  GError             **error);
 
 const gchar *udev_subsystems[] = { NULL };
 
 G_DEFINE_TYPE_WITH_CODE (SynceDeviceManager, synce_device_manager, G_TYPE_OBJECT,
-			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_initable_iface_init))
+			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_initable_iface_init)
+			 G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, synce_device_manager_async_initable_iface_init))
 
 /* private stuff */
 
@@ -43,10 +49,20 @@ typedef struct
   SynceDevice *device;
 } DeviceEntry;
 
+enum {
+  NOT_INITIALISED,
+  INITIALISING,
+  INITIALISED
+};
+
 typedef struct _SynceDeviceManagerPrivate SynceDeviceManagerPrivate;
 
 struct _SynceDeviceManagerPrivate
 {
+  guint init_state;
+  gboolean init_success;
+  GList *init_results;
+  GError *init_error;
   gboolean inited;
   gboolean dispose_has_run;
 
@@ -254,7 +270,7 @@ synce_device_manager_client_connected_cb(GSocketService *server,
        * should close the socket listener on port 990 here, but can't see how to
        */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
-      deventry->device = g_initable_new (SYNCE_TYPE_DEVICE_LEGACY, NULL, &error, "connection", conn, "device-path", deventry->device_path, NULL);
+      deventry->device = SYNCE_DEVICE(synce_device_legacy_new (conn, deventry->device_path));
     } else {
       g_warning("%s: unexpected secondary connection to port %d", G_STRFUNC, local_port);
       return TRUE;
@@ -265,7 +281,7 @@ synce_device_manager_client_connected_cb(GSocketService *server,
        * should close the socket listener on port 5679 here, but can't see how to
        */
       g_debug("%s: creating device object for %s", G_STRFUNC, deventry->device_path);
-      deventry->device = g_initable_new (SYNCE_TYPE_DEVICE_RNDIS, NULL, &error, "connection", conn, "device-path", deventry->device_path, NULL);
+      deventry->device = SYNCE_DEVICE(synce_device_rndis_new (conn, deventry->device_path));
     } else {
       synce_device_rndis_client_connected (SYNCE_DEVICE_RNDIS(deventry->device), conn);
       return TRUE;
@@ -529,6 +545,13 @@ synce_device_manager_initable_iface_init (GInitableIface *iface)
 }
 
 static void
+synce_device_manager_async_initable_iface_init (GAsyncInitableIface *iface)
+{
+  iface->init_async = synce_device_manager_init_async;
+  iface->init_finish = synce_device_manager_init_finish;
+}
+
+static void
 synce_device_manager_init (SynceDeviceManager *self)
 {
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
@@ -538,12 +561,204 @@ synce_device_manager_init (SynceDeviceManager *self)
   priv->control_connect_id = 0;
   priv->control_disconnect_id = 0;
   priv->iface_check_id = 0;
+  priv->inited = FALSE;
+  priv->init_state = NOT_INITIALISED;
+  priv->init_success = FALSE;
+  priv->init_results = NULL;
+  priv->init_error = NULL;
 #if HAVE_GUDEV
   priv->gudev_client = NULL;
 #endif
 
   return;
 }
+
+
+static void
+synce_device_manager_ctrl_ready_cb (GObject *source_object,
+				    GAsyncResult *res,
+				    gpointer user_data)
+{
+  g_return_if_fail (SYNCE_IS_DEVICE_MANAGER(user_data));
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  GError *error = NULL;
+
+  priv->control_iface = synce_device_manager_control_new_finish(res, &error);
+  if (!(priv->control_iface)) {
+    g_critical("%s: failed to create manager control interface: %s", G_STRFUNC, error->message);
+    goto out;
+  }
+
+  priv->control_connect_id = g_signal_connect(priv->control_iface, "device-connected", G_CALLBACK(synce_device_manager_device_connected_cb), self);
+  priv->control_disconnect_id = g_signal_connect(priv->control_iface, "device-disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
+
+  priv->init_success = TRUE;
+
+ out:
+
+  priv->inited = TRUE;
+  if (!priv->init_success)
+    priv->init_error = error;
+
+  GList *l;
+
+  priv->init_state = INITIALISED;
+
+  for (l = priv->init_results; l != NULL; l = l->next)
+    {
+      GTask *task = l->data;
+
+      if (priv->init_success)
+	g_task_return_boolean (task, TRUE);
+      else
+	g_task_return_error (task, g_error_copy(priv->init_error));
+      g_object_unref (task);
+    }
+
+  g_list_free (priv->init_results);
+  priv->init_results = NULL;
+
+  return;
+}
+
+static void
+synce_device_manager_sysbus_ready_cb (GObject *source_object,
+				      GAsyncResult *res,
+				      gpointer user_data)
+{
+  g_return_if_fail (SYNCE_IS_DEVICE_MANAGER(user_data));
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(user_data);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  GError *error = NULL;
+  GDBusConnection *system_bus = NULL;
+
+  system_bus = g_bus_get_finish (res, &error);
+
+  if (system_bus == NULL) {
+    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, error->message);
+    goto out;
+  }
+  if (!g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(priv->interface),
+					system_bus,
+                                        DEVICE_MANAGER_OBJECT_PATH,
+					&error)) {
+    g_critical("%s: Failed to export interface on system bus: %s", G_STRFUNC, error->message);
+    g_object_unref(system_bus);
+    goto out;
+  }
+  g_object_unref(system_bus);
+
+  synce_device_manager_control_new_async(g_task_get_cancellable((GTask*)priv->init_results->data),
+					 synce_device_manager_ctrl_ready_cb,
+					 self);
+
+  return;
+
+ out:
+
+  if (!priv->init_success)
+    priv->init_error = error;
+
+  GList *l;
+
+  priv->init_state = INITIALISED;
+
+  for (l = priv->init_results; l != NULL; l = l->next)
+    {
+      GTask *task = l->data;
+
+      if (priv->init_success)
+	g_task_return_boolean (task, TRUE);
+      else
+	g_task_return_error (task, g_error_copy(priv->init_error));
+      g_object_unref (task);
+    }
+
+  g_list_free (priv->init_results);
+  priv->init_results = NULL;
+
+  return;
+}
+
+
+static void
+synce_device_manager_init_async (GAsyncInitable *initable, int io_priority, GCancellable *cancellable, GAsyncReadyCallback callback, gpointer user_data)
+{
+  g_return_if_fail (SYNCE_IS_DEVICE_MANAGER(initable));
+  SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(initable);
+  SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
+
+  GTask *task = NULL;
+  task = g_task_new (initable, cancellable, callback, user_data);
+
+  switch (priv->init_state)
+    {
+    case NOT_INITIALISED:
+
+#if HAVE_GUDEV
+      g_debug("%s: connecting to udev", G_STRFUNC);
+      if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
+	g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
+	priv->init_error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED, "Failed to initialize connection to udev");
+	g_task_return_error (task, g_error_copy(priv->init_error));
+	priv->init_state = INITIALISED;
+	g_object_unref(task);
+	return;
+      }
+
+      if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
+	g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
+	priv->init_error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED, "Failed to initialize connection to udev");
+	g_task_return_error (task, g_error_copy(priv->init_error));
+	priv->init_state = INITIALISED;
+	g_object_unref(task);
+	return;
+      }
+#endif
+
+      priv->interface = synce_dbus_device_manager_skeleton_new();
+      g_signal_connect(priv->interface,
+		       "handle-get-connected-devices",
+		       G_CALLBACK (synce_device_manager_get_connected_devices),
+		       self);
+
+      /* should we ref self ? */
+      g_bus_get (G_BUS_TYPE_SYSTEM,
+		 cancellable,
+		 synce_device_manager_sysbus_ready_cb,
+		 self);
+
+      priv->init_results = g_list_append(priv->init_results, task);
+      priv->init_state = INITIALISING;
+      break;
+    case INITIALISING:
+      priv->init_results = g_list_append(priv->init_results, task);
+      break;
+    case INITIALISED:
+      if (!priv->init_success)
+	g_task_return_error (task, g_error_copy(priv->init_error));
+      else
+	g_task_return_boolean (task, TRUE);
+      g_object_unref (task);
+      break;
+    }
+  return;
+}
+
+
+static gboolean
+synce_device_manager_init_finish (GAsyncInitable      *initable,
+				  GAsyncResult        *res,
+				  GError             **error)
+{
+  g_return_val_if_fail (g_task_is_valid (res, initable), FALSE);
+
+  return g_task_propagate_boolean (G_TASK (res), error);
+}
+
 
 static gboolean
 synce_device_manager_initable_init (GInitable *initable, GCancellable *cancellable, GError **error)
@@ -552,61 +767,73 @@ synce_device_manager_initable_init (GInitable *initable, GCancellable *cancellab
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(initable);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE (self);
 
-  if (cancellable != NULL) {
-    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-			 "Cancellable initialization not supported");
-    return FALSE;
-  }
+  switch (priv->init_state)
+    {
+    case NOT_INITIALISED:
+      priv->init_state = INITIALISING;
 
 #if HAVE_GUDEV
-  g_debug("%s: connecting to udev", G_STRFUNC);
-  if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
-    g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
-    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-			 "Failed to initialize connection to udev");
-    return FALSE;
-  }
+      g_debug("%s: connecting to udev", G_STRFUNC);
+      if (!(priv->gudev_client = g_udev_client_new(udev_subsystems))) {
+	g_critical("%s: failed to initialize connection to udev", G_STRFUNC);
+	priv->init_error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED, "Failed to initialize connection to udev");
+	goto out;
+      }
 
-  if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
-    g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
-    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-			 "Failed to initialize connection to udev");
-    return FALSE;
-  }
+      if (g_signal_connect(priv->gudev_client, "uevent", G_CALLBACK(gudev_uevent_callback), self) < 1) {
+	g_critical("%s: failed to connect to uevent signal", G_STRFUNC);
+	priv->init_error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED, "Failed to initialize connection to udev");
+	goto out;
+      }
 #endif
 
-  priv->interface = synce_dbus_device_manager_skeleton_new();
-  g_signal_connect(priv->interface,
-		   "handle-get-connected-devices",
-		   G_CALLBACK (synce_device_manager_get_connected_devices),
-		   self);
+      priv->interface = synce_dbus_device_manager_skeleton_new();
+      g_signal_connect(priv->interface,
+		       "handle-get-connected-devices",
+		       G_CALLBACK (synce_device_manager_get_connected_devices),
+		       self);
 
-  GDBusConnection *system_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, error);
-  if (system_bus == NULL) {
-    g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, (*error)->message);
-    return FALSE;
-  }
-  if (!g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(priv->interface),
-					system_bus,
-                                        DEVICE_MANAGER_OBJECT_PATH,
-					error)) {
-    g_critical("%s: Failed to export interface on system bus: %s", G_STRFUNC, (*error)->message);
-    g_object_unref(system_bus);
-    return FALSE;
-  }
-  g_object_unref(system_bus);
+      GDBusConnection *system_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &(priv->init_error));
+      if (system_bus == NULL) {
+	g_critical("%s: Failed to connect to system bus: %s", G_STRFUNC, priv->init_error->message);
+	goto out;
+      }
+      if (!g_dbus_interface_skeleton_export(G_DBUS_INTERFACE_SKELETON(priv->interface),
+					    system_bus,
+					    DEVICE_MANAGER_OBJECT_PATH,
+					    &(priv->init_error))) {
+	g_critical("%s: Failed to export interface on system bus: %s", G_STRFUNC, priv->init_error->message);
+	g_object_unref(system_bus);
+	goto out;;
+      }
+      g_object_unref(system_bus);
 
-  priv->control_iface = g_initable_new(SYNCE_TYPE_DEVICE_MANAGER_CONTROL, NULL, error, NULL);
-  if (!(priv->control_iface)) {
-    g_critical("%s: failed to create manager control interface: %s", G_STRFUNC, (*error)->message);
-    return FALSE;
-  }
+      priv->control_iface = synce_device_manager_control_new(NULL, &(priv->init_error));
+      if (!(priv->control_iface)) {
+	g_critical("%s: failed to create manager control interface: %s", G_STRFUNC, priv->init_error->message);
+	goto out;;
+      }
 
-  priv->control_connect_id = g_signal_connect(priv->control_iface, "device-connected", G_CALLBACK(synce_device_manager_device_connected_cb), self);
-  priv->control_disconnect_id = g_signal_connect(priv->control_iface, "device-disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
+      priv->control_connect_id = g_signal_connect(priv->control_iface, "device-connected", G_CALLBACK(synce_device_manager_device_connected_cb), self);
+      priv->control_disconnect_id = g_signal_connect(priv->control_iface, "device-disconnected", G_CALLBACK(synce_device_manager_device_disconnected_cb), self);
 
-  priv->inited = TRUE;
-  return TRUE;
+      priv->inited = TRUE;
+      priv->init_success = TRUE;
+      break;
+
+    case INITIALISING:
+      /* shouldn't ever have this unless initialised in 2 different threads ? */
+      break;
+    case INITIALISED:
+      /* don't need to do anything here */
+      break;
+    }
+
+ out:
+  if (priv->init_success == FALSE)
+    g_propagate_error (error, g_error_copy(priv->init_error));
+  priv->init_state = INITIALISED;
+  return priv->init_success;
 }
 
 static void
@@ -639,6 +866,9 @@ synce_device_manager_dispose (GObject *obj)
   g_signal_handler_disconnect(priv->control_iface, priv->control_connect_id);
   g_signal_handler_disconnect(priv->control_iface, priv->control_disconnect_id);
   g_object_unref(priv->control_iface);
+
+  g_list_free_full(priv->init_results, g_object_unref);
+  g_clear_error(&(priv->init_error));
 
   if (G_OBJECT_CLASS (synce_device_manager_parent_class)->dispose)
     G_OBJECT_CLASS (synce_device_manager_parent_class)->dispose (obj);
@@ -680,4 +910,37 @@ synce_device_manager_class_init (SynceDeviceManagerClass *klass)
 
 }
 
+
+SynceDeviceManager *
+synce_device_manager_new (GCancellable *cancellable, GError **error)
+{
+  return SYNCE_DEVICE_MANAGER(g_initable_new(SYNCE_TYPE_DEVICE_MANAGER, cancellable, error, NULL));
+}
+
+void
+synce_device_manager_new_async (GCancellable *cancellable,
+				GAsyncReadyCallback callback,
+				gpointer user_data)
+{
+  g_async_initable_new_async(SYNCE_TYPE_DEVICE_MANAGER, G_PRIORITY_DEFAULT, cancellable, callback, user_data, NULL);
+}
+
+SynceDeviceManager *
+synce_device_manager_new_finish (GAsyncResult *res,
+				 GError **error)
+{
+  GObject *object = NULL;
+  GObject *source_object = NULL;
+
+  source_object = g_async_result_get_source_object (res);
+  g_assert (source_object != NULL);
+  object = g_async_initable_new_finish (G_ASYNC_INITABLE (source_object),
+					res,
+					error);
+  g_object_unref (source_object);
+  if (object != NULL)
+    return SYNCE_DEVICE_MANAGER(object);
+  else
+    return NULL;
+}
 

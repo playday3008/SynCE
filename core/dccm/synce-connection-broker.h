@@ -36,6 +36,9 @@ GType synce_connection_broker_get_type (void);
 
 void _synce_connection_broker_take_connection (SynceConnectionBroker *self, GSocketConnection *conn);
 
+SynceConnectionBroker *
+synce_connection_broker_new (guint id, GDBusMethodInvocation *context);
+
 G_END_DECLS
 
 #endif /* SYNCE_CONNECTION_BROKER_H */

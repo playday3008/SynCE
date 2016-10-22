@@ -2,6 +2,11 @@
 
 	* add dbus properties for static device properties
 	* remove support for odccm
+	* SynceDevice does not need to implement failable initialization
+	* create _new functions for SynceConnectionBroker, DeviceLegacy,
+	  DeviceRndis, DeviceManager, DeviceManagerControl
+	* implement async initialisation for DeviceManager,
+	  DeviceManagerControl
 
 2016-10-10  Mark Ellis  <mark@mpellis.org.uk>
 

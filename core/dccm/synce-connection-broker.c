@@ -305,3 +305,10 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
 
   return;
 }
+
+SynceConnectionBroker *
+synce_connection_broker_new (guint id, GDBusMethodInvocation *context)
+{
+  return SYNCE_CONNECTION_BROKER(g_object_new(SYNCE_TYPE_CONNECTION_BROKER, "id", id, "context", context, NULL));
+}
+

@@ -485,10 +485,7 @@ synce_device_rndis_request_connection_impl (G_GNUC_UNUSED SynceDbusDevice *inter
   guint *req_id_local = (guint *) g_malloc (sizeof (guint));
   *req_id_local = ++(priv->req_id) ;
 
-  broker = g_object_new (SYNCE_TYPE_CONNECTION_BROKER,
-                         "id", *req_id_local,
-                         "context", ctx,
-                         NULL);
+  broker = synce_connection_broker_new (*req_id_local, ctx);
 
   /* FIXME: have SynceConnectionBroker emit a signal when the request has
    *        timed out so that we don't risk zombie requests hanging around. */
@@ -643,4 +640,9 @@ synce_device_rndis_class_init (SynceDeviceRndisClass *klass)
   synce_device_class->synce_device_request_connection = synce_device_rndis_request_connection_impl;
 }
 
+SynceDeviceRndis *
+synce_device_rndis_new (GSocketConnection *connection, const gchar *device_path)
+{
+  return SYNCE_DEVICE_RNDIS(g_object_new(SYNCE_TYPE_DEVICE_RNDIS, "connection", connection, "device-path", device_path, NULL));
+}
 

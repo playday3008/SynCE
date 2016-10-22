@@ -27,6 +27,9 @@ GType synce_device_rndis_get_type (void);
 
 void synce_device_rndis_client_connected (SynceDeviceRndis *self, GSocketConnection *conn);
 
+SynceDeviceRndis *
+synce_device_rndis_new (GSocketConnection *connection, const gchar *device_path);
+
 G_END_DECLS
 
 #endif /* SYNCE_DEVICE_RNDIS_H */
