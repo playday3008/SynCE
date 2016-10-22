@@ -178,7 +178,7 @@ const char* synce_strerror_from_hresult(HRESULT hr);
 
 /*
  * Info from the ~/.synce/active_connection file
- * written by (v)dccm, or obtained over dbus from odccm or dccm
+ * written by (v)dccm, or obtained over dbus from dccm
  */
 
 typedef struct _SynceInfo SynceInfo;

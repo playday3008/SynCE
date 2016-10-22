@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
+#if ENABLE_UDEV_SUPPORT
 #include <glib-object.h>
 #include <gio/gio.h>
 #endif
@@ -62,20 +62,11 @@ struct _SynceInfo
   char* object_path;
 };
 
-#if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
+#if ENABLE_UDEV_SUPPORT
 static const char* const DBUS_SERVICE       = "org.freedesktop.DBus";
 static const char* const DBUS_IFACE         = "org.freedesktop.DBus";
 static const char* const DBUS_PATH          = "/org/freedesktop/DBus";
-#endif
 
-#if ENABLE_ODCCM_SUPPORT
-static const char* const ODCCM_SERVICE      = "org.synce.odccm";
-static const char* const ODCCM_MGR_PATH     = "/org/synce/odccm/DeviceManager";
-static const char* const ODCCM_MGR_IFACE    = "org.synce.odccm.DeviceManager";
-static const char* const ODCCM_DEV_IFACE    = "org.synce.odccm.Device";
-#endif
-
-#if ENABLE_UDEV_SUPPORT
 static const char* const DCCM_SERVICE      = "org.synce.dccm";
 static const char* const DCCM_MGR_PATH     = "/org/synce/dccm/DeviceManager";
 static const char* const DCCM_MGR_IFACE    = "org.synce.dccm.DeviceManager";
@@ -170,86 +161,83 @@ exit:
 
 #endif /* ENABLE_DCCM_FILE_SUPPORT */
 
-#if ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT
+#if ENABLE_UDEV_SUPPORT
 
 static gboolean
 synce_info_fields_from_dbus(SynceInfo *result, GDBusProxy *proxy)
 {
-  GError *error = NULL;
   GVariant *res = NULL;
 
-  if (!(res = g_dbus_proxy_call_sync(proxy, "GetName",
-				g_variant_new ("()"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error)))
-    {
-      g_warning("%s: Failed to get device name: %s", G_STRFUNC, error->message);
-      goto ERROR;
-    }
-  g_variant_get (res, "(s)", &(result->name));
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "Name"))) {
+    g_warning("%s: Failed to get device name", G_STRFUNC);
+    goto ERROR;
+  }
+  result->name = g_variant_dup_string (res, NULL);
   g_variant_unref (res);
 
-  if (!(res = g_dbus_proxy_call_sync(proxy, "GetOsVersion",
-				g_variant_new ("()"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error)))
-    {
-      g_warning("%s: Failed to get device OS for %s: %s", G_STRFUNC, result->name, error->message);
-      goto ERROR;
-    }
-  g_variant_get (res, "(uu)", &(result->os_major), &(result->os_minor));
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "OsMajorVersion"))) {
+    g_warning("%s: Failed to get device OS major version for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->os_major = g_variant_get_uint32 (res);
   g_variant_unref (res);
 
-  if (!(res = g_dbus_proxy_call_sync(proxy, "GetCpuType",
-				g_variant_new ("()"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error)))
-    {
-      g_warning("%s: Failed to get device cpu type for %s: %s", G_STRFUNC, result->name, error->message);
-      goto ERROR;
-    }
-  g_variant_get (res, "(u)", &(result->processor_type));
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "OsMinorVersion"))) {
+    g_warning("%s: Failed to get device OS minor version for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->os_minor = g_variant_get_uint32 (res);
   g_variant_unref (res);
 
-  if (!(res = g_dbus_proxy_call_sync(proxy, "GetPlatformName",
-				g_variant_new ("()"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error)))
-    {
-      g_warning("%s: Failed to get device platform name for %s: %s", result->name, G_STRFUNC, error->message);
-      goto ERROR;
-    }
-  g_variant_get (res, "(s)", &(result->os_name));
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "CpuType"))) {
+    g_warning("%s: Failed to get device cpu type for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->processor_type = g_variant_get_uint32 (res);
   g_variant_unref (res);
 
-  if (!(res = g_dbus_proxy_call_sync(proxy, "GetModelName",
-				g_variant_new ("()"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error)))
-    {
-      g_warning("%s: Failed to get device model name for %s: %s", result->name, G_STRFUNC, error->message);
-      goto ERROR;
-    }
-  g_variant_get (res, "(s)", &(result->model));
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "PlatformName"))) {
+    g_warning("%s: Failed to get device platform name for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->os_name = g_variant_dup_string (res, NULL);
   g_variant_unref (res);
 
-  if (!(res = g_dbus_proxy_call_sync(proxy, "GetIpAddress",
-				g_variant_new ("()"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error)))
-    {
-      g_warning("%s: Failed to get device IP address for %s: %s", result->name, G_STRFUNC, error->message);
-      goto ERROR;
-    }
-  g_variant_get (res, "(s)", &(result->device_ip));
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "ModelName"))) {
+    g_warning("%s: Failed to get device model name for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->model = g_variant_dup_string (res, NULL);
   g_variant_unref (res);
 
-  if (!(res = g_dbus_proxy_call_sync(proxy, "GetGuid",
-				g_variant_new ("()"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, &error)))
-    {
-      g_warning("%s: Failed to get GUID for %s: %s", result->name, G_STRFUNC, error->message);
-      goto ERROR;
-    }
-  g_variant_get (res, "(s)", &(result->guid));
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "IpAddress"))) {
+    g_warning("%s: Failed to get device IP address for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->device_ip = g_variant_dup_string (res, NULL);
+  g_variant_unref (res);
+
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "Guid"))) {
+    g_warning("%s: Failed to get GUID for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->guid = g_variant_dup_string (res, NULL);
+  g_variant_unref (res);
+
+  if (!(res = g_dbus_proxy_get_cached_property(proxy, "IfaceAddress"))) {
+    g_warning("%s: Failed to get local interface IP address for %s", G_STRFUNC, result->name);
+    goto ERROR;
+  }
+  result->local_iface_ip = g_variant_dup_string (res, NULL);
   g_variant_unref (res);
 
   return TRUE;
 
 ERROR:
-  if (error != NULL)
-    g_error_free(error);
   return FALSE;
 }
 
-static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const char* data, gboolean udev)
+static SynceInfo *synce_info_from_udev(SynceInfoIdField field, const char* data)
 {
   SynceInfo *result = NULL;
   GError *error = NULL;
@@ -259,28 +247,6 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
   gboolean dccm_running = FALSE;
   GVariant *ret = NULL;
   gchar **devices = NULL;
-  const gchar *service = NULL;
-  const gchar *mgr_path = NULL;
-  const gchar *mgr_iface = NULL;
-  const gchar *dev_iface = NULL;
-  const gchar *dccm_name = NULL;
-  if (udev) {
-#if ENABLE_UDEV_SUPPORT
-    service = DCCM_SERVICE;
-    mgr_path = DCCM_MGR_PATH;
-    mgr_iface = DCCM_MGR_IFACE;
-    dev_iface = DCCM_DEV_IFACE;
-    dccm_name = "udev";
-#endif
-  } else {
-#if ENABLE_ODCCM_SUPPORT
-    service = ODCCM_SERVICE;
-    mgr_path = ODCCM_MGR_PATH;
-    mgr_iface = ODCCM_MGR_IFACE;
-    dev_iface = ODCCM_DEV_IFACE;
-    dccm_name = "odccm";
-#endif
-  }
 
 #if !GLIB_CHECK_VERSION (2, 36, 0)
   g_type_init();
@@ -301,13 +267,13 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
 
   ret = g_dbus_proxy_call_sync (dbus_proxy,
 				"NameHasOwner",
-				g_variant_new ("(s)", service),
+				g_variant_new ("(s)", DCCM_SERVICE),
 				G_DBUS_CALL_FLAGS_NONE,
 				-1,
 				NULL,
 				&error);
   if (!ret) {
-    g_critical("%s: Error checking owner of service %s: %s", G_STRFUNC, service, error->message);
+    g_critical("%s: Error checking owner of service %s: %s", G_STRFUNC, DCCM_SERVICE, error->message);
     g_object_unref(dbus_proxy);
     goto ERROR;
   }
@@ -316,16 +282,16 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
 
   g_object_unref(dbus_proxy);
   if (!dccm_running) {
-    g_message("%s is not running, ignoring", dccm_name);
+    g_message("udev dccm is not running, ignoring");
     goto ERROR;
   }
 
   mgr_proxy = g_dbus_proxy_new_for_bus_sync (G_BUS_TYPE_SYSTEM,
 					     G_DBUS_PROXY_FLAGS_NONE,
 					     NULL, /* GDBusInterfaceInfo */
-					     service,
-					     mgr_path,
-					     mgr_iface,
+					     DCCM_SERVICE,
+					     DCCM_MGR_PATH,
+					     DCCM_MGR_IFACE,
 					     NULL, /* GCancellable */
 					     &error);
   if (mgr_proxy == NULL) {
@@ -348,7 +314,7 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
   g_variant_unref (ret);
 
   if (g_strv_length(devices) == 0) {
-    g_message("No devices connected to %s", dccm_name);
+    g_message("No devices connected to udev dccm");
     goto ERROR;
   }
 
@@ -359,9 +325,9 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
     GDBusProxy *proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SYSTEM,
 					     G_DBUS_PROXY_FLAGS_NONE,
 					     NULL, /* GDBusInterfaceInfo */
-					     service,
+					     DCCM_SERVICE,
 					     obj_path,
-					     dev_iface,
+					     DCCM_DEV_IFACE,
 					     NULL, /* GCancellable */
 					     &error);
     if (proxy == NULL) {
@@ -417,28 +383,9 @@ static SynceInfo *synce_info_from_udev_or_odccm(SynceInfoIdField field, const ch
       goto ERROR;
     }
 
-    if (udev) {
-      ret = g_dbus_proxy_call_sync (proxy,
-				    "GetIfaceAddress",
-				    g_variant_new ("()"),
-				    G_DBUS_CALL_FLAGS_NONE,
-				    -1,
-				    NULL,
-				    &error);
-      if (!ret) {
-	g_warning("%s: Failed to get local interface IP address for %s: %s", G_STRFUNC, result->name, error->message);
-	g_object_unref(proxy);
-	goto ERROR;
-      }
-      g_variant_get (ret, "(s)", &(result->local_iface_ip));
-      g_variant_unref (ret);
-    } else {
-      result->local_iface_ip = NULL;
-    }
-
     g_object_unref(proxy);
 
-    result->transport = g_strdup(dccm_name);
+    result->transport = g_strdup("udev");
 
     break;
   }
@@ -460,7 +407,7 @@ OUT:
   return result;
 }
 
-#endif /* ENABLE_ODCCM_SUPPORT || ENABLE_UDEV_SUPPORT */
+#endif /* ENABLE_UDEV_SUPPORT */
 
 
 /** @brief Get device information for a named device
@@ -497,17 +444,12 @@ SynceInfo* synce_info_new_by_field(SynceInfoIdField field, const char* data)
   SynceInfo* result = NULL;
 
 #if ENABLE_UDEV_SUPPORT
-  result = synce_info_from_udev_or_odccm(field, data, TRUE);
+  result = synce_info_from_udev(field, data);
 #endif
-
-#if ENABLE_ODCCM_SUPPORT
-  if (!result)
-    result = synce_info_from_udev_or_odccm(field, data, FALSE);
 
 #if ENABLE_MIDASYNC
   if (!result)
     result = synce_info_from_midasyncd(field, data);
-#endif
 #endif
 
 #if ENABLE_DCCM_FILE_SUPPORT
@@ -661,7 +603,7 @@ synce_info_get_device_ip(SynceInfo *info)
  * connection, in dotted quad notation, from a previously
  * obtained SynceInfo struct.
  * 
- * This is not available when using legacy odccm or vdccm, NULL
+ * This is not available when using legacy vdccm, NULL
  * is returned.
  *
  * @param[in] info struct to query
@@ -762,7 +704,7 @@ synce_info_get_dccm_pid(SynceInfo *info)
  * 
  * This function obtains the transport type used by a device
  * from a previously obtained SynceInfo struct. This will be
- * udev, odccm, or vdccm.
+ * udev or vdccm.
  * 
  * @param[in] info struct to query
  * @return the transport type, owned by the info object

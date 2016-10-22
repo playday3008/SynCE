@@ -31,12 +31,11 @@ synce_get_connection_filename \- get synce connection filename
 .BI "bool synce_set_default_connection_filename();"
 .fi
 .SH DESCRIPTION
-These functions are used with the
+These functions are used with the legacy
 .BR vdccm(1)
 and
 .BR dccm(1)
-connection daemons only. They are of no use when using
-.BR odccm(1).
+connection daemons only. They are of no use when using the current dbus dccm.
 .sp
 .BR synce_get_connection_filename ()
 provides a string describing the location of the synce device connection file, written by (v)dccm. The default file is ~/.synce/active_connection.

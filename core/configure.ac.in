@@ -117,24 +117,6 @@ fi
 if test "$enable_dccm_file_support" = "yes"; then dccm_file=1; else dccm_file=0; fi
 AC_DEFINE_UNQUOTED(ENABLE_DCCM_FILE_SUPPORT, $dccm_file, [Define to 1 if you want dccm file support.])
 
-dnl
-dnl whether odccm dbus support is required
-dnl
-AC_ARG_ENABLE(odccm-support,
-              [  --enable-odccm-support  enable odccm support (requires D-Bus)],
-              enable_odccm_support=$enableval, enable_odccm_support=no)
-
-if ! test "$enable_odccm_support" = "no"; then
-  AC_MSG_NOTICE([Building with odccm support])
-  AC_DEFINE(ENABLE_ODCCM_SUPPORT, 1, [Define if building with odccm support])
-  enable_odccm_support=yes
-else
-  AC_MSG_NOTICE([Building without odccm support])
-fi
-
-if test "$enable_odccm_support" = "yes"; then odccm=1; else odccm=0; fi
-AC_DEFINE_UNQUOTED(ENABLE_ODCCM_SUPPORT, $odccm, [Define to 1 if you want odccm support.])
-
 
 dnl
 dnl whether dbus support for udev is required

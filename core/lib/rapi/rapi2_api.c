@@ -2479,8 +2479,8 @@ IRAPIDesktop_Init()
 	self->sink_seq_num = 1;
 
         /*
-           connect to dccm, odccm, vdccm ?
-           set up callbacks from dccm and odccm 
+           connect to dccm, vdccm ?
+           set up callbacks from dccm 
            create initial devices
         */
         self->dbus_proxy = NULL;
@@ -2544,8 +2544,8 @@ IRAPIDesktop_Uninit()
 {
         /*
            destroy devices
-           remove callbacks from dccm and odccm 
-           disconnect from dccm, odccm, vdccm ?
+           remove callbacks from dccm 
+           disconnect from dccm, vdccm ?
         */
 
         IRAPIDesktop *self = irapi_desktop;

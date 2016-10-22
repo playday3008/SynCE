@@ -1,6 +1,7 @@
 2016-10-22  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add dbus properties for static device properties
+	* remove support for odccm
 
 2016-10-10  Mark Ellis  <mark@mpellis.org.uk>
 

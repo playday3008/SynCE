@@ -62,9 +62,7 @@ When using
 or the deprecated
 .BR dccm (1),
 the current active device is selected. This is usually the last device connected, specifically that described in the active_connection file which is by default
-in the ~/.synce/ directory. With 
-.BR odccm (1)
-the first device connected will be returned. With core
+in the ~/.synce/ directory. With core
 .BR dccm
 this depends on the device(s) in question, and should be considered undefined.
 .sp
@@ -106,9 +104,7 @@ all fields are populated except for
 .BR local_iface_ip 
 and 
 .BR os_minor .
-With 
-.BR odccm (1)
-and core
+With  core
 .BR dccm,
 .BR dccm_pid,
 .BR password,
@@ -118,9 +114,6 @@ and core
 and 
 .BR partner_id_2
 are not used.
-.BR odccm (1)
-also does not populate
-.BR local_iface_ip.
 .SH "RETURN VALUE"
 The
 .BR synce_info_new ()
@@ -128,5 +121,4 @@ function returns a pointer to the allocated SynceInfo struct,
 or NULL if an error occured.
 .SH "SEE ALSO"
 .BR synce (7),
-.BR odccm (1),
 .BR vdccm (1)
