@@ -2,14 +2,6 @@
 #include "config.h"
 #endif
 
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/ioctl.h>
 #include <synce.h>
 #include <glib.h>
 #include <gio/gio.h>
@@ -173,82 +165,3 @@ synce_rapi_unicode_string_to_string_at_offset (const guchar *buf, const guchar *
   return ret;
 }
 
-gboolean
-synce_trigger_connection (const gchar *device_ip)
-{
-  gboolean result = FALSE;
-  gint fd = -1;
-  struct sockaddr_in sa;
-  guchar b = 0x7f;
-
-  if ((fd = socket (AF_INET, SOCK_DGRAM, 0)) < 0) {
-    g_warning ("%s: failed to create socket: %s", G_STRFUNC, strerror (errno));
-    goto exit;
-  }
-
-  sa.sin_family = AF_INET;
-  sa.sin_port = htons (5679);
-  inet_aton (device_ip, &sa.sin_addr);
-
-  if (sendto (fd, &b, sizeof (b), 0, (const struct sockaddr *) &sa,
-              sizeof (sa)) != 1)
-    {
-      g_warning ("%s: failed to send on socket: %s", G_STRFUNC, strerror (errno));
-      goto exit;
-    }
-
-  result = TRUE;
-
-exit:
-  if (fd != -1)
-    close (fd);
-
-  return result;
-}
-
-GSocket *
-synce_create_socket(const gchar *address, guint16 port)
-{
-  GError *error = NULL;
-  GSocket *socket = NULL;
-  GInetAddress *inet_address = NULL;
-  GSocketAddress *sock_address = NULL;
-
-  if (!(inet_address = g_inet_address_new_from_string(address))) {
-    g_critical("%s: failed to parse ip address: %s", G_STRFUNC, address);
-    goto error_exit;
-  }
-
-  socket = g_socket_new(G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP, &error);
-  if (!socket) {
-    g_critical("%s: failed to create socket: %s", G_STRFUNC, error->message);
-    goto error_exit;
-  }
-  if (!(g_initable_init(G_INITABLE(socket), NULL, &error))) {
-    g_critical("%s: failed to initialise socket: %s", G_STRFUNC, error->message);
-    g_object_unref(socket);
-    goto error_exit;
-  }
-  sock_address = g_inet_socket_address_new(inet_address, port);
-  if (!(g_socket_bind(socket, sock_address, TRUE, &error))) {
-    g_critical("%s: failed to bind to port %u: %s", G_STRFUNC, port, error->message);
-    g_object_unref(socket);
-    goto error_exit;
-  }
-  if (!(g_socket_listen(socket, &error))) {
-    g_critical("%s: failed to listen to port %u: %s", G_STRFUNC, port, error->message);
-    g_object_unref(socket);
-    goto error_exit;
-  }
-
-  g_object_unref(sock_address);
-  g_object_unref(inet_address);
-  return socket;
-
- error_exit:
-  if (error) g_error_free(error);
-  if (inet_address) g_object_unref(inet_address);
-  if (sock_address) g_object_unref(sock_address);
-
-  return NULL;
-}

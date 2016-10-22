@@ -9,6 +9,8 @@
 	  DeviceManagerControl
 	* use gio functions for socket transfer of file descriptors
 	  for ease of maintenance
+	* improve process of establishing initial connection in
+	  DeviceManager
 
 2016-10-10  Mark Ellis  <mark@mpellis.org.uk>
 

@@ -304,31 +304,55 @@ synce_device_manager_client_connected_cb(GSocketService *server,
 }
 
 
+static void
+trigger_device_connection (const gchar *device_ip)
+{
+  GSocket *sock = NULL;
+  GInetAddress *inet_address = NULL;
+  GSocketAddress *sock_address = NULL;
+  GError *error = NULL;
+  gchar b = 0x7f;
+
+  sock = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_DEFAULT, &error);
+  if (!sock) {
+    g_warning ("%s: failed to create socket: %s", G_STRFUNC, error->message);
+    goto exit;
+  }
+
+  if (!(inet_address = g_inet_address_new_from_string(device_ip))) {
+    g_critical("%s: failed to parse ip address: %s", G_STRFUNC, device_ip);
+    goto exit;
+  }
+  sock_address = g_inet_socket_address_new(inet_address, 5679);
+
+  if (g_socket_send_to (sock, sock_address, &b, sizeof(b), NULL, &error) != 1) {
+    g_critical("%s: failed to send on socket: %s", G_STRFUNC, error->message);
+    goto exit;
+  }
+
+exit:
+  if (sock) g_object_unref(sock);
+  if (inet_address) g_object_unref(inet_address);
+  if (sock_address) g_object_unref(sock_address);
+
+  return;
+}
+
+
 static gboolean
 synce_device_manager_create_device(SynceDeviceManager *self,
-				   const gchar *local_ip,
+				   GInetAddress *local_addr,
 				   DeviceEntry *deventry)
 {
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
   g_return_val_if_fail(priv->inited && !(priv->dispose_has_run), FALSE);
 
+  GSocketAddress *sock_address = NULL;
+  GError *error = NULL;
+
   g_debug("%s: found device interface for %s", G_STRFUNC, deventry->device_path);
 
   deventry->iface_pending = FALSE;
-
-  GError *error = NULL;
-  GSocket *socket_990 = NULL;
-  GSocket *socket_5679 = NULL;
-
-  if (!(socket_990 = synce_create_socket(local_ip, 990))) {
-    g_critical("%s: failed to create listening socket on rndis port (990)", G_STRFUNC);
-    goto error_exit;
-  }
-
-  if (!(socket_5679 = synce_create_socket(local_ip, 5679))) {
-    g_critical("%s: failed to create listening socket on legacy port (5679)", G_STRFUNC);
-    goto error_exit;
-  }
 
   deventry->server = g_socket_service_new();
   if (!(deventry->server)) {
@@ -336,20 +360,26 @@ synce_device_manager_create_device(SynceDeviceManager *self,
     goto error_exit;
   }
 
-  if (!(g_socket_listener_add_socket(G_SOCKET_LISTENER(deventry->server), socket_990, NULL, &error))) {
-    g_critical("%s: failed to add 990 socket to socket service: %s", G_STRFUNC, error->message);
+  sock_address = g_inet_socket_address_new(local_addr, 990);
+  if (!(g_socket_listener_add_address(G_SOCKET_LISTENER(deventry->server),
+				 sock_address, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP,
+				 NULL, NULL, &error))) {
+    g_critical("%s: failed to add port 990 socket to socket service: %s", G_STRFUNC, error->message);
     g_error_free(error);
     goto error_exit;
   }
 
-  if (!(g_socket_listener_add_socket(G_SOCKET_LISTENER(deventry->server), socket_5679, NULL, &error))) {
-    g_critical("%s: failed to add 5679 socket to socket service: %s", G_STRFUNC, error->message);
+  g_object_unref(sock_address);
+  sock_address = g_inet_socket_address_new(local_addr, 5679);
+  if (!(g_socket_listener_add_address(G_SOCKET_LISTENER(deventry->server),
+				 sock_address, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_TCP,
+				 NULL, NULL, &error))) {
+    g_critical("%s: failed to add port 5679 socket to socket service: %s", G_STRFUNC, error->message);
     g_error_free(error);
     goto error_exit;
   }
 
-  g_object_unref(socket_990);
-  g_object_unref(socket_5679);
+  g_object_unref(sock_address);
 
   g_signal_connect(deventry->server, "incoming", G_CALLBACK(synce_device_manager_client_connected_cb), self);
 
@@ -359,7 +389,7 @@ synce_device_manager_create_device(SynceDeviceManager *self,
 
   if (deventry->rndis) {
     g_debug("%s: triggering connection", G_STRFUNC);
-    synce_trigger_connection(deventry->device_ip);
+    trigger_device_connection(deventry->device_ip);
   } else {
     g_debug("%s: NOT triggering connection", G_STRFUNC);
   }
@@ -367,15 +397,14 @@ synce_device_manager_create_device(SynceDeviceManager *self,
   return TRUE;
 
  error_exit:
-  if (socket_990) g_object_unref(socket_990);
-  if (socket_5679) g_object_unref(socket_5679);
+  if (sock_address) g_object_unref(sock_address);
   if (deventry->server) g_object_unref(deventry->server);
 
   return FALSE;
 }
 
 static gboolean
-synce_device_manager_check_interface_cb (gpointer userdata)
+synce_device_manager_check_interfaces_cb (gpointer userdata)
 {
   SynceDeviceManager *self = SYNCE_DEVICE_MANAGER(userdata);
   SynceDeviceManagerPrivate *priv = SYNCE_DEVICE_MANAGER_GET_PRIVATE(self);
@@ -386,7 +415,12 @@ synce_device_manager_check_interface_cb (gpointer userdata)
 
   device_entry_iter = priv->devices;
   while (device_entry_iter) {
-    gchar *local_ip = ((DeviceEntry*)device_entry_iter->data)->local_ip;
+    if ( !((DeviceEntry*)device_entry_iter->data)->iface_pending ) {
+      device_entry_iter = g_slist_next(device_entry_iter);
+      continue;
+    }
+
+    const gchar *local_ip = ((DeviceEntry*)device_entry_iter->data)->local_ip;
 
     GSocket *socket = g_socket_new(G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, &error);
     if (!socket) {
@@ -401,7 +435,7 @@ synce_device_manager_check_interface_cb (gpointer userdata)
     if (g_socket_bind(socket, G_SOCKET_ADDRESS(sockaddr), TRUE, &error)) {
       g_debug("%s: address ready", G_STRFUNC);
       g_object_unref(socket);
-      synce_device_manager_create_device(self, ((DeviceEntry*)device_entry_iter->data)->local_ip, device_entry_iter->data);
+      synce_device_manager_create_device(self, local_addr, device_entry_iter->data);
     } else {
       g_debug("%s: address not yet ready, failed to bind: %s", G_STRFUNC, error->message);
       g_error_free(error);
@@ -461,7 +495,7 @@ synce_device_manager_device_connected_cb(G_GNUC_UNUSED SynceDeviceManagerControl
   if (priv->iface_check_id > 0)
     return;
 
-  priv->iface_check_id = g_timeout_add (100, synce_device_manager_check_interface_cb, self);
+  priv->iface_check_id = g_timeout_add (100, synce_device_manager_check_interfaces_cb, self);
 }
 
 
