@@ -3,14 +3,12 @@
 #endif
 
 #include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
+#include <gio/gunixconnection.h>
 
 #include "synce-connection-broker.h"
 
@@ -193,19 +191,9 @@ server_socket_readable_cb(G_GNUC_UNUSED GSocketService *source,
 {
   SynceConnectionBroker *self = user_data;
   SynceConnectionBrokerPrivate *priv = SYNCE_CONNECTION_BROKER_GET_PRIVATE (self);
-  gint device_fd = -1, client_fd = -1;
-  ssize_t ret = 0;
-  struct msghdr msg = { 0, };
-  struct cmsghdr *cmsg = NULL;
-  gchar cmsg_buf[CMSG_SPACE (sizeof (device_fd))];
-  struct iovec iov;
-  guchar dummy_byte = 0x7f;
+  gint device_fd = -1;
+  GError *error = NULL;
 
-  GSocket *client_socket = g_socket_connection_get_socket(client_connection);
-  if (client_socket == NULL) {
-    g_warning ("%s: client disconnected ?", G_STRFUNC);
-    return TRUE;
-  }
   GSocket *device_socket = g_socket_connection_get_socket(priv->conn);
   if (device_socket == NULL) {
     g_warning ("%s: device disconnected ?", G_STRFUNC);
@@ -213,28 +201,10 @@ server_socket_readable_cb(G_GNUC_UNUSED GSocketService *source,
   }
 
   device_fd = g_socket_get_fd(device_socket);
-  client_fd = g_socket_get_fd(client_socket);
 
-  msg.msg_control = cmsg_buf;
-  msg.msg_controllen = sizeof (cmsg_buf);
-  msg.msg_iov = &iov;
-  msg.msg_iovlen = 1;
-
-  cmsg = CMSG_FIRSTHDR (&msg);
-  cmsg->cmsg_level = SOL_SOCKET;
-  cmsg->cmsg_type = SCM_RIGHTS;
-  cmsg->cmsg_len = CMSG_LEN (sizeof (device_fd));
-
-  memmove(CMSG_DATA(cmsg), &device_fd, sizeof(device_fd));
-  
-  iov.iov_base = &dummy_byte;
-  iov.iov_len = sizeof (dummy_byte);
-
-  ret = sendmsg (client_fd, &msg, MSG_NOSIGNAL);
-  if (ret != 1) {
-    g_warning("%s: failed to send device file descriptor, sendmsg() returned %zd", G_STRFUNC, ret);
-    if (ret < 0)
-      g_warning("%s: error while sending device file descriptor: %d: %s", G_STRFUNC, errno, g_strerror(errno));
+  if (!g_unix_connection_send_fd (G_UNIX_CONNECTION(client_connection), device_fd, NULL, &error)) {
+    g_warning("%s: failed to send device file descriptor: %s", G_STRFUNC, error->message);
+    g_clear_error(&error);
   }
 
   g_signal_emit (self, signals[DONE], 0);

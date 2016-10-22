@@ -7,6 +7,8 @@
 	  DeviceRndis, DeviceManager, DeviceManagerControl
 	* implement async initialisation for DeviceManager,
 	  DeviceManagerControl
+	* use gio functions for socket transfer of file descriptors
+	  for ease of maintenance
 
 2016-10-10  Mark Ellis  <mark@mpellis.org.uk>
 

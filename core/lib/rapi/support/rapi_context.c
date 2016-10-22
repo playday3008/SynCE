@@ -15,10 +15,9 @@
 #if ENABLE_UDEV_SUPPORT
 #include <glib-object.h>
 #include <gio/gio.h>
+#include <gio/gunixsocketaddress.h>
+#include <gio/gunixconnection.h>
 #include "synce_gerrors.h"
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
 #endif
 
 #define USE_THREAD_SAFE_VERSION 1
@@ -220,77 +219,36 @@ void rapi_context_unref(RapiContext* context)/*{{{*/
 static gint
 get_socket_from_dccm(const gchar *unix_path)
 {
-  int fd = -1, dev_fd;
-  ssize_t ret;
-  struct sockaddr_un sa;
-  struct msghdr msg = { 0, 0, 0, 0, 0, 0, 0 };
-  struct cmsghdr *cmsg;
-  struct iovec iov;
-  char cmsg_buf[512];
-  char data_buf[512];
+  int dev_fd = -1;
+  GError *error = NULL;
+  GSocketClient *client = NULL;
+  GSocketAddress *addr = NULL;
+  GSocketConnection *conn = NULL;
 
-  if ((strlen(unix_path) + 1) > sizeof(sa.sun_path)) {
-    g_warning("%s: socket path too long: %s: %zd > %zd", G_STRFUNC, unix_path, strlen(unix_path) + 1, sizeof(sa.sun_path));
-    goto ERROR;
+  client = g_socket_client_new();
+  addr = g_unix_socket_address_new(unix_path);
+  conn = g_socket_client_connect (client, G_SOCKET_CONNECTABLE(addr), NULL, &error);
+  if (!conn) {
+    g_warning("%s: failed to connect to socket %s: %s", G_STRFUNC, unix_path, error->message);
+    g_clear_error(&error);
+    goto OUT;
   }
 
-  fd = socket(AF_UNIX, SOCK_STREAM, 0);
-  if (fd < 0) {
-    g_warning("%s: failed to create socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
-    goto ERROR;
+  dev_fd = g_unix_connection_receive_fd(G_UNIX_CONNECTION(conn), NULL, &error);
+  if (dev_fd < 0) {
+    g_warning("%s: failed to receive device file descriptor: %s", G_STRFUNC, error->message);
+    g_clear_error(&error);
+    goto OUT;
   }
-
-  sa.sun_family = AF_UNIX;
-  strcpy(sa.sun_path, unix_path);
-
-  if (connect(fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
-    g_warning("%s: failed to connect socket: %d: %s", G_STRFUNC, errno, g_strerror(errno));
-    goto ERROR;
-  }
-
-  msg.msg_control = cmsg_buf;
-  msg.msg_controllen = sizeof(cmsg_buf);
-  msg.msg_iov = &iov;
-  msg.msg_iovlen = 1;
-  msg.msg_flags = MSG_WAITALL;
-
-  iov.iov_base = data_buf;
-  iov.iov_len = sizeof(data_buf);
-
-  ret = recvmsg(fd, &msg, 0);
-  if (ret < 0) {
-    g_warning("%s: failed to receive file descriptor: %d: %s", G_STRFUNC, errno, g_strerror(errno));
-    goto ERROR;
-  }
-
-  cmsg = CMSG_FIRSTHDR (&msg);
-  if (cmsg == NULL || cmsg->cmsg_type != SCM_RIGHTS) {
-    g_warning("%s: failed to extract file descriptor, no message or incorrect type", G_STRFUNC);
-    goto ERROR;
-  }
-
-  if (cmsg->cmsg_len < sizeof(dev_fd)) {
-    g_warning("%s: failed to extract file descriptor, invalid message length: %Zd < %zd", G_STRFUNC, cmsg->cmsg_len, sizeof(dev_fd));
-    goto ERROR;
-  }
-
-  memmove(&dev_fd, CMSG_DATA(cmsg), sizeof(dev_fd));
-
-  goto OUT;
-
-ERROR:
-  dev_fd = -1;
 
 OUT:
-  if (fd >= 0)
-    close(fd);
+  g_object_unref(client);
+  g_object_unref(addr);
+  if (conn) g_object_unref(conn);
 
   return dev_fd;
 }
-#endif /* ENABLE_UDEV_SUPPORT */
 
-
-#if ENABLE_UDEV_SUPPORT
 
 /*
  * synce_glib_init:
