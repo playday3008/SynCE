@@ -274,7 +274,7 @@ public:
 
     static bool getVersionEx(synce::CEOSVERSIONINFO *version)
     {
-        memset(version, 0, sizeof(version));
+        memset(version, 0, sizeof(*version));
         version->dwOSVersionInfoSize = sizeof(version);
 
         return synce::IRAPISession_CeGetVersionEx(session, version);
@@ -283,7 +283,7 @@ public:
 
     static void getSystemInfo(synce::SYSTEM_INFO *system)
     {
-        memset(system, 0, sizeof(system));
+        memset(system, 0, sizeof(*system));
         synce::IRAPISession_CeGetSystemInfo(session, system);
     }
 
@@ -298,7 +298,7 @@ public:
 
     static bool getStoreInformation(synce::STORE_INFORMATION *store)
     {
-        memset(store, 0, sizeof(store));
+        memset(store, 0, sizeof(*store));
         return synce::IRAPISession_CeGetStoreInformation(session, store);
     }
 

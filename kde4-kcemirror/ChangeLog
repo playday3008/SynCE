@@ -1,3 +1,8 @@
+2016-11-25  Mark Ellis  <mark@mpellis.org.uk>
+
+	* fixed parameter initialisation for 3 calls in rapiwrapper.h, thanks
+	  to dcb
+
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.2 release
