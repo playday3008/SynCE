@@ -37,7 +37,7 @@ int main(int argc, char** argv)
 	{
 		bytes_read = read(STDIN_FILENO, buffer+bytes_read_total, bytes_left);
 
-		if (bytes_read < 0)
+		if (bytes_read <= 0)
 			break;
 	
 		bytes_left -= bytes_read;	
