@@ -138,7 +138,10 @@ synce_connection_broker_finalize (GObject *obj)
   SynceConnectionBroker *self = SYNCE_CONNECTION_BROKER (obj);
   SynceConnectionBrokerPrivate *priv = SYNCE_CONNECTION_BROKER_GET_PRIVATE (self);
 
-  g_free (priv->filename);
+  if (priv->filename != NULL) {
+    unlink (priv->filename);
+    g_free (priv->filename);
+  }
 
   G_OBJECT_CLASS (synce_connection_broker_parent_class)->finalize (obj);
 }

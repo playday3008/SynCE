@@ -1,3 +1,12 @@
+2017-01-05  Arndt Kaiser
+
+	* fixed infinite loop in synce-serial-chat,
+	  if stdin has been closed and read() returns 0
+	* add missing python-modules in synceconnector
+	* fix gcc (4.9) compile-error when compiling with "-Werror"
+	* after a connection has been closed, the unused file of the
+	  unix domain socket has to be removed from the filesystem
+
 2016-10-22  Mark Ellis  <mark@mpellis.org.uk>
 
 	* add dbus properties for static device properties
