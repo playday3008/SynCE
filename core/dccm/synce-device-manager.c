@@ -561,7 +561,7 @@ synce_device_manager_get_connected_devices (SynceDbusDeviceManager *interface,
     device_entry_iter = g_slist_next(device_entry_iter);
   }
 
-  synce_dbus_device_manager_complete_get_connected_devices(interface, invocation, device_list);
+  synce_dbus_device_manager_complete_get_connected_devices(interface, invocation, (const gchar**)device_list);
 
   g_strfreev(device_list);
 
