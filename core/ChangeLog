@@ -6,6 +6,7 @@
 	* fix gcc (4.9) compile-error when compiling with "-Werror"
 	* after a connection has been closed, the unused file of the
 	  unix domain socket has to be removed from the filesystem
+	* log path of the unix domain socket file, if it can't be created
 
 2016-10-22  Mark Ellis  <mark@mpellis.org.uk>
 

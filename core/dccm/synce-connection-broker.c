@@ -242,7 +242,7 @@ _synce_connection_broker_take_connection (SynceConnectionBroker *self,
   }
 
   if (!(g_socket_listener_add_address(G_SOCKET_LISTENER(priv->server), sock_address, G_SOCKET_TYPE_STREAM, G_SOCKET_PROTOCOL_DEFAULT, NULL, NULL, &error))) {
-    g_critical("%s: failed to add address to socket service: %s", G_STRFUNC, error->message);
+    g_critical("%s: failed to add address %s to socket service: %s", G_STRFUNC, priv->filename, error->message);
     goto error_exit;
   }
   g_object_unref(sock_address);
