@@ -477,6 +477,21 @@ synce_device_manager_device_connected_cb(G_GNUC_UNUSED SynceDeviceManagerControl
 
   g_debug("%s: receieved device connected signal for %s", G_STRFUNC, device_path);
 
+  GSList *device_entry_iter = priv->devices;
+  while (device_entry_iter != NULL) {
+
+    if (strcmp(device_path, ((DeviceEntry*)device_entry_iter->data)->device_path) == 0) {
+      break;
+    }
+
+    device_entry_iter = g_slist_next(device_entry_iter);
+  }
+
+  if (device_entry_iter) {
+    g_debug("%s: ignoring connect signal for already known device %s", G_STRFUNC, device_path);
+    return;
+  }
+
   DeviceEntry *deventry = g_new0(DeviceEntry, 1);
   if (!deventry) {
     g_critical("%s: failed to allocate DeviceEntry", G_STRFUNC);

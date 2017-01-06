@@ -1,3 +1,6 @@
+2017-01-06  Arndt Kaiser
+	* prevent devices from beeing registered multiple times
+
 2017-01-05  Arndt Kaiser
 
 	* fixed infinite loop in synce-serial-chat,
