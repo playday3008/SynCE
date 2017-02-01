@@ -248,6 +248,12 @@ def serial_stop_device(linkname):
 #
 def serial_start_device(device_file, local_ip, remote_ip, linkname):
 
+    pidfile = VAR_PPP+"/ppp-"+linkname+".pid"
+
+    if os.path.isfile(pidfile) != False:
+        logger.warning("SynCE connection for %s is still running", linkname)
+        return False
+
     ipaddr = local_ip+":"+remote_ip
 
     cmd_list = [PPPD, device_file, DEVSPEED, "connect", "@LIBEXECDIR@/synce-serial-chat", ipaddr, "ms-dns", local_ip]

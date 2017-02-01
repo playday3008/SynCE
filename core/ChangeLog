@@ -1,5 +1,9 @@
+2017-02-01  Arndt Kaiser
+	* prevent unintentional deletion of the pppd-pidfile in
+	  scripts/synceconnector.py.in
+
 2017-01-06  Arndt Kaiser
-	* prevent devices from beeing registered multiple times
+	* prevent devices from being registered multiple times
 
 2017-01-05  Arndt Kaiser
 
