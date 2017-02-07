@@ -10,6 +10,8 @@
 	* remove unnessessary call to g_object_get()
 	* remove synce_device_dbus_uninit() because dbus-uninit
 	  is already done by synce_device_dispose()
+	* raise required GIO Version to 2.30 because
+	  g_dbus_interface_skeleton_export() is used
 
 2017-02-01  Arndt Kaiser
 	* prevent unintentional deletion of the pppd-pidfile in
