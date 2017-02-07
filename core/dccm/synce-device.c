@@ -462,21 +462,6 @@ synce_device_dbus_init(SynceDevice *self)
 }
 
 void
-synce_device_dbus_uninit(SynceDevice *self)
-{
-  SynceDevicePrivate *priv = SYNCE_DEVICE_GET_PRIVATE (self);
-  g_return_if_fail(!(priv->dispose_has_run));
-
-  g_message ("%s: unregistering object path '%s'", G_STRFUNC, priv->obj_path);
-
-  g_dbus_interface_skeleton_unexport(G_DBUS_INTERFACE_SKELETON(priv->interface));
-  g_object_unref(priv->interface);
-  priv->interface = NULL;
-
-  return;
-}
-
-void
 synce_device_change_password_flags (SynceDevice *self,
 				    SynceDevicePasswordFlags new_flag)
 {

@@ -8,6 +8,8 @@
 	  async-read of the last ping. The aborted read also releases
 	  the last reference to the device-object
 	* remove unnessessary call to g_object_get()
+	* remove synce_device_dbus_uninit() because dbus-uninit
+	  is already done by synce_device_dispose()
 
 2017-02-01  Arndt Kaiser
 	* prevent unintentional deletion of the pppd-pidfile in

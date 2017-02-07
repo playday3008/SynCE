@@ -75,7 +75,6 @@ gboolean synce_device_request_connection (SynceDbusDevice *interface, GDBusMetho
 void synce_device_change_password_flags (SynceDevice *self, SynceDevicePasswordFlags new_flag);
 void synce_device_conn_broker_done_cb (SynceConnectionBroker *broker, gpointer user_data);
 void synce_device_dbus_init(SynceDevice *self);
-void synce_device_dbus_uninit(SynceDevice *self);
 void synce_device_conn_event_cb(GObject *istream, GAsyncResult *res, gpointer user_data);
 
 G_END_DECLS
