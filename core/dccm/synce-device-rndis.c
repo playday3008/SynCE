@@ -263,6 +263,13 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 
   GError *error = NULL;
   gssize num_read = g_input_stream_read_finish(istream, res, &error);
+  if (error != NULL) {
+    g_debug("%s: failed to read data: %s", G_STRFUNC, error->message);
+    g_error_free(error);
+    g_free(priv->iobuf);
+    g_object_unref(self);
+    return;
+  }
 
   if (priv->state == CTRL_STATE_HANDSHAKE)
     {

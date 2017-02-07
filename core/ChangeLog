@@ -1,3 +1,6 @@
+2017-02-07  Arndt Kaiser
+	* improve error handling of failed async-reads
+
 2017-02-01  Arndt Kaiser
 	* prevent unintentional deletion of the pppd-pidfile in
 	  scripts/synceconnector.py.in
