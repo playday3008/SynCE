@@ -334,6 +334,7 @@ exit:
   if (sock) g_object_unref(sock);
   if (inet_address) g_object_unref(inet_address);
   if (sock_address) g_object_unref(sock_address);
+  if (error) g_error_free(error);
 
   return;
 }

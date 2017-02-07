@@ -410,7 +410,7 @@ synce_device_legacy_client_event_password_cb(GObject *source_object,
   g_free(info->buf);
   g_free(info);
 
-  if (num_read == -1) {
+  if (error != NULL) {
     g_warning("%s: Failed to get password reply from device: %s", G_STRFUNC, error->message);
     g_error_free(error);
     g_object_unref(conn);

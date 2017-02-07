@@ -532,7 +532,7 @@ synce_device_rndis_client_event_cb(GObject *source_object,
 
   GError *error = NULL;
   gssize num_read = g_input_stream_read_finish(istream, res, &error);
-  if (num_read == -1) {
+  if (error != NULL) {
     g_warning("%s: failed to read connection ID from device: %s", G_STRFUNC, error->message);
     g_error_free(error);
     g_object_unref(self);
