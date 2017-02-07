@@ -66,9 +66,11 @@ synce_device_legacy_send_ping(gpointer data)
   }
 
   /* do a read here ? */
-  priv->iobuf = g_malloc(4);
   GInputStream *istream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
-  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
+  if (!g_input_stream_has_pending(istream)) {
+      priv->iobuf = g_malloc(4);
+      g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
+  }
 
   if (++priv_legacy->ping_count == DCCM_MAX_PING_COUNT) {
     gchar *name = NULL;
