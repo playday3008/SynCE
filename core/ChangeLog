@@ -7,6 +7,7 @@
 	  the io-stream must be closed to abort the pending
 	  async-read of the last ping. The aborted read also releases
 	  the last reference to the device-object
+	* remove unnessessary call to g_object_get()
 
 2017-02-01  Arndt Kaiser
 	* prevent unintentional deletion of the pppd-pidfile in

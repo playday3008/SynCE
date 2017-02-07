@@ -73,15 +73,10 @@ synce_device_legacy_send_ping(gpointer data)
   }
 
   if (++priv_legacy->ping_count == DCCM_MAX_PING_COUNT) {
-    gchar *name = NULL;
-
-    g_object_get(self, "name", &name, NULL);
-
-    g_warning("%s: Device %s not responded to %d pings, assume disconnected", G_STRFUNC, name, DCCM_MAX_PING_COUNT);
+    g_warning("%s: Device %s not responded to %d pings, assume disconnected", G_STRFUNC, priv->name, DCCM_MAX_PING_COUNT);
     synce_device_dbus_uninit(SYNCE_DEVICE(self));
     g_io_stream_close(G_IO_STREAM(priv->conn), NULL, NULL);
     g_signal_emit (self, SYNCE_DEVICE_GET_CLASS(SYNCE_DEVICE(self))->signals[SYNCE_DEVICE_SIGNAL_DISCONNECTED], 0);
-    g_free(name);
     return FALSE;
   }
 
