@@ -68,8 +68,8 @@ synce_device_legacy_send_ping(gpointer data)
   /* do a read here ? */
   GInputStream *istream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
   if (!g_input_stream_has_pending(istream)) {
-      priv->iobuf = g_malloc(4);
-      g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
+    priv->iobuf = g_realloc(priv->iobuf, 4);
+    g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
   }
 
   if (++priv_legacy->ping_count == DCCM_MAX_PING_COUNT) {
@@ -230,7 +230,6 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
   if (error != NULL) {
     g_debug("%s: failed to read data: %s", G_STRFUNC, error->message);
     g_error_free(error);
-    g_free(priv->iobuf);
     g_object_unref(self);
     return;
   }
@@ -243,17 +242,15 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
       if (num_read != 4)
 	{
 	  g_warning ("%s: unexpected length", G_STRFUNC);
-	  g_free(priv->iobuf);
 	  g_object_unref(self);
 	  return;
 	}
 
       header = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
-      g_free(priv->iobuf);
 
       if (header == 0) {
 	/* empty packet header */
-	priv->iobuf = g_malloc(4);
+	priv->iobuf = g_realloc(priv->iobuf, 4);
 	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 	g_object_unref(self);
 	return;
@@ -266,7 +263,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	/* info message */
 	priv->state = CTRL_STATE_GETTING_INFO;
 	priv->info_buf_size = header;
-	priv->iobuf = g_malloc(priv->info_buf_size);
+	priv->iobuf = g_realloc(priv->iobuf, priv->info_buf_size);
 	g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
       } else {
 	/* password challenge */
@@ -274,7 +271,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	/*
 	  synce_device_change_password_flags (SYNCE_DEVICE(self), SYNCE_DEVICE_PASSWORD_FLAG_PROVIDE);
 	*/
-	priv->iobuf = g_malloc(4);
+	priv->iobuf = g_realloc(priv->iobuf, 4);
 	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
       }
     }
@@ -291,9 +288,7 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 
       gchar *info_buf = g_malloc(num_read);
       memcpy(info_buf, priv->iobuf, num_read);
-      g_free(priv->iobuf);
-      synce_device_legacy_info_received(self, (guchar *) info_buf,
-					num_read);
+      synce_device_legacy_info_received(self, (guchar *) info_buf, num_read);
       g_free(info_buf);
     }
   else if (priv->state == CTRL_STATE_AUTH)
@@ -309,7 +304,6 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	}
 
       result = GUINT16_FROM_LE (*((guint16 *) priv->iobuf));
-      g_free(priv->iobuf);
 
       if (result != 0)
 	{
@@ -339,11 +333,10 @@ synce_device_legacy_conn_event_cb_impl(GObject *source_object,
 	  return;
 	}
       req = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
-      g_free(priv->iobuf);
 
       if (req == 0) {
 	/* empty packet header */
-	priv->iobuf = g_malloc(4);
+	priv->iobuf = g_realloc(priv->iobuf, 4);
 	g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 	g_object_unref(self);
 	return;

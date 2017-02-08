@@ -223,7 +223,7 @@ synce_device_rndis_info_received(SynceDeviceRndis *self, const guchar *buf, gssi
 	  }
 
 	  GInputStream *in_stream = g_io_stream_get_input_stream(G_IO_STREAM(priv->conn));
-	  priv->iobuf = g_malloc(sizeof(guint32));
+	  priv->iobuf = g_realloc(priv->iobuf, sizeof(guint32));
 	  g_input_stream_read_async(in_stream, priv->iobuf, sizeof(guint32), G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 
           /*
@@ -266,7 +266,6 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
   if (error != NULL) {
     g_debug("%s: failed to read data: %s", G_STRFUNC, error->message);
     g_error_free(error);
-    g_free(priv->iobuf);
     g_object_unref(self);
     return;
   }
@@ -282,13 +281,11 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
       if (num_read != 4)
 	{
 	  g_warning ("%s: unexpected length", G_STRFUNC);
-	  g_free(priv->iobuf);
 	  g_object_unref(self);
 	  return;
 	}
 
       req = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
-      g_free(priv->iobuf);
       resp = g_array_sized_new (FALSE, FALSE, sizeof (guint32), 1);
 
       switch (req)
@@ -298,7 +295,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	  break;
 	case 4:
 	  priv->state = CTRL_STATE_GETTING_INFO;
-	  priv->iobuf = g_malloc(4);
+	  priv->iobuf = g_realloc(priv->iobuf, 4);
 	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 	  break;
 	case 6:
@@ -329,7 +326,7 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	    g_critical("%s: failed to write control message to device: %s", G_STRFUNC, error->message);
 	    g_error_free(error);
 	  }
-	  priv->iobuf = g_malloc(4);
+	  priv->iobuf = g_realloc(priv->iobuf, 4);
 	  g_input_stream_read_async(istream, priv->iobuf, 4, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 
 	  g_free (buf);
@@ -344,15 +341,12 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	  if (num_read != 4)
 	    {
 	      g_warning ("%s: event->length != 4", G_STRFUNC);
-	      g_free(priv->iobuf);
 	      g_object_unref(self);
 	      return;
 	    }
 
 	  priv->info_buf_size = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
-	  g_free(priv->iobuf);
-
-	  priv->iobuf = g_malloc(priv->info_buf_size);
+	  priv->iobuf = g_realloc(priv->iobuf, priv->info_buf_size);
 	  g_input_stream_read_async(istream, priv->iobuf, priv->info_buf_size, G_PRIORITY_DEFAULT, NULL, synce_device_conn_event_cb, g_object_ref(self));
 	}
       else
@@ -361,16 +355,13 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	    {
 	      g_warning ("%s: length read=%zd != info_buf_size=%d",
 			 G_STRFUNC, num_read, priv->info_buf_size);
-	      g_free(priv->iobuf);
 	      g_object_unref(self);
 	      return;
 	    }
 
 	  gchar *info_buf = g_malloc0(num_read);
 	  memcpy(info_buf, priv->iobuf, num_read);
-	  g_free(priv->iobuf);
-	  synce_device_rndis_info_received(self, (guchar *) info_buf,
-					   num_read);
+	  synce_device_rndis_info_received(self, (guchar *) info_buf, num_read);
 	  g_free(info_buf);
 	}
     }
@@ -384,13 +375,11 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 	if (num_read != sizeof (guint16))
 	  {
 	    g_warning ("%s: length read != 2", G_STRFUNC);
-	    g_free(priv->iobuf);
 	    g_object_unref(self);
 	    return;
 	  }
 
 	result = GUINT16_FROM_LE (*((guint16 *) priv->iobuf));
-	g_free(priv->iobuf);
 
 	if (result != 0)
 	  {
@@ -409,7 +398,6 @@ synce_device_rndis_conn_event_cb_impl(GObject *source_object,
 
 	guint32 result;
 	result = GUINT32_FROM_LE (*((guint32 *) priv->iobuf));
-	g_free(priv->iobuf);
 	if (result == 0)
 	  {
 	    priv->state = CTRL_STATE_CONNECTED;
