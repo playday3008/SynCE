@@ -2,6 +2,7 @@
 
 	* RTFCharget() improved and wrong calculation inside of sizeof() fixed
 	  (bug #215, thanks to dcb)
+	* new testnotes for RTF<->UTF8 conversion-tests
 
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 
