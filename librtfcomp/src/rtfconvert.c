@@ -379,35 +379,31 @@ static int RTFCharget(const unsigned char *sin, int maxlen, unsigned int *comput
 {
 	static char *escape_header = "\\'";
 	static char *unicode_header = "\\u";
+	int header_len = 2;
 	int len = -1;
 	int skip_next = -1;
 	unsigned char c;
 	unsigned int skipped_utf;
 
-	if (
-	      (maxlen >= sizeof(escape_header + 2)) 
-	        && 
-              (strncmp(sin, escape_header, strlen(escape_header))) == 0
-           ) {
-		len = 4;
-		if (sscanf(sin+strlen(escape_header), "%2x",computed_UTF8) != 1) {
+	if ((maxlen >= (header_len + 2)) && (strncmp(sin, escape_header, header_len) == 0)) {
+		len = header_len + 2;
+
+		if (sscanf(sin + header_len, "%2x", computed_UTF8) != 1) {
 			len = -1;
 		}
+
+		return len;
 	}
 
-	if (
-             (maxlen >= sizeof(unicode_header + 1)) 
-	        && 
-             (strncmp(sin, unicode_header, strlen(unicode_header))) == 0
-           ) {
-		len = 2;
+	if ((maxlen > header_len) && (strncmp(sin, unicode_header, header_len) == 0)) {
+		len = header_len;
 		c = sin[len];
 
 		while ((len<maxlen) && ((c == '-') || ((c>= '0') && (c <= '9')))) {
 			c = sin[++len];
 		}
 
-		if (sscanf(sin+strlen(unicode_header), "%d",computed_UTF8) != 1) {
+		if (sscanf(sin + header_len, "%d", computed_UTF8) != 1) {
 			len = -1;
 		}
 
@@ -420,6 +416,8 @@ static int RTFCharget(const unsigned char *sin, int maxlen, unsigned int *comput
 		if (skip_next > 0) {
 			len += skip_next;
 		}
+
+		return len;
 	}
 
 	if ((*sin >= 32) && (*sin <= 127) && (*sin != '\\') && 
