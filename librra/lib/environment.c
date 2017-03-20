@@ -1,5 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE
 #include "environment.h"
 #include <stdlib.h>
 #include <string.h>

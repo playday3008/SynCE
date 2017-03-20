@@ -1,5 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE 1
 #include "syncmgr.h"
 #include "rrac.h"
 #include "uint32vector.h"

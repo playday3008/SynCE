@@ -1,3 +1,8 @@
+2017-03-21  Arndt Kaiser
+
+	* tidy compiler warnings by removing _BSD_SOURCE and _SVID_SOURCE,
+	  because both are deprecated since glibc 2.20
+
 2013-07-25  Mark Ellis  <mark@mpellis.org.uk>
 
 	* 0.17 release

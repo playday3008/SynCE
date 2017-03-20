@@ -1,5 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE 1
 #include "recurrence_pattern.h"
 #include "environment.h"
 #include <stdio.h>

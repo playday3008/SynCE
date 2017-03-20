@@ -1,5 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE 1
 #include "../lib/syncmgr.h"
 #include "../lib/uint32vector.h"
 #include "../lib/appointment_ids.h"

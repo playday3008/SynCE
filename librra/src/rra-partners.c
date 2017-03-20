@@ -1,5 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE 1
 #include <rapi2.h>
 #include <synce_log.h>
 #include "matchmaker.h"

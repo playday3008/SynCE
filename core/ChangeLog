@@ -1,8 +1,15 @@
+2017-03-21  Arndt Kaiser
+
+	* tidy compiler warnings by removing _BSD_SOURCE and _SVID_SOURCE,
+	  because both are deprecated since glibc 2.20
+
 2017-02-08  Arndt Kaiser
+
 	* use g_realloc() for iobuf-allocation because it's simpler,
 	  prevents memory leaks and performs better
 
 2017-02-07  Arndt Kaiser
+
 	* improve error handling of failed async-reads
 	* returned GErrors should be freed (memory leaks fixed)
 	* don't start new async-reads while there are pending
@@ -11,17 +18,19 @@
 	  the io-stream must be closed to abort the pending
 	  async-read of the last ping. The aborted read also releases
 	  the last reference to the device-object
-	* remove unnessessary call to g_object_get()
+	* remove unnecessary call to g_object_get()
 	* remove synce_device_dbus_uninit() because dbus-uninit
 	  is already done by synce_device_dispose()
 	* raise required GIO Version to 2.30 because
 	  g_dbus_interface_skeleton_export() is used
 
 2017-02-01  Arndt Kaiser
+
 	* prevent unintentional deletion of the pppd-pidfile in
 	  scripts/synceconnector.py.in
 
 2017-01-06  Arndt Kaiser
+
 	* prevent devices from being registered multiple times
 
 2017-01-05  Arndt Kaiser

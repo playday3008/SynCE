@@ -1,6 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE 1
-#define _POSIX_C_SOURCE 2
 #ifdef HAVE_CONFIG_H 
 #include "config.h"
 #endif

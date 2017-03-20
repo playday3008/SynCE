@@ -1,5 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE 1
 #include "timezone.h"
 #include "generator.h"
 #include <rapi2.h>

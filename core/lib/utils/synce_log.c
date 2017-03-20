@@ -1,5 +1,4 @@
 /* $Id */
-#define _BSD_SOURCE 1
 #include "synce_log.h"
 #include <stdarg.h>
 #include <stdio.h>

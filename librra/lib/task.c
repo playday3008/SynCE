@@ -1,5 +1,4 @@
 /* $Id$ */
-#define _BSD_SOURCE 1
 #include "task.h"
 #include "appointment_ids.h"
 #include "timezone.h"

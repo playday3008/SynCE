@@ -1,6 +1,4 @@
 /* $Id$ */
-#define _POSIX_C_SOURCE 2 /* for getopt */
-#define _BSD_SOURCE
 #include "../lib/timezone.h"
 #include "../lib/generator.h"
 #include <rapi2.h>

@@ -1,4 +1,3 @@
-#define _BSD_SOURCE 1
 #include "rapi.h"
 #include "rapi_context.h"
 #include "synce_log.h"
