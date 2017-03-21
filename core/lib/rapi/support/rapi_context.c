@@ -35,8 +35,6 @@ static const char* const DBUS_IFACE         = "org.freedesktop.DBus";
 static const char* const DBUS_PATH          = "/org/freedesktop/DBus";
 
 static const char* const DCCM_SERVICE      = "org.synce.dccm";
-static const char* const DCCM_MGR_PATH     = "/org/synce/dccm/DeviceManager";
-static const char* const DCCM_MGR_IFACE    = "org.synce.dccm.DeviceManager";
 static const char* const DCCM_DEV_IFACE    = "org.synce.dccm.Device";
 #endif
 

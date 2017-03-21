@@ -2,6 +2,7 @@
 
 	* tidy compiler warnings by removing _BSD_SOURCE and _SVID_SOURCE,
 	  because both are deprecated since glibc 2.20
+	* get rid of compiler warnings by removing unused variables
 
 2017-02-08  Arndt Kaiser
 
