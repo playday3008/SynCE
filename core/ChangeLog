@@ -1,3 +1,10 @@
+2018-10-01  Arndt Kaiser
+
+	* synce-pcp now aborts at the first error if copying a directory
+	  with multiple files
+	* synce-pls now aborts at the first error if traversing
+	  multiple directories recursively
+
 2017-03-21  Arndt Kaiser
 
 	* tidy compiler warnings by removing _BSD_SOURCE and _SVID_SOURCE,

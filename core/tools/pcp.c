@@ -291,6 +291,9 @@ static bool copy_dir(IRAPISession *session, const char* source, const char* dest
 
       free(new_src);
       free(new_dest);
+
+      if (!result)
+        break;
     }
 
     IRAPISession_CeRapiFreeBuffer(session, data);
@@ -322,6 +325,9 @@ static bool copy_dir(IRAPISession *session, const char* source, const char* dest
 
       free(new_src);
       free(new_dest);
+
+      if (!result)
+        break;
     }
 
     closedir(dir_handle);

@@ -380,8 +380,11 @@ static bool list_matching_files(IRAPISession *session, const char* path, bool fi
 				free(base_path);
 				free(entry_name);
 
-				list_matching_files(session, new_path, FALSE);
+				success = list_matching_files(session, new_path, FALSE);
 				free(new_path);
+
+				if (!success)
+				  goto exit;
 			}
 		}
 	}
