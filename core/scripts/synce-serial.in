@@ -14,7 +14,10 @@ import logging, logging.handlers
 import platform
 import ConfigParser
 import dbus
-import gudev
+import gi
+
+gi.require_version("GUdev", "1.0")
+from gi.repository import GUdev
 
 sys.path.insert(0,"@SYNCEDATADIR@")
 import synceconnector
@@ -63,7 +66,7 @@ if __name__ == '__main__':
 
     device_file = sys.argv[2]
 
-    udev_client = gudev.Client("")
+    udev_client = GUdev.Client()
     device = udev_client.query_by_device_file(device_file)
     if device == None:
         logger.critical("Failed to find device "+device_file+" in udev")
