@@ -5,6 +5,7 @@
 
 #include "synce_socket.h"
 #include "synce_log.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <unistd.h>
@@ -216,37 +217,35 @@ fail:
  */ 
 bool synce_socket_connect_proxy(SynceSocket* syncesock, const char* remoteIpAddress)
 {
+    struct sockaddr_un proxyaddr;
+    char *path = NULL;
+    int length;
+
     synce_socket_close(syncesock);
 
     if (!synce_socket_create_proxy(syncesock))
         goto fail;
 
-
-    char *path;
-
     if (!synce_get_subdirectory("rapi2", &path)) {
         goto fail;
     }
 
-    char socketPath[256];
-
-    strncpy(socketPath, path, 256);
-    strncat(socketPath, "/", 256 - strlen(socketPath));
-    strncat(socketPath, remoteIpAddress, 256 - strlen(socketPath));
-
-    free(path);
-
-    struct sockaddr_un proxyaddr;
+    length = snprintf(proxyaddr.sun_path, sizeof(proxyaddr.sun_path), "%s/%s", path, remoteIpAddress);
+    if ((length < 0) || (length >= (int) sizeof(proxyaddr.sun_path)))
+        goto fail;
 
     proxyaddr.sun_family = AF_LOCAL;
-    strncpy(proxyaddr.sun_path, socketPath, sizeof(proxyaddr.sun_path));
-
     if (connect(syncesock->fd, (struct sockaddr *) &proxyaddr, sizeof(proxyaddr)) < 0)
         goto fail;
+
+    free(path);
 
     return true;
 
 fail:
+    if (path != NULL)
+        free(path);
+
     synce_socket_close(syncesock);
     return false;
 }

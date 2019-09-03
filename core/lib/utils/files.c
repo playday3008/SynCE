@@ -63,6 +63,7 @@ bool synce_get_directory(char** path)
   char buffer[MAX_PATH];
   char *p;
   struct passwd* user = NULL;
+  int length;
 
   if (!path)
     return false;
@@ -84,7 +85,9 @@ bool synce_get_directory(char** path)
   if (!user)
     return false;
 
-  snprintf(buffer, sizeof(buffer), "%s/" DIRECTORY_NAME, user->pw_dir);
+  length = snprintf(buffer, sizeof(buffer), "%s/" DIRECTORY_NAME, user->pw_dir);
+  if ((length < 0) || (length >= (int) sizeof(buffer)))
+    return false;
 
   if (!make_sure_directory_exists(buffer))
     return false;
@@ -158,6 +161,7 @@ bool synce_get_connection_filename(char** filename)
 	bool success = false;
 	char* path = NULL;
 	char buffer[MAX_PATH];
+	int length;
 
 	if (!filename)
 		goto exit;
@@ -167,7 +171,10 @@ bool synce_get_connection_filename(char** filename)
 	if (!synce_get_directory(&path))
 		goto exit;
 
-	snprintf(buffer, sizeof(buffer), "%s/%s" , path, connection_filename);
+	length = snprintf(buffer, sizeof(buffer), "%s/%s" , path, connection_filename);
+	if ((length < 0) || (length >= (int) sizeof(buffer)))
+		goto exit;
+
 	*filename = strdup(buffer);
 
 	success = true;
@@ -193,6 +200,7 @@ bool synce_get_subdirectory(const char* name, char** directory)
 	bool success = false;
 	char* path = NULL;
 	char buffer[MAX_PATH];
+	int length;
 
 	if (!name || !directory)
 		goto exit;
@@ -205,7 +213,9 @@ bool synce_get_subdirectory(const char* name, char** directory)
 	if (!synce_get_directory(&path))
 		goto exit;
 
-	snprintf(buffer, sizeof(buffer), "%s/%s", path, name);
+	length = snprintf(buffer, sizeof(buffer), "%s/%s", path, name);
+	if ((length < 0) || (length >= (int) sizeof(buffer)))
+		goto exit;
 
 	if (!make_sure_directory_exists(buffer))
 		goto exit;
