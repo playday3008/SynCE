@@ -14,7 +14,7 @@
 #include "synce-device-dbus.h"
 #include "synce_gerrors.h"
 
-G_DEFINE_TYPE (SynceDevice, synce_device, G_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_PRIVATE (SynceDevice, synce_device, G_TYPE_OBJECT)
 
 
 /* properties */
@@ -743,8 +743,6 @@ synce_device_class_init (SynceDeviceClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
   GParamSpec *param_spec;
-
-  g_type_class_add_private (klass, sizeof (SynceDevicePrivate));
 
   obj_class->get_property = synce_device_get_property;
   obj_class->set_property = synce_device_set_property;

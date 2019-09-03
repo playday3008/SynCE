@@ -21,10 +21,6 @@ static gboolean synce_device_manager_control_init_finish (GAsyncInitable      *i
 							  GAsyncResult        *res,
 							  GError             **error);
 
-G_DEFINE_TYPE_WITH_CODE (SynceDeviceManagerControl, synce_device_manager_control, G_TYPE_OBJECT,
-			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_control_initable_iface_init)
-			 G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, synce_device_manager_control_async_initable_iface_init))
-
 enum {
   NOT_INITIALISED,
   INITIALISING,
@@ -44,6 +40,11 @@ struct _SynceDeviceManagerControlPrivate
   gboolean dispose_has_run;
   SynceDbusDeviceManagerControl *interface;
 };
+
+G_DEFINE_TYPE_WITH_CODE (SynceDeviceManagerControl, synce_device_manager_control, G_TYPE_OBJECT,
+                         G_ADD_PRIVATE (SynceDeviceManagerControl)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_control_initable_iface_init)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, synce_device_manager_control_async_initable_iface_init))
 
 #define SYNCE_DEVICE_MANAGER_CONTROL_GET_PRIVATE(o) \
     (G_TYPE_INSTANCE_GET_PRIVATE((o), SYNCE_TYPE_DEVICE_MANAGER_CONTROL, SynceDeviceManagerControlPrivate))
@@ -326,8 +327,6 @@ static void
 synce_device_manager_control_class_init (SynceDeviceManagerControlClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (SynceDeviceManagerControlPrivate));
 
   obj_class->dispose = synce_device_manager_control_dispose;
   obj_class->finalize = synce_device_manager_control_finalize;

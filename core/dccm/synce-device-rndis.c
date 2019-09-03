@@ -14,12 +14,12 @@
 #include "synce_gerrors.h"
 #include "utils.h"
 
-G_DEFINE_TYPE(SynceDeviceRndis, synce_device_rndis, SYNCE_TYPE_DEVICE)
-
 typedef struct _SynceDeviceRndisPrivate SynceDeviceRndisPrivate;
 struct _SynceDeviceRndisPrivate {
   GHashTable *pending_client_conns;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (SynceDeviceRndis, synce_device_rndis, SYNCE_TYPE_DEVICE)
 
 #define SYNCE_DEVICE_RNDIS_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SYNCE_TYPE_DEVICE_RNDIS, SynceDeviceRndisPrivate))
 
@@ -625,8 +625,6 @@ synce_device_rndis_class_init (SynceDeviceRndisClass *klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   SynceDeviceClass *synce_device_class = SYNCE_DEVICE_CLASS(klass);
-
-  g_type_class_add_private (klass, sizeof (SynceDeviceRndisPrivate));
 
   gobject_class->dispose = synce_device_rndis_dispose;
   gobject_class->finalize = synce_device_rndis_finalize;

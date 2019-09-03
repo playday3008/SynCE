@@ -16,8 +16,6 @@
 
 #include "utils.h"
 
-G_DEFINE_TYPE (SynceConnectionBroker, synce_connection_broker, G_TYPE_OBJECT)
-
 /* properties */
 enum
 {
@@ -50,6 +48,8 @@ struct _SynceConnectionBrokerPrivate
   gchar *filename;
   GSocketService *server;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (SynceConnectionBroker, synce_connection_broker, G_TYPE_OBJECT)
 
 #define SYNCE_CONNECTION_BROKER_GET_PRIVATE(o) \
     (G_TYPE_INSTANCE_GET_PRIVATE((o), SYNCE_TYPE_CONNECTION_BROKER, SynceConnectionBrokerPrivate))
@@ -151,9 +151,6 @@ synce_connection_broker_class_init (SynceConnectionBrokerClass *conn_broker_clas
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (conn_broker_class);
   GParamSpec *param_spec;
-
-  g_type_class_add_private (conn_broker_class,
-                            sizeof (SynceConnectionBrokerPrivate));
 
   obj_class->get_property = synce_connection_broker_get_property;
   obj_class->set_property = synce_connection_broker_set_property;

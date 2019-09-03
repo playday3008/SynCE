@@ -32,10 +32,6 @@ static gboolean synce_device_manager_init_finish (GAsyncInitable      *initable,
 
 const gchar *udev_subsystems[] = { NULL };
 
-G_DEFINE_TYPE_WITH_CODE (SynceDeviceManager, synce_device_manager, G_TYPE_OBJECT,
-			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_initable_iface_init)
-			 G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, synce_device_manager_async_initable_iface_init))
-
 /* private stuff */
 
 typedef struct
@@ -76,6 +72,11 @@ struct _SynceDeviceManagerPrivate
 #endif
   SynceDbusDeviceManager *interface;
 };
+
+G_DEFINE_TYPE_WITH_CODE (SynceDeviceManager, synce_device_manager, G_TYPE_OBJECT,
+                         G_ADD_PRIVATE (SynceDeviceManager)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, synce_device_manager_initable_iface_init)
+                         G_IMPLEMENT_INTERFACE (G_TYPE_ASYNC_INITABLE, synce_device_manager_async_initable_iface_init))
 
 #define SYNCE_DEVICE_MANAGER_GET_PRIVATE(o) \
     (G_TYPE_INSTANCE_GET_PRIVATE((o), SYNCE_TYPE_DEVICE_MANAGER, SynceDeviceManagerPrivate))
@@ -934,8 +935,6 @@ static void
 synce_device_manager_class_init (SynceDeviceManagerClass *klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (SynceDeviceManagerPrivate));
 
   obj_class->dispose = synce_device_manager_dispose;
   obj_class->finalize = synce_device_manager_finalize;

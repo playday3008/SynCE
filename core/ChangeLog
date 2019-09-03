@@ -2,6 +2,9 @@
 
 	* fix unhandled string-truncations which are detected by new
 	  gcc compiler versions
+	* replace g_type_class_add_private() with the instance private
+	  data macros G_DEFINE_TYPE_WITH_PRIVATE or G_ADD_PRIVATE
+	  because it's deprecated since GLib 2.58
 
 2019-08-20  Arndt Kaiser
 

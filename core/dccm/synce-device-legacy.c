@@ -15,8 +15,6 @@
 #include "synce_gerrors.h"
 #include "utils.h"
 
-G_DEFINE_TYPE(SynceDeviceLegacy, synce_device_legacy, SYNCE_TYPE_DEVICE)
-
 typedef struct _SynceDeviceLegacyPrivate SynceDeviceLegacyPrivate;
 struct _SynceDeviceLegacyPrivate {
   gint ping_count;
@@ -24,6 +22,8 @@ struct _SynceDeviceLegacyPrivate {
   GSocketClient *rapi_sock_client;
   GInetSocketAddress *rapi_address;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE (SynceDeviceLegacy, synce_device_legacy, SYNCE_TYPE_DEVICE)
 
 #define SYNCE_DEVICE_LEGACY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), SYNCE_TYPE_DEVICE_LEGACY, SynceDeviceLegacyPrivate))
 
@@ -636,8 +636,6 @@ synce_device_legacy_class_init (SynceDeviceLegacyClass *klass)
 
   gobject_class->dispose = synce_device_legacy_dispose;
   gobject_class->finalize = synce_device_legacy_finalize;
-
-  g_type_class_add_private (klass, sizeof (SynceDeviceLegacyPrivate));
 
   synce_device_class->synce_device_conn_event_cb = synce_device_legacy_conn_event_cb_impl;
   synce_device_class->synce_device_request_connection = synce_device_legacy_request_connection_impl;
