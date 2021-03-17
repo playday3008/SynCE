@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from pyrapi2 import *
 from partnerships import *
@@ -8,8 +8,7 @@ s = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
 i = 1
 for partnership in get_partnerships(s):
     if partnership != None:
-        print "%d: %s" % (i, partnership)
+        print("%d: %s" % (i, partnership))
     else:
-        print "%d: [slot empty]" % i
+        print("%d: [slot empty]" % i)
     i += 1
-

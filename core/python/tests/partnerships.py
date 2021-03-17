@@ -39,7 +39,7 @@ def get_partnerships(session):
     hklm = session.HKEY_LOCAL_MACHINE
     partners_key = hklm.create_sub_key(
             r"Software\Microsoft\Windows CE Services\Partners")
-    for pos in xrange(1, 3):
+    for pos in range(1, 3):
         key = partners_key.create_sub_key("P%d" % pos)
         if key.disposition == REG_OPENED_EXISTING_KEY:
             try:
@@ -54,7 +54,7 @@ def get_partnerships(session):
     partners_key.close()
 
     # Look up the synchronization data on each
-    for ctic in config_query_get(session, "Sync", "Sources").children.values():
+    for ctic in list(config_query_get(session, "Sync", "Sources").children.values()):
         sub_ctic = config_query_get(session, "Sync.Sources", ctic.type, recursive=True)
 
         guid = sub_ctic.type
@@ -69,19 +69,19 @@ def get_partnerships(session):
             partnerships[pos - 1] = pship
 
             engine = sub_ctic.children["Engines"].children[GUID_WM5_ENGINE]
-            for provider in engine.children["Providers"].children.values():
+            for provider in list(engine.children["Providers"].children.values()):
                 if int(provider["Enabled"]) != 0:
                     pship.sync_items.append(SYNC_ITEM_ID_FROM_GUID[provider.type])
         else:
             sync_entries.append((guid, hostname, description))
 
-    for entry in reg_entries.values():
-        print "deleting dangling registry entry:", entry
+    for entry in list(reg_entries.values()):
+        print("deleting dangling registry entry:", entry)
         hklm.delete_sub_key(
             r"Software\Microsoft\Windows CE Services\Partners\P%d" % entry[0])
 
     for entry in sync_entries:
-        print "deleting dangling sync source:", entry
+        print("deleting dangling sync source:", entry)
         config_query_remove(session, "Sync.Sources", entry[0])
 
     return partnerships
@@ -98,14 +98,14 @@ def create_partnership(session, name, sync_items):
     if slot == None:
         raise NoFreeSlotsError("all slots are currently full")
 
-    print "adding to slot %d" % slot
+    print("adding to slot %d" % slot)
 
     id = generate_id()
     guid = generate_guid()
     hostname = socket.gethostname()
 
-    print "generated id: %#x" % id
-    print "generated guid: '%s'" % guid
+    print("generated id: %#x" % id)
+    print("generated guid: '%s'" % guid)
 
     #
     # Create the synchronization config data source
@@ -134,7 +134,7 @@ def create_partnership(session, name, sync_items):
     providers = Characteristic("Providers")
     engine.add_child(providers)
 
-    for item_id, item_rec in SYNC_ITEMS.items():
+    for item_id, item_rec in list(SYNC_ITEMS.items()):
         item_str, item_readonly = item_rec
         item_guid = SYNC_ITEM_ID_TO_GUID[item_id]
         item_enabled = (str(item_id) in sync_items)
@@ -166,4 +166,3 @@ def create_partnership(session, name, sync_items):
 
 def delete_partnership(session, partnership):
     config_query_remove(session, "Sync.Sources", partnership.guid)
-

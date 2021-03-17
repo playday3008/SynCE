@@ -1,14 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 from pyrapi2 import *
 from partnerships import *
 
 if len(sys.argv) != 3:
-    print "Invalid argument count"
+    print("Invalid argument count")
     sys.exit(1)
 
 s = RAPISession(SYNCE_LOG_LEVEL_DEFAULT)
 
 create_partnership(s, sys.argv[1], sys.argv[2].split(","))
-

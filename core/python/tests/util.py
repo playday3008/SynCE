@@ -37,12 +37,12 @@ class Characteristic:
         indent = "%*s" % (4 * level, "")
         str = "%s* %s\n" % (indent, self.type)
         if self.params:
-            for name, value in self.params.items():
+            for name, value in list(self.params.items()):
                 str += "%s    %s = %s\n" % (indent, name, value)
         else:
             str += "%s    [no params]\n" % indent
 
-        for child in self.children.values():
+        for child in list(self.children.values()):
             str += "\n"
             str += child.to_string(level + 1)
 
@@ -67,7 +67,7 @@ def characteristic_from_xml(xml_node, parent=None):
             elif node.localName == "parm":
                 ctic[node.getAttribute("name")] = node.getAttribute("value")
             else:
-                print "unhandled node '%s'" % node.localName
+                print("unhandled node '%s'" % node.localName)
 
     return ctic
 
@@ -75,10 +75,10 @@ def characteristic_to_xml(ctic, doc, parent=None):
     node = doc.createElement("characteristic")
     node.setAttribute("type", ctic.type)
 
-    for child in ctic.children.values():
+    for child in list(ctic.children.values()):
         characteristic_to_xml(child, doc, node)
 
-    for name, value in ctic.params.items():
+    for name, value in list(ctic.params.items()):
         parm = doc.createElement("parm")
         parm.setAttribute("name", name)
         parm.setAttribute("value", value)
@@ -126,15 +126,15 @@ def _config_query(session, query_type, path, leaf=None, recursive=False, ctic=No
     parent.appendChild(node)
 
     if os.getenv("SYNCE_DEBUG"):
-        print "CeProcessConfig request:"
-        print doc_node.toprettyxml()
+        print("CeProcessConfig request:")
+        print(doc_node.toprettyxml())
 
     reply = session.process_config(doc_node.toxml(), 1)
     reply_doc = minidom.parseString(reply)
 
     if os.getenv("SYNCE_DEBUG"):
-        print "CeProcessConfig response:"
-        print reply_doc.documentElement.toprettyxml()
+        print("CeProcessConfig response:")
+        print(reply_doc.documentElement.toprettyxml())
 
     reply_node = get_node_on_level(reply_doc, 2 + len(tokens))
 
@@ -157,11 +157,10 @@ def generate_guid():
         d4.append(random.randint(0, 0xFF))
 
     guid = "{%08X-%04X-%04X-" % (d1, d2, d3)
-    for i in xrange(len(d4)):
+    for i in range(len(d4)):
         guid += "%02X" % d4[i]
         if i == 1:
             guid += "-"
     guid += "}"
 
     return guid
-
