@@ -57,7 +57,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     devnum = serial_get_devnum(device_file)
-    if devnum < 0:
+    if int(devnum) < 0:
         sys.exit(1)
 
     # see the "linkname" option in the man page for pppd
